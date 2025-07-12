@@ -44,18 +44,30 @@ void Character::setVelocity(const QPointF &velocity) {
     Character::velocity = velocity;
 }
 
+bool Character::isCrouchDown() const {
+    return crouchDown;
+}
+
+void Character::setCrouchDown(bool crouchDown) {
+    Character::crouchDown = crouchDown;
+}
+
 void Character::processInput() {
-    auto velocity = QPointF(0, 0);
+    auto newVelocity = QPointF(0, velocity.y()); // 保持 Y 轴速度（重力和跳跃）
     const auto moveSpeed = 0.3;
-    if (isLeftDown()) {
-        velocity.setX(velocity.x() - moveSpeed);
-        setTransform(QTransform().scale(1, 1));
+    if (isCrouchDown()) {
+        // 下蹲时不能移动，形态变为单膝跪地
+        setTransform(QTransform().scale(1, 0.5).translate(0, 20)); // Y轴缩放+下移，模拟单膝跪地
+    } else {
+        setTransform(QTransform().scale(1, 1)); // 恢复正常形态
+        if (isLeftDown()) {
+            newVelocity.setX(newVelocity.x() - moveSpeed);
+        }
+        if (isRightDown()) {
+            newVelocity.setX(newVelocity.x() + moveSpeed);
+        }
     }
-    if (isRightDown()) {
-        velocity.setX(velocity.x() + moveSpeed);
-        setTransform(QTransform().scale(-1, 1));
-    }
-    setVelocity(velocity);
+    setVelocity(newVelocity);
 
     if (!lastPickDown && pickDown) { // first time pickDown
         picking = true;
@@ -67,6 +79,33 @@ void Character::processInput() {
 
 bool Character::isPicking() const {
     return picking;
+}
+
+void Character::jump() {
+    if (isOnGround()) {
+        velocity.setY(jumpSpeed);
+    }
+}
+
+void Character::applyGravity(double deltaTime) {
+    if (!isOnGround()) {
+        velocity.setY(velocity.y() + gravity * deltaTime);
+    }
+
+    // Check whether the character has already touched the ground,,,
+    double newY = pos().y() + velocity.y() * deltaTime;
+    if (newY >= groundY) {
+        setPos(pos().x(), groundY);
+        velocity.setY(0);
+    }
+}
+
+void Character::setGroundY(double groundY) {
+    this->groundY = groundY;
+}
+
+bool Character::isOnGround() const {
+    return pos().y() >= groundY;
 }
 
 Armor *Character::pickupArmor(Armor *newArmor) {

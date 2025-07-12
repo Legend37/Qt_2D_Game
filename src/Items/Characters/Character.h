@@ -1,7 +1,3 @@
-//
-// Created by gerw on 8/20/24.
-//
-
 #ifndef QT_PROGRAMMING_2024_CHARACTER_H
 #define QT_PROGRAMMING_2024_CHARACTER_H
 
@@ -26,6 +22,9 @@ public:
 
     void setPickDown(bool pickDown);
 
+    [[nodiscard]] bool isCrouchDown() const;
+    void setCrouchDown(bool crouchDown);
+
     [[nodiscard]] const QPointF &getVelocity() const;
 
     [[nodiscard]] bool isPicking() const;
@@ -33,6 +32,14 @@ public:
     void setVelocity(const QPointF &velocity);
 
     void processInput();
+
+    void jump();
+
+    void applyGravity(double deltaTime);
+
+    void setGroundY(double groundY);
+
+    [[nodiscard]] bool isOnGround() const;
 
     Armor* pickupArmor(Armor* newArmor);
 
@@ -43,10 +50,13 @@ protected:
     QPointF velocity{};
 //    QGraphicsEllipseItem *ellipseItem; // for debugging
 private:
-    bool leftDown{}, rightDown{}, pickDown{};
+    bool leftDown{}, rightDown{}, pickDown{}, crouchDown{};
     bool lastPickDown{};
     bool picking{};
+    double groundY{};
+    static constexpr double gravity = 0.02;
+    static constexpr double jumpSpeed = -3.0;
 };
 
 
-#endif //QT_PROGRAMMING_2024_CHARACTER_H
+#endif

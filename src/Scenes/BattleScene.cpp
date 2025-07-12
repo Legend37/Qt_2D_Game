@@ -19,6 +19,7 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     addItem(spareArmor);
     map->scaleToFitScene(this);
     character->setPos(map->getSpawnPos());
+    character->setGroundY(map->getFloorHeight());
     spareArmor->unmount();
     spareArmor->setPos(sceneRect().left() + (sceneRect().right() - sceneRect().left()) * 0.75, map->getFloorHeight());
 }
@@ -47,6 +48,16 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                 character->setPickDown(true);
             }
             break;
+        case Qt::Key_W:
+            if (character != nullptr) {
+                character->jump();
+            }
+            break;
+        case Qt::Key_S:
+            if (character != nullptr) {
+                character->setCrouchDown(true);
+            }
+            break;
         default:
             Scene::keyPressEvent(event);
     }
@@ -69,6 +80,11 @@ void BattleScene::keyReleaseEvent(QKeyEvent *event) {
                 character->setPickDown(false);
             }
             break;
+        case Qt::Key_S:
+            if (character != nullptr) {
+                character->setCrouchDown(false);
+            }
+            break;
         default:
             Scene::keyReleaseEvent(event);
     }
@@ -81,6 +97,7 @@ void BattleScene::update() {
 void BattleScene::processMovement() {
     Scene::processMovement();
     if (character != nullptr) {
+        character->applyGravity(deltaTime);
         character->setPos(character->pos() + character->getVelocity() * (double) deltaTime);
     }
 }
