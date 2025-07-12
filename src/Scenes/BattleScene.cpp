@@ -47,11 +47,6 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                 character->setPickDown(true);
             }
             break;
-        case Qt::Key_W:
-            if (character != nullptr) {
-                character->setUpDown(true);
-            }
-            break;
         default:
             Scene::keyPressEvent(event);
     }
@@ -72,11 +67,6 @@ void BattleScene::keyReleaseEvent(QKeyEvent *event) {
         case Qt::Key_J:
             if (character != nullptr) {
                 character->setPickDown(false);
-            }
-            break;
-        case Qt::Key_W:
-            if (character != nullptr) {
-                character->setUpDown(false);
             }
             break;
         default:

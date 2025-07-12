@@ -1,3 +1,7 @@
+//
+// Created by gerw on 8/20/24.
+//
+
 #ifndef QT_PROGRAMMING_2024_CHARACTER_H
 #define QT_PROGRAMMING_2024_CHARACTER_H
 
@@ -22,10 +26,6 @@ public:
 
     void setPickDown(bool pickDown);
 
-    [[nodiscard]] bool isUpDown() const;
-
-    void setUpDown(bool upDown);
-
     [[nodiscard]] const QPointF &getVelocity() const;
 
     [[nodiscard]] bool isPicking() const;
@@ -43,7 +43,7 @@ protected:
     QPointF velocity{};
 //    QGraphicsEllipseItem *ellipseItem; // for debugging
 private:
-    bool leftDown{}, rightDown{}, pickDown{}, upDown{};
+    bool leftDown{}, rightDown{}, pickDown{};
     bool lastPickDown{};
     bool picking{};
 };
