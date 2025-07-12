@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(qt_programming_2024)
+project(qt_2025_game)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTOMOC ON)
@@ -13,7 +13,7 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
-add_executable(qt_programming_2024 src/main.cpp
+add_executable(qt_2025_game src/main.cpp
         src/MyGame.cpp
         src/MyGame.h
         src/Items/Item.cpp
@@ -47,7 +47,7 @@ add_executable(qt_programming_2024 src/main.cpp
         src/Items/Mountable.h
         src/Items/Armors/FlamebreakerArmor.cpp
         src/Items/Armors/FlamebreakerArmor.h)
-target_link_libraries(qt_programming_2024
+target_link_libraries(qt_2025_game
         Qt::Core
         Qt::Gui
         Qt::Widgets

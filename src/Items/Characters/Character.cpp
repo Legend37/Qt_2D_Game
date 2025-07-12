@@ -1,7 +1,3 @@
-//
-// Created by gerw on 8/20/24.
-//
-
 #include <QTransform>
 #include "Character.h"
 
@@ -36,6 +32,14 @@ void Character::setPickDown(bool pickDown) {
     Character::pickDown = pickDown;
 }
 
+bool Character::isUpDown() const {
+    return upDown;
+}
+
+void Character::setUpDown(bool upDown) {
+    Character::upDown = upDown;
+}
+
 const QPointF &Character::getVelocity() const {
     return velocity;
 }
@@ -54,6 +58,9 @@ void Character::processInput() {
     if (isRightDown()) {
         velocity.setX(velocity.x() + moveSpeed);
         setTransform(QTransform().scale(-1, 1));
+    }
+    if (isUpDown()) {
+        velocity.setY(velocity.y() - moveSpeed);
     }
     setVelocity(velocity);
 
