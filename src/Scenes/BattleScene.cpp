@@ -4,11 +4,14 @@
 
 #include <QDebug>
 #include <QRandomGenerator>
+#include <algorithm>
 #include "BattleScene.h"
 #include "../Items/Characters/Link.h"
 #include "../Items/Maps/Battlefield.h"
 #include "../Items/Armors/FlamebreakerArmor.h"
 #include "../Items/Weapons/Pistol.h"
+#include "../Items/Weapons/Shotgun.h"
+#include "../Items/Weapons/Submachine.h"
 
 BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     // This is useful if you want the scene to have the exact same dimensions as the view
@@ -151,21 +154,27 @@ Mountable *BattleScene::pickupMountable(Character *character, Mountable *mountab
 }
 
 void BattleScene::generateRandomWeapons() {
-    // 生成2-4把随机武器
-    int weaponCount = QRandomGenerator::global()->bounded(2, 5);
+    // 创建所有3种武器类型，每种只生成一把
+    QVector<Weapon*> weapons;
     
-    for (int i = 0; i < weaponCount; ++i) {
-        // 创建手枪
-        Pistol* pistol = new Pistol(nullptr);
-        pistol->unmount();
+    // 创建每种武器
+    weapons.append(new Pistol(nullptr));
+    weapons.append(new Shotgun(nullptr));
+    weapons.append(new Submachine(nullptr));
+    
+    // 随机打乱武器顺序
+    std::random_shuffle(weapons.begin(), weapons.end());
+    
+    // 在地面随机位置放置武器
+    for (int i = 0; i < weapons.size(); ++i) {
+        Weapon* weapon = weapons[i];
+        weapon->unmount();
         
-        // 随机位置在地面上
-        qreal randomX = QRandomGenerator::global()->bounded(
-            static_cast<int>(sceneRect().left() + 50), 
-            static_cast<int>(sceneRect().right() - 50)
-        );
+        // 随机位置在地面上，确保武器之间有一定距离
+        qreal randomX = sceneRect().left() + 100 + i * 200 + 
+                       QRandomGenerator::global()->bounded(-50, 51);
         
-        pistol->setPos(randomX, map->getFloorHeight());
-        addItem(pistol);
+        weapon->setPos(randomX, map->getFloorHeight());
+        addItem(weapon);
     }
 }

@@ -6,7 +6,7 @@
 
 class Weapon : public Item, public Mountable {
 public:
-    explicit Weapon(QGraphicsItem *parent, const QString &imagePath, const QString &weaponName);
+    explicit Weapon(QGraphicsItem *parent, const QString &imagePath, const QString &weaponName, bool mirrorPixmap = true);
     
     QString getWeaponName() const;
     

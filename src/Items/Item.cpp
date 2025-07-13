@@ -4,8 +4,12 @@
 
 #include "Item.h"
 
-Item::Item(QGraphicsItem *parent, const QString &pixmapPath) : QGraphicsItem(parent) {
+Item::Item(QGraphicsItem *parent, const QString &pixmapPath, bool mirrorPixmap) : QGraphicsItem(parent) {
     if (pixmapPath != "") {
-        pixmapItem = new QGraphicsPixmapItem(QPixmap(pixmapPath), this);
+        QPixmap pix(pixmapPath);
+        if (mirrorPixmap) {
+            pix = pix.transformed(QTransform().scale(-1, 1));
+        }
+        pixmapItem = new QGraphicsPixmapItem(pix, this);
     }
 }

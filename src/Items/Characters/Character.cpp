@@ -159,16 +159,10 @@ Weapon *Character::pickupWeapon(Weapon *newWeapon) {
 
 void Character::updateWeaponPosition() {
     if (weapon != nullptr) {
-        // 根据角色朝向调整武器位置
-        if (facingRight) {
-            // 面向左边时（翻转状态），武器应该在左手
-            weapon->setPos(-20, -5);
-            weapon->setRotation(15); // 镜像旋转
-        } else {
-            // 面向右边时，武器在右手
-            weapon->setPos(20, -5);
-            weapon->setRotation(-15);
-        }
+        // 武器始终在角色中心上方，不需要根据朝向调整位置
+        weapon->setPos(-60, -120);
+        weapon->setRotation(0);
+        weapon->setZValue(2); // 确保在最上层
     }
 }
 

@@ -11,6 +11,8 @@
 #include "../Items/Maps/Map.h"
 #include "../Items/Characters/Character.h"
 #include "../Items/Weapons/Pistol.h"
+#include "../Items/Weapons/Shotgun.h"
+#include "../Items/Weapons/Submachine.h"
 
 class BattleScene : public Scene {
 Q_OBJECT

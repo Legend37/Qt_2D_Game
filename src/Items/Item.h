@@ -10,7 +10,7 @@
 
 class Item : public QGraphicsItem {
 public:
-    explicit Item(QGraphicsItem *parent, const QString &pixmapPath);
+    explicit Item(QGraphicsItem *parent, const QString &pixmapPath, bool mirrorPixmap = false);
 
     [[nodiscard]] QRectF boundingRect() const override {
         if (pixmapItem != nullptr) {

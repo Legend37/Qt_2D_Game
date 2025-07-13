@@ -51,6 +51,10 @@ add_executable(qt_2025_game src/main.cpp
         src/Items/Weapons/Weapon.h
         src/Items/Weapons/Pistol.cpp
         src/Items/Weapons/Pistol.h
+        src/Items/Weapons/Shotgun.cpp
+        src/Items/Weapons/Shotgun.h
+        src/Items/Weapons/Submachine.cpp
+        src/Items/Weapons/Submachine.h
         src/Items/Platform.cpp
         src/Items/Platform.h)
 target_link_libraries(qt_2025_game
