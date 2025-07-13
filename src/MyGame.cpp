@@ -12,6 +12,8 @@ MyGame::MyGame(QWidget *parent) : QMainWindow(parent) {
     view->setFixedSize((int) view->scene()->width(), (int) view->scene()->height());
     view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->setFocusPolicy(Qt::StrongFocus);
+    view->setFocus();
 
 
     setCentralWidget(view);

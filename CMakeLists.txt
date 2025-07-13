@@ -22,6 +22,8 @@ add_executable(qt_2025_game src/main.cpp
         src/Items/Characters/Character.h
         src/Items/Characters/Link.cpp
         src/Items/Characters/Link.h
+        src/Items/Characters/Hero.cpp
+        src/Items/Characters/Hero.h
         src/Items/Armors/Armor.cpp
         src/Items/Armors/Armor.h
         src/Items/HeadEquipments/HeadEquipment.cpp

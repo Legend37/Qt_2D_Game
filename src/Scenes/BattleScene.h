@@ -10,6 +10,7 @@
 #include "Scene.h"
 #include "../Items/Maps/Map.h"
 #include "../Items/Characters/Character.h"
+#include "../Items/Characters/Hero.h"
 #include "../Items/Weapons/Pistol.h"
 #include "../Items/Weapons/Shotgun.h"
 #include "../Items/Weapons/Submachine.h"
@@ -45,6 +46,7 @@ private:
 
     Map *map;
     Character *character;
+    Hero *hero;
     Armor *spareArmor;
 };
 

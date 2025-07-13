@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "BattleScene.h"
 #include "../Items/Characters/Link.h"
+#include "../Items/Characters/Hero.h"
 #include "../Items/Maps/Battlefield.h"
 #include "../Items/Armors/FlamebreakerArmor.h"
 #include "../Items/Weapons/Pistol.h"
@@ -28,43 +29,57 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     spareArmor->unmount();
     spareArmor->setPos(sceneRect().left() + (sceneRect().right() - sceneRect().left()) * 0.75, map->getFloorHeight());
     
-    // 在地面随机生成武器
+    // Create second character Hero
+    hero = new Hero();
+    addItem(hero);
+    hero->setPos(map->getSpawnPos() + QPointF(400, 0)); // A bit to the right
+    hero->setGroundY(map->getFloorHeight());
+    
+    // Generate weapons at random positions on the ground
     generateRandomWeapons();
 }
 
 void BattleScene::processInput() {
     Scene::processInput();
-    if (character != nullptr) {
-        character->processInput();
-    }
+    if (character != nullptr) character->processInput();
+    if (hero != nullptr) hero->processInput();
 }
 
 void BattleScene::keyPressEvent(QKeyEvent *event) {
     switch (event->key()) {
         case Qt::Key_A:
-            if (character != nullptr) {
-                character->setLeftDown(true);
-            }
+            if (character != nullptr) character->setLeftDown(true);
             break;
         case Qt::Key_D:
-            if (character != nullptr) {
-                character->setRightDown(true);
-            }
+            if (character != nullptr) character->setRightDown(true);
             break;
-        case Qt::Key_J:
-            if (character != nullptr) {
-                character->setPickDown(true);
-            }
+        case Qt::Key_F:
+            if (character != nullptr) character->setPickDown(true);
             break;
         case Qt::Key_W:
-            if (character != nullptr) {
-                character->jump();
-            }
+            if (character != nullptr) character->jump();
             break;
         case Qt::Key_S:
-            if (character != nullptr) {
-                character->setCrouchDown(true);
-            }
+            if (character != nullptr) character->setCrouchDown(true);
+            break;
+        case Qt::Key_Left:
+            qDebug() << "[DEBUG] Hero: Left key pressed";
+            if (hero != nullptr) hero->setLeftDown(true);
+            break;
+        case Qt::Key_Right:
+            qDebug() << "[DEBUG] Hero: Right key pressed";
+            if (hero != nullptr) hero->setRightDown(true);
+            break;
+        case Qt::Key_Up:
+            qDebug() << "[DEBUG] Hero: Up key pressed (jump)";
+            if (hero != nullptr) hero->jump();
+            break;
+        case Qt::Key_Down:
+            qDebug() << "[DEBUG] Hero: Down key pressed (crouch)";
+            if (hero != nullptr) hero->setCrouchDown(true);
+            break;
+        case Qt::Key_L:
+            if (hero != nullptr) hero->setPickDown(true);
             break;
         default:
             Scene::keyPressEvent(event);
@@ -74,24 +89,28 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
 void BattleScene::keyReleaseEvent(QKeyEvent *event) {
     switch (event->key()) {
         case Qt::Key_A:
-            if (character != nullptr) {
-                character->setLeftDown(false);
-            }
+            if (character != nullptr) character->setLeftDown(false);
             break;
         case Qt::Key_D:
-            if (character != nullptr) {
-                character->setRightDown(false);
-            }
+            if (character != nullptr) character->setRightDown(false);
             break;
-        case Qt::Key_J:
-            if (character != nullptr) {
-                character->setPickDown(false);
-            }
+        case Qt::Key_F:
+            if (character != nullptr) character->setPickDown(false);
             break;
         case Qt::Key_S:
-            if (character != nullptr) {
-                character->setCrouchDown(false);
-            }
+            if (character != nullptr) character->setCrouchDown(false);
+            break;
+        case Qt::Key_Left:
+            if (hero != nullptr) hero->setLeftDown(false);
+            break;
+        case Qt::Key_Right:
+            if (hero != nullptr) hero->setRightDown(false);
+            break;
+        case Qt::Key_Down:
+            if (hero != nullptr) hero->setCrouchDown(false);
+            break;
+        case Qt::Key_L:
+            if (hero != nullptr) hero->setPickDown(false);
             break;
         default:
             Scene::keyReleaseEvent(event);
@@ -108,18 +127,27 @@ void BattleScene::processMovement() {
         character->applyGravity(deltaTime);
         character->setPos(character->pos() + character->getVelocity() * (double) deltaTime);
     }
+    if (hero != nullptr) {
+        hero->applyGravity(deltaTime);
+        hero->setPos(hero->pos() + hero->getVelocity() * (double) deltaTime);
+    }
 }
 
 void BattleScene::processPicking() {
     Scene::processPicking();
-    if (character->isPicking()) {
+    if (character && character->isPicking()) {
         auto mountable = findNearestUnmountedMountable(character->pos(), 100.);
         if (mountable != nullptr) {
             auto oldItem = pickupMountable(character, mountable);
             if (auto oldArmor = dynamic_cast<Armor *>(oldItem)) {
                 spareArmor = oldArmor;
             }
-            // 如果是武器，旧武器会自动掉落到地面
+        }
+    }
+    if (hero && hero->isPicking()) {
+        auto mountable = findNearestUnmountedMountable(hero->pos(), 100.);
+        if (mountable != nullptr) {
+            pickupMountable(hero, mountable);
         }
     }
 }
@@ -144,7 +172,7 @@ Mountable *BattleScene::findNearestUnmountedMountable(const QPointF &pos, qreal 
 }
 
 Mountable *BattleScene::pickupMountable(Character *character, Mountable *mountable) {
-    // 支持护甲和武器
+    // Support for armor and weapons
     if (auto armor = dynamic_cast<Armor *>(mountable)) {
         return character->pickupArmor(armor);
     } else if (auto weapon = dynamic_cast<Weapon *>(mountable)) {
@@ -154,23 +182,23 @@ Mountable *BattleScene::pickupMountable(Character *character, Mountable *mountab
 }
 
 void BattleScene::generateRandomWeapons() {
-    // 创建所有3种武器类型，每种只生成一把
+    // Create one of each weapon type
     QVector<Weapon*> weapons;
     
-    // 创建每种武器
+    // Create each weapon
     weapons.append(new Pistol(nullptr));
     weapons.append(new Shotgun(nullptr));
     weapons.append(new Submachine(nullptr));
     
-    // 随机打乱武器顺序
+    // Shuffle weapon order
     std::random_shuffle(weapons.begin(), weapons.end());
     
-    // 在地面随机位置放置武器
+    // Place weapons at random positions on the ground
     for (int i = 0; i < weapons.size(); ++i) {
         Weapon* weapon = weapons[i];
         weapon->unmount();
         
-        // 随机位置在地面上，确保武器之间有一定距离
+        // Random position on the ground, ensure some distance between weapons
         qreal randomX = sceneRect().left() + 100 + i * 200 + 
                        QRandomGenerator::global()->bounded(-50, 51);
         
