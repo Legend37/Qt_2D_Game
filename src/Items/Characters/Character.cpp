@@ -53,23 +53,43 @@ void Character::setCrouchDown(bool crouchDown) {
 }
 
 void Character::processInput() {
-    auto newVelocity = QPointF(0, velocity.y()); // 保持 Y 轴速度（重力和跳跃）
+    auto newVelocity = QPointF(0, velocity.y()); // Reset horizontal velocity
     const auto moveSpeed = 0.3;
+    
     if (isCrouchDown()) {
-        // 下蹲时不能移动，形态变为单膝跪地
-        setTransform(QTransform().scale(1, 0.5).translate(0, 20)); // Y轴缩放+下移，模拟单膝跪地
+        if (isLeftDown()) {
+            facingRight = true;
+        } else if (isRightDown()) {
+            facingRight = false;
+        }
+        QTransform transform;
+        if (facingRight) {
+            transform.scale(-1, 0.5).translate(0, 20); 
+        } else {
+            transform.scale(1, 0.5).translate(0, 20);
+        }
+        setTransform(transform);
     } else {
-        setTransform(QTransform().scale(1, 1)); // 恢复正常形态
         if (isLeftDown()) {
             newVelocity.setX(newVelocity.x() - moveSpeed);
+            facingRight = false; 
         }
         if (isRightDown()) {
             newVelocity.setX(newVelocity.x() + moveSpeed);
+            facingRight = true;
         }
+        
+        QTransform transform;
+        if (facingRight) {
+            transform.scale(-1, 1); 
+        } else {
+            transform.scale(1, 1);  
+        }
+        setTransform(transform);
     }
     setVelocity(newVelocity);
 
-    if (!lastPickDown && pickDown) { // first time pickDown
+    if (!lastPickDown && pickDown) {
         picking = true;
     } else {
         picking = false;
@@ -91,8 +111,8 @@ void Character::applyGravity(double deltaTime) {
     if (!isOnGround()) {
         velocity.setY(velocity.y() + gravity * deltaTime);
     }
-
-    // Check whether the character has already touched the ground,,,
+    // Check if the character is on the ground
+    // If the character's position is below the ground level, reset its position to the ground
     double newY = pos().y() + velocity.y() * deltaTime;
     if (newY >= groundY) {
         setPos(pos().x(), groundY);

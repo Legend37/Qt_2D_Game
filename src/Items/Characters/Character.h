@@ -53,6 +53,8 @@ private:
     bool leftDown{}, rightDown{}, pickDown{}, crouchDown{};
     bool lastPickDown{};
     bool picking{};
+    bool facingRight{true}; //record the facing direction of the character
+    // If the character is facing right, the x coordinate of the pixmap will be negative
     double groundY{};
     static constexpr double gravity = 0.02;
     static constexpr double jumpSpeed = -3.0;
