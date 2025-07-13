@@ -69,6 +69,7 @@ void Character::processInput() {
             transform.scale(1, 0.5).translate(0, 20);
         }
         setTransform(transform);
+        updateWeaponPosition(); // 下蹲时也更新武器位置
     } else {
         if (isLeftDown()) {
             newVelocity.setX(newVelocity.x() - moveSpeed);
@@ -86,6 +87,7 @@ void Character::processInput() {
             transform.scale(1, 1);  
         }
         setTransform(transform);
+        updateWeaponPosition(); // 更新武器位置
     }
     setVelocity(newVelocity);
 
@@ -139,5 +141,34 @@ Armor *Character::pickupArmor(Armor *newArmor) {
     newArmor->mountToParent();
     armor = newArmor;
     return oldArmor;
+}
+
+Weapon *Character::pickupWeapon(Weapon *newWeapon) {
+    auto oldWeapon = weapon;
+    if (oldWeapon != nullptr) {
+        oldWeapon->unmount();
+        oldWeapon->setPos(newWeapon->pos());
+        oldWeapon->setParentItem(parentItem());
+    }
+    newWeapon->setParentItem(this);
+    newWeapon->mountToParent();
+    weapon = newWeapon;
+    updateWeaponPosition(); // 确保武器位置正确
+    return oldWeapon;
+}
+
+void Character::updateWeaponPosition() {
+    if (weapon != nullptr) {
+        // 根据角色朝向调整武器位置
+        if (facingRight) {
+            // 面向左边时（翻转状态），武器应该在左手
+            weapon->setPos(-20, -5);
+            weapon->setRotation(15); // 镜像旋转
+        } else {
+            // 面向右边时，武器在右手
+            weapon->setPos(20, -5);
+            weapon->setRotation(-15);
+        }
+    }
 }
 

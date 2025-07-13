@@ -3,10 +3,12 @@
 //
 
 #include <QDebug>
+#include <QRandomGenerator>
 #include "BattleScene.h"
 #include "../Items/Characters/Link.h"
 #include "../Items/Maps/Battlefield.h"
 #include "../Items/Armors/FlamebreakerArmor.h"
+#include "../Items/Weapons/Pistol.h"
 
 BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     // This is useful if you want the scene to have the exact same dimensions as the view
@@ -22,6 +24,9 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     character->setGroundY(map->getFloorHeight());
     spareArmor->unmount();
     spareArmor->setPos(sceneRect().left() + (sceneRect().right() - sceneRect().left()) * 0.75, map->getFloorHeight());
+    
+    // 在地面随机生成武器
+    generateRandomWeapons();
 }
 
 void BattleScene::processInput() {
@@ -107,7 +112,11 @@ void BattleScene::processPicking() {
     if (character->isPicking()) {
         auto mountable = findNearestUnmountedMountable(character->pos(), 100.);
         if (mountable != nullptr) {
-            spareArmor = dynamic_cast<Armor *>(pickupMountable(character, mountable));
+            auto oldItem = pickupMountable(character, mountable);
+            if (auto oldArmor = dynamic_cast<Armor *>(oldItem)) {
+                spareArmor = oldArmor;
+            }
+            // 如果是武器，旧武器会自动掉落到地面
         }
     }
 }
@@ -132,9 +141,31 @@ Mountable *BattleScene::findNearestUnmountedMountable(const QPointF &pos, qreal 
 }
 
 Mountable *BattleScene::pickupMountable(Character *character, Mountable *mountable) {
-    // Limitation: currently only supports armor
+    // 支持护甲和武器
     if (auto armor = dynamic_cast<Armor *>(mountable)) {
         return character->pickupArmor(armor);
+    } else if (auto weapon = dynamic_cast<Weapon *>(mountable)) {
+        return character->pickupWeapon(weapon);
     }
     return nullptr;
+}
+
+void BattleScene::generateRandomWeapons() {
+    // 生成2-4把随机武器
+    int weaponCount = QRandomGenerator::global()->bounded(2, 5);
+    
+    for (int i = 0; i < weaponCount; ++i) {
+        // 创建手枪
+        Pistol* pistol = new Pistol(nullptr);
+        pistol->unmount();
+        
+        // 随机位置在地面上
+        qreal randomX = QRandomGenerator::global()->bounded(
+            static_cast<int>(sceneRect().left() + 50), 
+            static_cast<int>(sceneRect().right() - 50)
+        );
+        
+        pistol->setPos(randomX, map->getFloorHeight());
+        addItem(pistol);
+    }
 }

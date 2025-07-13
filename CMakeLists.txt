@@ -46,7 +46,13 @@ add_executable(qt_2025_game src/main.cpp
         src/Items/Mountable.cpp
         src/Items/Mountable.h
         src/Items/Armors/FlamebreakerArmor.cpp
-        src/Items/Armors/FlamebreakerArmor.h)
+        src/Items/Armors/FlamebreakerArmor.h
+        src/Items/Weapons/Weapon.cpp
+        src/Items/Weapons/Weapon.h
+        src/Items/Weapons/Pistol.cpp
+        src/Items/Weapons/Pistol.h
+        src/Items/Platform.cpp
+        src/Items/Platform.h)
 target_link_libraries(qt_2025_game
         Qt::Core
         Qt::Gui

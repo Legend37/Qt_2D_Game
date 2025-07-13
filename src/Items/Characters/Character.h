@@ -5,6 +5,7 @@
 #include "../HeadEquipments/HeadEquipment.h"
 #include "../Armors/Armor.h"
 #include "../LegEquipments/LegEquipment.h"
+#include "../Weapons/Weapon.h"
 
 class Character : public Item {
 public:
@@ -43,10 +44,16 @@ public:
 
     Armor* pickupArmor(Armor* newArmor);
 
+    Weapon* pickupWeapon(Weapon* newWeapon);
+
+private:
+    void updateWeaponPosition();
+
 protected:
     HeadEquipment *headEquipment{};
     LegEquipment *legEquipment{};
     Armor *armor{};
+    Weapon *weapon{};
     QPointF velocity{};
 //    QGraphicsEllipseItem *ellipseItem; // for debugging
 private:
