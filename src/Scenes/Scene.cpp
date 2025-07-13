@@ -1,3 +1,13 @@
+
+#include <QDateTime>
+#include <QPainter>
+#include <QRectF>
+#include "Scene.h"
+
+// 允许子类重载的空实现
+void Scene::drawForeground(QPainter *painter, const QRectF &rect) {
+    QGraphicsScene::drawForeground(painter, rect);
+}
 //
 // Created by gerw on 8/20/24.
 //

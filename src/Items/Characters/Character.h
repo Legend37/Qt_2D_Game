@@ -46,6 +46,9 @@ public:
 
     Weapon* pickupWeapon(Weapon* newWeapon);
 
+    int getHP() const { return hp; }
+    void setHP(int value) { hp = value; }
+
 private:
     void updateWeaponPosition();
 
@@ -65,6 +68,7 @@ private:
     double groundY{};
     static constexpr double gravity = 0.02;
     static constexpr double jumpSpeed = -3.0;
+    int hp = 100; // Default HP
 };
 
 

@@ -7,6 +7,8 @@
 
 #include <QKeyEvent>
 #include <QRandomGenerator>
+#include <QPainter>
+#include <QRectF>
 #include "Scene.h"
 #include "../Items/Maps/Map.h"
 #include "../Items/Characters/Character.h"
@@ -15,6 +17,7 @@
 #include "../Items/Weapons/Shotgun.h"
 #include "../Items/Weapons/Submachine.h"
 
+
 class BattleScene : public Scene {
 Q_OBJECT
 
@@ -22,26 +25,20 @@ public:
     explicit BattleScene(QObject *parent);
 
     void processInput() override;
-
     void processMovement() override;
-
     void processPicking() override;
 
 protected slots:
-
     void update() override;
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
-
     void keyReleaseEvent(QKeyEvent *event) override;
+    void drawForeground(QPainter *painter, const QRectF &rect) override;
 
 private:
-
     Mountable *findNearestUnmountedMountable(const QPointF &pos, qreal distance_threshold = std::numeric_limits<qreal>::max());
-
     static Mountable * pickupMountable(Character *character, Mountable *mountable);
-    
     void generateRandomWeapons();
 
     Map *map;

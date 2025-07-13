@@ -6,6 +6,8 @@
 #define QT_PROGRAMMING_2024_SCENE_H
 
 #include <QGraphicsScene>
+#include <QPainter>
+#include <QRectF>
 #include <QTimer>
 
 class Scene : public QGraphicsScene {
@@ -27,6 +29,8 @@ protected slots:
     virtual void update();
 
 protected:
+    // 允许子类重载以自定义前景绘制（如HP条）
+    void drawForeground(QPainter *painter, const QRectF &rect) override;
     qint64 deltaTime{};
 
 private:

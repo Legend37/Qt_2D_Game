@@ -1,3 +1,40 @@
+#include "BattleScene.h"
+#include <QPainter>
+// 绘制HP条（左上角为character，右上角为hero）
+void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
+    Q_UNUSED(rect);
+    // HP条参数
+    int barWidth = 200;
+    int barHeight = 24;
+    int margin = 16;
+    int hpMax = 100;
+    // Character HP条（左上角）
+    if (character) {
+        int hp = character->getHP();
+        QRect bgRect(margin, margin, barWidth, barHeight);
+        QRect fgRect(margin, margin, barWidth * std::max(0, std::min(hp, hpMax)) / hpMax, barHeight);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(60, 60, 60, 200));
+        painter->drawRect(bgRect);
+        painter->setBrush(QColor(220, 40, 40, 220));
+        painter->drawRect(fgRect);
+        painter->setPen(Qt::white);
+        painter->drawText(bgRect, Qt::AlignCenter, QString("Character HP: %1").arg(hp));
+    }
+    // Hero HP条（右上角）
+    if (hero) {
+        int hp = hero->getHP();
+        QRect bgRect(sceneRect().width() - barWidth - margin, margin, barWidth, barHeight);
+        QRect fgRect(sceneRect().width() - barWidth - margin, margin, barWidth * std::max(0, std::min(hp, hpMax)) / hpMax, barHeight);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(60, 60, 60, 200));
+        painter->drawRect(bgRect);
+        painter->setBrush(QColor(40, 120, 220, 220));
+        painter->drawRect(fgRect);
+        painter->setPen(Qt::white);
+        painter->drawText(bgRect, Qt::AlignCenter, QString("Hero HP: %1").arg(hp));
+    }
+}
 //
 // Created by gerw on 8/20/24.
 //
