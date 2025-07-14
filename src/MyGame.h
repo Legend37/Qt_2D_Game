@@ -8,14 +8,17 @@
 #include <QGraphicsView>
 #include <QMainWindow>
 #include "Scenes/Scene.h"
+#include "ui_mainwindow.h"
+
 
 class MyGame : public QMainWindow {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit MyGame(QWidget *parent = nullptr);
 
 private:
+    Ui::MainWindow *ui;
     Scene *battleScene;
     QGraphicsView *view;
 };

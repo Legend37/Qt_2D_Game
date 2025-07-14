@@ -9,6 +9,8 @@
 
 class Character : public Item {
 public:
+    Weapon* getWeapon() const { return weapon; }
+    bool isFacingRight() const { return facingRight; }
     explicit Character(QGraphicsItem *parent);
 
     [[nodiscard]] bool isLeftDown() const;

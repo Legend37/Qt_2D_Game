@@ -9,6 +9,7 @@
 #include <QRandomGenerator>
 #include <QPainter>
 #include <QRectF>
+#include <QTimer>
 #include "Scene.h"
 #include "../Items/Maps/Map.h"
 #include "../Items/Characters/Character.h"
@@ -17,6 +18,7 @@
 #include "../Items/Weapons/Shotgun.h"
 #include "../Items/Weapons/Submachine.h"
 
+class Weapon;
 
 class BattleScene : public Scene {
 Q_OBJECT
@@ -41,11 +43,15 @@ private:
     static Mountable * pickupMountable(Character *character, Mountable *mountable);
     void generateRandomWeapons();
 
+    void spawnRandomWeapon();
+    void updateFallingWeapons();
+    QTimer *weaponDropTimer = nullptr;
+    QList<QPair<Weapon*, qint64>> fallingWeapons; // 武器和生成时间
+
     Map *map;
     Character *character;
     Hero *hero;
     Armor *spareArmor;
 };
-
 
 #endif //QT_PROGRAMMING_2024_BATTLESCENE_H

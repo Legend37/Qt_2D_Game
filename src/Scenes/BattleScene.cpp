@@ -1,14 +1,15 @@
 #include "BattleScene.h"
+#include <QDateTime>
+#include "../Items/Weapons/Bullet.h"
 #include <QPainter>
-// 绘制HP条（左上角为character，右上角为hero）
 void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
     Q_UNUSED(rect);
-    // HP条参数
+
     int barWidth = 200;
     int barHeight = 24;
     int margin = 16;
     int hpMax = 100;
-    // Character HP条（左上角）
+    // Character HP
     if (character) {
         int hp = character->getHP();
         QRect bgRect(margin, margin, barWidth, barHeight);
@@ -21,7 +22,7 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
         painter->setPen(Qt::white);
         painter->drawText(bgRect, Qt::AlignCenter, QString("Character HP: %1").arg(hp));
     }
-    // Hero HP条（右上角）
+    // Hero HP
     if (hero) {
         int hp = hero->getHP();
         QRect bgRect(sceneRect().width() - barWidth - margin, margin, barWidth, barHeight);
@@ -35,9 +36,6 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
         painter->drawText(bgRect, Qt::AlignCenter, QString("Hero HP: %1").arg(hp));
     }
 }
-//
-// Created by gerw on 8/20/24.
-//
 
 #include <QDebug>
 #include <QRandomGenerator>
@@ -72,8 +70,55 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     hero->setPos(map->getSpawnPos() + QPointF(400, 0)); // A bit to the right
     hero->setGroundY(map->getFloorHeight());
     
-    // Generate weapons at random positions on the ground
-    generateRandomWeapons();
+
+    // every 10 seconds, spawn a random weapon
+    weaponDropTimer = new QTimer(this);
+    connect(weaponDropTimer, &QTimer::timeout, this, &BattleScene::spawnRandomWeapon);
+    weaponDropTimer->start(10000);
+}
+void BattleScene::spawnRandomWeapon() {
+    int type = QRandomGenerator::global()->bounded(3);
+    Weapon *weapon = nullptr;
+    if (type == 0) weapon = new Pistol(nullptr);
+    else if (type == 1) weapon = new Shotgun(nullptr);
+    else weapon = new Submachine(nullptr);
+    weapon->unmount();
+    qreal randomX = sceneRect().left() + 100 + QRandomGenerator::global()->bounded((int)sceneRect().width() - 200);
+    weapon->setPos(randomX, sceneRect().top());
+    addItem(weapon);
+    fallingWeapons.append(qMakePair(weapon, QDateTime::currentMSecsSinceEpoch()));
+}
+
+// Update gravity
+void BattleScene::updateFallingWeapons() {
+    const qreal gravity = 0.5; // gravity
+    const qreal maxY = map->getFloorHeight();
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    QList<int> toRemove;
+    QList<Weapon*> toDelete;
+    for (int i = 0; i < fallingWeapons.size(); ++i) {
+        Weapon *weapon = fallingWeapons[i].first;
+        qint64 born = fallingWeapons[i].second;
+        // 20sec duration，if unmounted, remove
+        if (now - born > 20000 && !weapon->isMounted()) {
+            removeItem(weapon);
+            toDelete.append(weapon);
+            toRemove.append(i);
+            continue;
+        }
+        // drop
+        QPointF pos = weapon->pos();
+        if (pos.y() < maxY) {
+            weapon->setPos(pos.x(), std::min(maxY, pos.y() + gravity * 16));
+        }
+    }
+    // clear the removed items
+    for (int i = toRemove.size() - 1; i >= 0; --i) {
+        fallingWeapons.removeAt(toRemove[i]);
+    }
+    for (Weapon* w : toDelete) {
+        delete w;
+    }
 }
 
 void BattleScene::processInput() {
@@ -84,6 +129,45 @@ void BattleScene::processInput() {
 
 void BattleScene::keyPressEvent(QKeyEvent *event) {
     switch (event->key()) {
+        case Qt::Key_G:
+            qDebug() << "[DEBUG] G key pressed";
+            // character攻击，发射子弹
+            if (character != nullptr) {
+                qDebug() << "[DEBUG] Character exists";
+                if (character->getWeapon() != nullptr) {
+                    qDebug() << "[DEBUG] Character has weapon";
+                    Weapon *weapon = character->getWeapon();
+                    qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
+                    if (weapon->getAmmo() > 0) {
+                        weapon->decAmmo();
+                        QPointF charPos = character->pos();
+                        QPointF gunPos = weapon->scenePos(); // 使用scenePos()获取武器在场景中的绝对位置
+                        qDebug() << "[DEBUG] Character pos:" << charPos;
+                        qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
+                        qDebug() << "[DEBUG] Character facing right:" << character->isFacingRight();
+                        
+                        qreal vx = character->isFacingRight() ? 22.5 : -22.5;
+
+                        qreal bx = gunPos.x();
+                        qreal by = gunPos.y();
+                        
+                        qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
+                        qDebug() << "[DEBUG] Bullet velocity:" << vx;
+                        
+                        Bullet *bullet = new Bullet(bx, by, vx);
+                        bullet->setZValue(100);
+                        addItem(bullet);
+                        qDebug() << "[DEBUG] Bullet created and added to scene";
+                    } else {
+                        qDebug() << "[DEBUG] No ammo left";
+                    }
+                } else {
+                    qDebug() << "[DEBUG] Character has no weapon";
+                }
+            } else {
+                qDebug() << "[DEBUG] Character is null";
+            }
+            break;
         case Qt::Key_A:
             if (character != nullptr) character->setLeftDown(true);
             break;
@@ -100,19 +184,15 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
             if (character != nullptr) character->setCrouchDown(true);
             break;
         case Qt::Key_Left:
-            qDebug() << "[DEBUG] Hero: Left key pressed";
             if (hero != nullptr) hero->setLeftDown(true);
             break;
         case Qt::Key_Right:
-            qDebug() << "[DEBUG] Hero: Right key pressed";
             if (hero != nullptr) hero->setRightDown(true);
             break;
         case Qt::Key_Up:
-            qDebug() << "[DEBUG] Hero: Up key pressed (jump)";
             if (hero != nullptr) hero->jump();
             break;
         case Qt::Key_Down:
-            qDebug() << "[DEBUG] Hero: Down key pressed (crouch)";
             if (hero != nullptr) hero->setCrouchDown(true);
             break;
         case Qt::Key_L:
@@ -156,6 +236,8 @@ void BattleScene::keyReleaseEvent(QKeyEvent *event) {
 
 void BattleScene::update() {
     Scene::update();
+    updateFallingWeapons();
+    advance();
 }
 
 void BattleScene::processMovement() {
