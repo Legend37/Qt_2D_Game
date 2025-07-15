@@ -51,6 +51,13 @@ public:
     int getHP() const { return hp; }
     void setHP(int value) { hp = value; }
 
+    // 碰撞箱相关函数
+    QRectF getHitBox() const;
+    bool checkBulletCollision(const QPointF& bulletPos) const;
+    
+    // 检查给定绝对坐标是否碰到该人物
+    bool isHitByPoint(const QPointF& absolutePos) const;
+
 private:
     void updateWeaponPosition();
 

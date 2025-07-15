@@ -120,6 +120,14 @@ void Character::applyGravity(double deltaTime) {
         setPos(pos().x(), groundY);
         velocity.setY(0);
     }
+    // 每秒输出一次(200,500)是否在碰撞箱内（假设60fps）
+    static int frameCounter = 0;
+    if (frameCounter % 60 == 0) {
+        QPointF testPoint(200, 300);
+        bool hit = isHitByPoint(testPoint);
+        qDebug() << "[DEBUG] (200,300) in character hitbox:" << hit;
+    }
+    frameCounter++;
 }
 
 void Character::setGroundY(double groundY) {
@@ -164,5 +172,24 @@ void Character::updateWeaponPosition() {
         weapon->setRotation(0);
         weapon->setZValue(2); // 确保在最上层
     }
+}
+
+QRectF Character::getHitBox() const {
+    QPointF charPos = scenePos();
+    return QRectF(charPos.x(), charPos.y() - 200, 100, 200);
+}
+
+// 判断给定的坐标是否在碰撞箱中
+bool Character::checkBulletCollision(const QPointF& bulletPos) const {
+    QRectF hitBox = getHitBox();
+    return hitBox.contains(bulletPos);
+}
+
+// 检查给定绝对坐标是否碰到该人物
+bool Character::isHitByPoint(const QPointF& absolutePos) const {
+    QPointF charPos = scenePos();
+    // 以人物pos为左下角，pos.x+100, pos.y-200为右上角的矩形
+    QRectF hitRect(charPos.x(), charPos.y() - 200, 100, 200);
+    return hitRect.contains(absolutePos);
 }
 

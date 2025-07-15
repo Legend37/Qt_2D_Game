@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QRectF>
 #include <QTimer>
+#include <QGraphicsSceneMouseEvent>
 #include "Scene.h"
 #include "../Items/Maps/Map.h"
 #include "../Items/Characters/Character.h"
@@ -37,6 +38,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void drawForeground(QPainter *painter, const QRectF &rect) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
     Mountable *findNearestUnmountedMountable(const QPointF &pos, qreal distance_threshold = std::numeric_limits<qreal>::max());

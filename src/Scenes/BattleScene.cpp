@@ -325,3 +325,11 @@ void BattleScene::generateRandomWeapons() {
         addItem(weapon);
     }
 }
+
+void BattleScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    QPointF clickPos = event->scenePos();
+    qDebug() << "[DEBUG] Mouse clicked at absolute position:" << clickPos;
+    
+    // 调用父类的鼠标点击事件处理
+    Scene::mousePressEvent(event);
+}
