@@ -35,6 +35,9 @@ public:
     // Getter methods for bullet collision detection
     Character* getCharacter() const { return character; }
     Hero* getHero() const { return hero; }
+    
+    // Getter method for ground height
+    qreal getGroundHeight() const { return map ? map->getFloorHeight() : 520; }
 
 protected slots:
     void update() override;
@@ -65,6 +68,9 @@ private:
 private slots:
     void debugAllBulletPositions();
     void debugHitBoxCorners();
+
+public slots:
+    void removeFallingWeapon(Weapon* weapon);
 };
 
 #endif //QT_PROGRAMMING_2024_BATTLESCENE_H

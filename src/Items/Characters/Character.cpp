@@ -150,11 +150,19 @@ Weapon *Character::pickupWeapon(Weapon *newWeapon) {
     auto oldWeapon = weapon;
     if (oldWeapon != nullptr) {
         oldWeapon->unmount();
-        oldWeapon->setPos(newWeapon->pos());
+        // Only set position if newWeapon is not nullptr
+        if (newWeapon != nullptr) {
+            oldWeapon->setPos(newWeapon->pos());
+        }
         oldWeapon->setParentItem(parentItem());
     }
-    newWeapon->setParentItem(this);
-    newWeapon->mountToParent();
+    
+    // Only mount newWeapon if it's not nullptr
+    if (newWeapon != nullptr) {
+        newWeapon->setParentItem(this);
+        newWeapon->mountToParent();
+    }
+    
     weapon = newWeapon;
     updateWeaponPosition(); // 确保武器位置正确
     return oldWeapon;

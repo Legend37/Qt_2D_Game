@@ -1,5 +1,6 @@
 #include "BattleScene.h"
 #include <QDateTime>
+#include <QTimer>
 #include "../Items/Weapons/Bullet.h"
 #include <QPainter>
 void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
@@ -49,6 +50,7 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
 #include "../Items/Weapons/Shotgun.h"
 #include "../Items/Weapons/Submachine.h"
 #include "../Items/Weapons/Knife.h"
+#include "../Items/Weapons/Ball.h"
 
 BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     // This is useful if you want the scene to have the exact same dimensions as the view
@@ -100,12 +102,14 @@ void BattleScene::debugAllBulletPositions() {
 }
 
 void BattleScene::spawnRandomWeapon() {
-    int type = QRandomGenerator::global()->bounded(4);
+    int type = QRandomGenerator::global()->bounded(5);
     Weapon *weapon = nullptr;
+    type = 5; // Force to spawn Ball for testing
     if (type == 0) weapon = new Pistol(nullptr);
     else if (type == 1) weapon = new Shotgun(nullptr);
     else if (type == 2) weapon = new Submachine(nullptr);
-    else weapon = new Knife(nullptr);
+    else if (type == 3) weapon = new Knife(nullptr);
+    else weapon = new Ball(nullptr);
     weapon->unmount();
     qreal randomX = sceneRect().left() + 100 + QRandomGenerator::global()->bounded((int)sceneRect().width() - 200);
     weapon->setPos(randomX, sceneRect().top());
@@ -122,6 +126,10 @@ void BattleScene::updateFallingWeapons() {
     QList<Weapon*> toDelete;
     for (int i = 0; i < fallingWeapons.size(); ++i) {
         Weapon *weapon = fallingWeapons[i].first;
+        // If the weapon is a Ball, its movement is handled by its own advance() method.
+        if (dynamic_cast<Ball*>(weapon)) {
+            continue;
+        }
         qint64 born = fallingWeapons[i].second;
         // 20sec duration，if unmounted, remove
         if (now - born > 20000 && !weapon->isMounted()) {
@@ -178,6 +186,60 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
                         } else {
                             qDebug() << "[DEBUG] Knife attack missed";
+                        }
+                    } else if (weapon->getWeaponName() == "Ball") {
+                        qDebug() << "[DEBUG] Character using ball attack";
+                        // 铅球攻击逻辑：投掷一个新的Ball对象
+                        if (weapon->getAmmo() > 0) {
+                            qDebug() << "[DEBUG] Ball used, creating thrown ball";
+                            
+                            // 创建一个新的Ball对象用于投掷
+                            Ball* thrownBall = new Ball(nullptr);
+                            thrownBall->unmount(); // 确保不是挂载状态
+                            
+                            // 设置投掷Ball的初始位置（角色位置）
+                            QPointF charPos = character->scenePos();
+                            thrownBall->setPos(charPos.x(), charPos.y() - 100); // 从角色上方投掷
+                            
+                            // 设置投掷Ball的初始速度
+                            qreal vx = character->isFacingRight() ? 15 : -15; // x轴速度根据朝向
+                            qreal vy = -25; // y轴速度向上，初始速度更大
+                            thrownBall->setVelocity(vx, vy);
+                            thrownBall->setThrownMode(true); // 设置为投掷模式，使用更快的重力
+                            thrownBall->shooter = character; // 设置射手
+                            
+                            // 添加到场景中
+                            addItem(thrownBall);
+                            qDebug() << "[DEBUG] Thrown ball created at pos:" << thrownBall->pos() << "with velocity:" << vx << "," << vy;
+                            
+                            // 原有武器处理逻辑
+                            qDebug() << "[DEBUG] Step 1: About to call removeFallingWeapon";
+                            
+                            // 武器用完后消失
+                            // 先从 fallingWeapons 列表中移除，再安全删除
+                            removeFallingWeapon(weapon);
+                            qDebug() << "[DEBUG] Step 2: removeFallingWeapon completed";
+                            
+                            removeItem(weapon);
+                            qDebug() << "[DEBUG] Step 3: removeItem completed";
+                            
+                            qDebug() << "[DEBUG] Step 4a: About to call character->pickupWeapon(nullptr)";
+                            qDebug() << "[DEBUG] Step 4b: character pointer is" << character;
+                            character->pickupWeapon(nullptr);
+                            qDebug() << "[DEBUG] Step 4: pickupWeapon(nullptr) completed";
+                            
+                            // 使用定时器延迟删除，避免立即删除导致的问题
+                            qDebug() << "[DEBUG] Step 5: About to schedule weapon deletion";
+                            QTimer::singleShot(0, [weapon]() {
+                                qDebug() << "[DEBUG] Lambda: About to delete weapon";
+                                delete weapon;
+                                qDebug() << "[DEBUG] Lambda: Weapon deleted successfully";
+                            });
+                            qDebug() << "[DEBUG] Step 6: Weapon deletion scheduled";
+                            
+                            qDebug() << "[DEBUG] Character is now empty-handed";
+                        } else {
+                            qDebug() << "[DEBUG] Ball has no ammo left";
                         }
                     } else {
                         // 远程武器攻击逻辑
@@ -261,6 +323,60 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
                         } else {
                             qDebug() << "[DEBUG] Knife attack missed";
+                        }
+                    } else if (weapon->getWeaponName() == "Ball") {
+                        qDebug() << "[DEBUG] Hero using ball attack";
+                        // 铅球攻击逻辑：投掷一个新的Ball对象
+                        if (weapon->getAmmo() > 0) {
+                            qDebug() << "[DEBUG] Ball used, creating thrown ball";
+                            
+                            // 创建一个新的Ball对象用于投掷
+                            Ball* thrownBall = new Ball(nullptr);
+                            thrownBall->unmount(); // 确保不是挂载状态
+                            
+                            // 设置投掷Ball的初始位置（英雄位置）
+                            QPointF heroPos = hero->scenePos();
+                            thrownBall->setPos(heroPos.x(), heroPos.y() - 100); // 从英雄上方投掷
+                            
+                            // 设置投掷Ball的初始速度
+                            qreal vx = hero->isFacingRight() ? 15 : -15; // x轴速度根据朝向
+                            qreal vy = -25; // y轴速度向上，初始速度更大
+                            thrownBall->setVelocity(vx, vy);
+                            thrownBall->setThrownMode(true); // 设置为投掷模式，使用更快的重力
+                            thrownBall->shooter = hero; // 设置射手
+                            
+                            // 添加到场景中
+                            addItem(thrownBall);
+                            qDebug() << "[DEBUG] Thrown ball created at pos:" << thrownBall->pos() << "with velocity:" << vx << "," << vy;
+                            
+                            // 原有武器处理逻辑
+                            qDebug() << "[DEBUG] Step 1: About to call removeFallingWeapon";
+                            
+                            // 武器用完后消失
+                            // 先从 fallingWeapons 列表中移除，再安全删除
+                            removeFallingWeapon(weapon);
+                            qDebug() << "[DEBUG] Step 2: removeFallingWeapon completed";
+                            
+                            removeItem(weapon);
+                            qDebug() << "[DEBUG] Step 3: removeItem completed";
+                            
+                            qDebug() << "[DEBUG] Step 4a: About to call hero->pickupWeapon(nullptr)";
+                            qDebug() << "[DEBUG] Step 4b: hero pointer is" << hero;
+                            hero->pickupWeapon(nullptr);
+                            qDebug() << "[DEBUG] Step 4: pickupWeapon(nullptr) completed";
+                            
+                            // 使用定时器延迟删除，避免立即删除导致的问题
+                            qDebug() << "[DEBUG] Step 5: About to schedule weapon deletion";
+                            QTimer::singleShot(0, [weapon]() {
+                                qDebug() << "[DEBUG] Lambda: About to delete weapon";
+                                delete weapon;
+                                qDebug() << "[DEBUG] Lambda: Weapon deleted successfully";
+                            });
+                            qDebug() << "[DEBUG] Step 6: Weapon deletion scheduled";
+                            
+                            qDebug() << "[DEBUG] Hero is now empty-handed";
+                        } else {
+                            qDebug() << "[DEBUG] Ball has no ammo left";
                         }
                     } else {
                         // 远程武器攻击逻辑
@@ -460,6 +576,7 @@ void BattleScene::generateRandomWeapons() {
     weapons.append(new Shotgun(nullptr));
     weapons.append(new Submachine(nullptr));
     weapons.append(new Knife(nullptr));
+    weapons.append(new Ball(nullptr));
     
     // Shuffle weapon order
     std::random_shuffle(weapons.begin(), weapons.end());
@@ -514,4 +631,21 @@ void BattleScene::debugHitBoxCorners() {
     }
     
     qDebug() << "[DEBUG] === End HitBox Debug ===";
+}
+
+void BattleScene::removeFallingWeapon(Weapon* weapon) {
+    qDebug() << "[DEBUG] removeFallingWeapon: Starting to remove weapon" << weapon;
+    qDebug() << "[DEBUG] removeFallingWeapon: fallingWeapons.size() =" << fallingWeapons.size();
+    
+    for (int i = 0; i < fallingWeapons.size(); ++i) {
+        qDebug() << "[DEBUG] removeFallingWeapon: Checking index" << i << "weapon:" << fallingWeapons[i].first;
+        if (fallingWeapons[i].first == weapon) {
+            qDebug() << "[DEBUG] removeFallingWeapon: Found weapon at index" << i << ", removing...";
+            fallingWeapons.removeAt(i);
+            qDebug() << "[DEBUG] removeFallingWeapon: Weapon removed successfully";
+            break;
+        }
+    }
+    
+    qDebug() << "[DEBUG] removeFallingWeapon: Final fallingWeapons.size() =" << fallingWeapons.size();
 }
