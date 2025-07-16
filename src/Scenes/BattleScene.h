@@ -31,6 +31,10 @@ public:
     void processMovement() override;
     void processPicking() override;
 
+    // Getter methods for bullet collision detection
+    Character* getCharacter() const { return character; }
+    Hero* getHero() const { return hero; }
+
 protected slots:
     void update() override;
 
@@ -48,12 +52,16 @@ private:
     void spawnRandomWeapon();
     void updateFallingWeapons();
     QTimer *weaponDropTimer = nullptr;
+    QTimer *bulletDebugTimer = nullptr; // 子弹调试定时器
     QList<QPair<Weapon*, qint64>> fallingWeapons; // 武器和生成时间
 
     Map *map;
     Character *character;
     Hero *hero;
     Armor *spareArmor;
+
+private slots:
+    void debugAllBulletPositions();
 };
 
 #endif //QT_PROGRAMMING_2024_BATTLESCENE_H

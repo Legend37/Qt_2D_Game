@@ -75,7 +75,24 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     weaponDropTimer = new QTimer(this);
     connect(weaponDropTimer, &QTimer::timeout, this, &BattleScene::spawnRandomWeapon);
     weaponDropTimer->start(10000);
+
+    // 每秒输出一次所有子弹的绝对位置
+    bulletDebugTimer = new QTimer(this);
+    connect(bulletDebugTimer, &QTimer::timeout, this, &BattleScene::debugAllBulletPositions);
+    bulletDebugTimer->start(1000);
 }
+
+void BattleScene::debugAllBulletPositions() {
+    qDebug() << "[DEBUG] === Bullet Debug Info ===";
+    for (QGraphicsItem *item : items()) {
+        auto bullet = dynamic_cast<Bullet *>(item);
+        if (bullet) {
+            qDebug() << "[DEBUG] Bullet pos():" << bullet->pos() << "scenePos():" << bullet->scenePos() << "center:" << bullet->getSceneCenter();
+        }
+    }
+    qDebug() << "[DEBUG] === End Bullet Debug ===";
+}
+
 void BattleScene::spawnRandomWeapon() {
     int type = QRandomGenerator::global()->bounded(3);
     Weapon *weapon = nullptr;
@@ -155,9 +172,11 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         qDebug() << "[DEBUG] Bullet velocity:" << vx;
                         
                         Bullet *bullet = new Bullet(bx, by, vx);
+                        bullet->shooter = character; // 设置射手
                         bullet->setZValue(100);
                         addItem(bullet);
                         qDebug() << "[DEBUG] Bullet created and added to scene";
+                        qDebug() << "[DEBUG] Bullet after creation - pos():" << bullet->pos() << "scenePos():" << bullet->scenePos();
                     } else {
                         qDebug() << "[DEBUG] No ammo left";
                     }

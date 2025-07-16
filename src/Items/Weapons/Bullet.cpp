@@ -2,6 +2,7 @@
 #include "../Characters/Character.h"
 #include "../../Scenes/BattleScene.h"
 #include <QGraphicsScene>
+#include <QDebug>
 
 Bullet::~Bullet() {}
 
@@ -15,14 +16,23 @@ void Bullet::advance(int phase) {
     }
     debugCounter++;
     
+    QPointF oldPos = scenePos();
     moveBy(velocity.x(), velocity.y());
+    QPointF newPos = scenePos();
+    
+    // 每帧都输出移动信息（临时调试）
+    if (debugCounter % 10 == 0) {
+        qDebug() << "[DEBUG] Bullet moved from:" << oldPos << "to:" << newPos << "velocity:" << velocity;
+    }
     
     // 检查碰撞
     checkCollisions();
     
     // Remove bullet if it goes off screen
-    if (pos().x() < -1000 || pos().x() > 2000 || pos().y() < -1000 || pos().y() > 2000) {
-        // qDebug() << "[DEBUG] Bullet removed (off screen)";
+    qreal currentX = scenePos().x();
+    qreal currentY = scenePos().y();
+    if (currentX < -50 || currentX > 1330 || currentY < -1000 || currentY > 2000) {
+        qDebug() << "[DEBUG] Bullet removed (off screen) - pos:" << scenePos() << "bounds: x[-50,1330] y[-1000,2000]";
         scene()->removeItem(this);
         delete this;
         return;
@@ -30,17 +40,22 @@ void Bullet::advance(int phase) {
 }
 
 void Bullet::checkCollisions() {
-    if (!scene()) return;
+    if (!scene()) {
+        qDebug() << "[DEBUG] Bullet checkCollisions: no scene";
+        return;
+    }
     
     // 尝试将场景转换为BattleScene
     BattleScene* battleScene = qobject_cast<BattleScene*>(scene());
     if (!battleScene) {
-        // qDebug() << "[DEBUG] Failed to cast scene to BattleScene";
+        qDebug() << "[DEBUG] Failed to cast scene to BattleScene";
         return;
     }
     
+    qDebug() << "[DEBUG] Bullet checkCollisions: pos=" << scenePos();
+    
     // 获取当前子弹位置 - 使用子弹的中心点
-    QPointF bulletPos = scenePos() + QPointF(10, 10); // 子弹中心点 (子弹是20x20，所以中心是+10,+10)
+    QPointF bulletPos = scenePos(); // 子弹的中心点就是它的位置
     // qDebug() << "[DEBUG] Checking bullet collision at center pos:" << bulletPos;
     
     // 检查与角色的碰撞
@@ -93,6 +108,7 @@ void Bullet::checkCollisions() {
 }
 
 QPointF Bullet::getSceneCenter() const {
-    // 子弹为20x20，中心点为+10,+10
-    return scenePos() + QPointF(10, 10);
+    // 子弹矩形是(-10, -10, 20, 20)，所以中心点需要加上偏移量
+    // 矩形的中心点相对于item原点的偏移是(0, 0)，因为矩形是以(-10, -10)为左上角
+    return scenePos();
 }

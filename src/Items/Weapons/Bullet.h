@@ -5,31 +5,27 @@
 #include <QBrush>
 #include <QColor>
 #include <QDebug>
+#include <QPen>
+
+class Character;
 
 class Bullet : public QGraphicsEllipseItem {
 public:
     Bullet(qreal x, qreal y, qreal vx, QGraphicsItem *parent = nullptr)
-        : QGraphicsEllipseItem(x - 10, y - 10, 20, 20, parent), velocity(vx, 0) {
+        : QGraphicsEllipseItem(-10, -10, 20, 20, parent), velocity(vx, 0), shooter(nullptr) {
         setBrush(QBrush(QColor(255, 255, 180)));
-        setPen(Qt::NoPen);
+        setPen(QPen(Qt::NoPen));
         setZValue(10);
+        setPos(x, y); // 使用 setPos 设置子弹在场景中的位置
     }
 
-    void advance(int phase) override {
-        if (phase == 0) return;
-        qDebug() << "[DEBUG] Bullet advancing, current pos:" << pos() << "velocity:" << velocity;
-        moveBy(velocity.x(), velocity.y());
-        qDebug() << "[DEBUG] Bullet new pos:" << pos();
-        
-        // Remove bullet if it goes off screen
-        if (pos().x() < -400 || pos().x() > 400 || pos().y() < -400 || pos().y() > 400) {
-            qDebug() << "[DEBUG] Bullet removed (off screen)";
-            scene()->removeItem(this);
-            delete this;
-        }
-    }
+    virtual ~Bullet();
+    void advance(int phase) override;
+    void checkCollisions();
+    QPointF getSceneCenter() const;
 
     QPointF velocity;
+    Character* shooter;
 };
 
 #endif
