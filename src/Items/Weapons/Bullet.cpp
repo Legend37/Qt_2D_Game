@@ -72,8 +72,8 @@ void Bullet::checkCollisions() {
             character->setHP(std::max(0, currentHP - 20));
             // qDebug() << "[DEBUG] Bullet hit character! HP:" << currentHP << "->" << character->getHP();
             
-            // 强制更新血量条
-            battleScene->invalidate(battleScene->sceneRect(), QGraphicsScene::ForegroundLayer);
+            // 重新绘制血条
+            scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
             
             // 移除子弹
             scene()->removeItem(this);
@@ -96,8 +96,8 @@ void Bullet::checkCollisions() {
             hero->setHP(std::max(0, currentHP - 20));
             // qDebug() << "[DEBUG] Bullet hit hero! HP:" << currentHP << "->" << hero->getHP();
             
-            // 强制更新血量条
-            battleScene->invalidate(battleScene->sceneRect(), QGraphicsScene::ForegroundLayer);
+            // 重新绘制血条
+            scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
             
             // 移除子弹
             scene()->removeItem(this);

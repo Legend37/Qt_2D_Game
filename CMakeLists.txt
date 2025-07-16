@@ -58,6 +58,8 @@ add_executable(qt_2025_game src/main.cpp
         src/Items/Weapons/Shotgun.h
         src/Items/Weapons/Submachine.cpp
         src/Items/Weapons/Submachine.h
+        src/Items/Weapons/Knife.cpp
+        src/Items/Weapons/Knife.h
         src/Items/Weapons/Bullet.cpp
         src/Items/Weapons/Bullet.h
         src/Items/Platform.cpp

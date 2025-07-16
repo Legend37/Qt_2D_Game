@@ -18,6 +18,7 @@
 #include "../Items/Weapons/Pistol.h"
 #include "../Items/Weapons/Shotgun.h"
 #include "../Items/Weapons/Submachine.h"
+#include "../Items/Weapons/Knife.h"
 
 class Weapon;
 

@@ -6,6 +6,8 @@
 class Knife : public Weapon {
 public:
     explicit Knife(QGraphicsItem *parent = nullptr);
+    
+    void mountToParent() override;
 };
 
 #endif

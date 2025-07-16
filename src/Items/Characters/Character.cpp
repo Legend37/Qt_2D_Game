@@ -122,11 +122,6 @@ void Character::applyGravity(double deltaTime) {
     }
     // 每秒输出一次(200,500)是否在碰撞箱内（假设60fps）
     static int frameCounter = 0;
-    if (frameCounter % 60 == 0) {
-        QPointF testPoint(200, 300);
-        bool hit = isHitByPoint(testPoint);
-        qDebug() << "[DEBUG] (200,300) in character hitbox:" << hit;
-    }
     frameCounter++;
 }
 

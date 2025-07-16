@@ -48,6 +48,7 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
 #include "../Items/Weapons/Pistol.h"
 #include "../Items/Weapons/Shotgun.h"
 #include "../Items/Weapons/Submachine.h"
+#include "../Items/Weapons/Knife.h"
 
 BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     // This is useful if you want the scene to have the exact same dimensions as the view
@@ -81,29 +82,30 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     connect(bulletDebugTimer, &QTimer::timeout, this, &BattleScene::debugAllBulletPositions);
     bulletDebugTimer->start(1000);
 
-    // 每秒输出一次碰撞箱矩形顶点
+    // 每5秒输出一次碰撞箱矩形顶点
     hitBoxDebugTimer = new QTimer(this);
     connect(hitBoxDebugTimer, &QTimer::timeout, this, &BattleScene::debugHitBoxCorners);
-    hitBoxDebugTimer->start(1000);
+    hitBoxDebugTimer->start(5000);
 }
 
 void BattleScene::debugAllBulletPositions() {
-    qDebug() << "[DEBUG] === Bullet Debug Info ===";
+    // qDebug() << "[DEBUG] === Bullet Debug Info ===";
     for (QGraphicsItem *item : items()) {
         auto bullet = dynamic_cast<Bullet *>(item);
         if (bullet) {
-            qDebug() << "[DEBUG] Bullet pos():" << bullet->pos() << "scenePos():" << bullet->scenePos() << "center:" << bullet->getSceneCenter();
+            // qDebug() << "[DEBUG] Bullet pos():" << bullet->pos() << "scenePos():" << bullet->scenePos() << "center:" << bullet->getSceneCenter();
         }
     }
-    qDebug() << "[DEBUG] === End Bullet Debug ===";
+    // qDebug() << "[DEBUG] === End Bullet Debug ===";
 }
 
 void BattleScene::spawnRandomWeapon() {
-    int type = QRandomGenerator::global()->bounded(3);
+    int type = QRandomGenerator::global()->bounded(4);
     Weapon *weapon = nullptr;
     if (type == 0) weapon = new Pistol(nullptr);
     else if (type == 1) weapon = new Shotgun(nullptr);
-    else weapon = new Submachine(nullptr);
+    else if (type == 2) weapon = new Submachine(nullptr);
+    else weapon = new Knife(nullptr);
     weapon->unmount();
     qreal randomX = sceneRect().left() + 100 + QRandomGenerator::global()->bounded((int)sceneRect().width() - 200);
     weapon->setPos(randomX, sceneRect().top());
@@ -153,40 +155,82 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
     switch (event->key()) {
         case Qt::Key_G:
             qDebug() << "[DEBUG] G key pressed";
-            // character攻击，发射子弹
+            // character攻击
             if (character != nullptr) {
                 qDebug() << "[DEBUG] Character exists";
                 if (character->getWeapon() != nullptr) {
                     qDebug() << "[DEBUG] Character has weapon";
                     Weapon *weapon = character->getWeapon();
-                    qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
-                    if (weapon->getAmmo() > 0) {
-                        weapon->decAmmo();
-                        QPointF charPos = character->pos();
-                        QPointF gunPos = weapon->scenePos(); // 使用scenePos()获取武器在场景中的绝对位置
-                        qDebug() << "[DEBUG] Character pos:" << charPos;
-                        qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
-                        qDebug() << "[DEBUG] Character facing right:" << character->isFacingRight();
+                    
+                    // 检查是否为小刀
+                    if (weapon->getWeaponName() == "Knife") {
+                        qDebug() << "[DEBUG] Character using knife attack";
+                        // 小刀攻击逻辑：检查小刀位置是否在对方碰撞箱内
+                        QPointF knifePos = weapon->scenePos();
+                        qDebug() << "[DEBUG] Knife position:" << knifePos;
                         
-                        qreal vx = character->isFacingRight() ? 22.5 : -22.5;
-
-                        qreal bx = gunPos.x();
-                        qreal by = gunPos.y();
-                        
-                        qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
-                        qDebug() << "[DEBUG] Bullet velocity:" << vx;
-                        
-                        Bullet *bullet = new Bullet(bx, by, vx);
-                        bullet->shooter = character; // 设置射手
-                        bullet->setZValue(100);
-                        addItem(bullet);
-                        qDebug() << "[DEBUG] Bullet created and added to scene";
-                        qDebug() << "[DEBUG] Bullet after creation - pos():" << bullet->pos() << "scenePos():" << bullet->scenePos();
+                        // 检查是否击中Hero
+                        if (hero && hero->isHitByPoint(knifePos)) {
+                            qDebug() << "[DEBUG] Knife hit Hero! Dealing 10 damage";
+                            int newHP = std::max(0, hero->getHP() - 10); // 确保HP不低于0
+                            hero->setHP(newHP);
+                            qDebug() << "[DEBUG] Hero HP after knife attack:" << hero->getHP();
+                            invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
+                        } else {
+                            qDebug() << "[DEBUG] Knife attack missed";
+                        }
                     } else {
-                        qDebug() << "[DEBUG] No ammo left";
+                        // 远程武器攻击逻辑
+                        qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
+                        if (weapon->getAmmo() > 0) {
+                            weapon->decAmmo();
+                            QPointF charPos = character->pos();
+                            QPointF gunPos = weapon->scenePos();
+                            qDebug() << "[DEBUG] Character pos:" << charPos;
+                            qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
+                            qDebug() << "[DEBUG] Character facing right:" << character->isFacingRight();
+                            
+                            qreal vx = character->isFacingRight() ? 22.5 : -22.5;
+                            qreal bx = gunPos.x();
+                            qreal by = gunPos.y();
+                            
+                            qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
+                            qDebug() << "[DEBUG] Bullet velocity:" << vx;
+                            
+                            Bullet *bullet = new Bullet(bx, by, vx);
+                            bullet->shooter = character;
+                            bullet->setZValue(100);
+                            addItem(bullet);
+                            qDebug() << "[DEBUG] Bullet created and added to scene";
+                        } else {
+                            qDebug() << "[DEBUG] No ammo left";
+                        }
                     }
                 } else {
-                    qDebug() << "[DEBUG] Character has no weapon";
+                    qDebug() << "[DEBUG] Character has no weapon - using fist attack";
+                    // 拳头攻击逻辑：检查角色前方是否有敌人
+                    QPointF charPos = character->scenePos();
+                    QPointF fistPos;
+                    
+                    // 根据角色朝向决定拳头攻击范围
+                    if (character->isFacingRight()) {
+                        fistPos = QPointF(charPos.x() + 120, charPos.y() - 100); // 右前方
+                    } else {
+                        fistPos = QPointF(charPos.x() - 20, charPos.y() - 100); // 左前方
+                    }
+                    
+                    qDebug() << "[DEBUG] Fist attack position:" << fistPos;
+                    
+                    // 检查是否击中Hero
+                    if (hero && hero->isHitByPoint(fistPos)) {
+                        qDebug() << "[DEBUG] Fist hit Hero! Dealing 3 damage";
+                        int newHP = std::max(0, hero->getHP() - 3); // 确保HP不低于0
+                        hero->setHP(newHP);
+                        qDebug() << "[DEBUG] Hero HP after fist attack:" << hero->getHP();
+                        invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
+                    } else {
+                        qDebug() << "[DEBUG] Fist attack missed";
+                    }
                 }
             } else {
                 qDebug() << "[DEBUG] Character is null";
@@ -194,39 +238,82 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
             break;
         case Qt::Key_K:
             qDebug() << "[DEBUG] K key pressed";
-            // hero攻击，发射子弹
+            // hero攻击
             if (hero != nullptr) {
                 qDebug() << "[DEBUG] Hero exists";
                 if (hero->getWeapon() != nullptr) {
                     qDebug() << "[DEBUG] Hero has weapon";
                     Weapon *weapon = hero->getWeapon();
-                    qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
-                    if (weapon->getAmmo() > 0) {
-                        weapon->decAmmo();
-                        QPointF heroPos = hero->pos();
-                        QPointF gunPos = weapon->scenePos();
-                        qDebug() << "[DEBUG] Hero pos:" << heroPos;
-                        qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
-                        qDebug() << "[DEBUG] Hero facing right:" << hero->isFacingRight();
-
-                        qreal vx = hero->isFacingRight() ? 22.5 : -22.5;
-                        qreal bx = gunPos.x();
-                        qreal by = gunPos.y();
-
-                        qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
-                        qDebug() << "[DEBUG] Bullet velocity:" << vx;
-
-                        Bullet *bullet = new Bullet(bx, by, vx);
-                        bullet->shooter = hero; // 设置射手
-                        bullet->setZValue(100);
-                        addItem(bullet);
-                        qDebug() << "[DEBUG] Bullet created and added to scene";
-                        qDebug() << "[DEBUG] Bullet after creation - pos():" << bullet->pos() << "scenePos():" << bullet->scenePos();
+                    
+                    // 检查是否为小刀
+                    if (weapon->getWeaponName() == "Knife") {
+                        qDebug() << "[DEBUG] Hero using knife attack";
+                        // 小刀攻击逻辑：检查小刀位置是否在对方碰撞箱内
+                        QPointF knifePos = weapon->scenePos();
+                        qDebug() << "[DEBUG] Knife position:" << knifePos;
+                        
+                        // 检查是否击中Character
+                        if (character && character->isHitByPoint(knifePos)) {
+                            qDebug() << "[DEBUG] Knife hit Character! Dealing 10 damage";
+                            int newHP = std::max(0, character->getHP() - 10); // 确保HP不低于0
+                            character->setHP(newHP);
+                            qDebug() << "[DEBUG] Character HP after knife attack:" << character->getHP();
+                            invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
+                        } else {
+                            qDebug() << "[DEBUG] Knife attack missed";
+                        }
                     } else {
-                        qDebug() << "[DEBUG] No ammo left";
+                        // 远程武器攻击逻辑
+                        qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
+                        if (weapon->getAmmo() > 0) {
+                            weapon->decAmmo();
+                            QPointF heroPos = hero->pos();
+                            QPointF gunPos = weapon->scenePos();
+                            qDebug() << "[DEBUG] Hero pos:" << heroPos;
+                            qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
+                            qDebug() << "[DEBUG] Hero facing right:" << hero->isFacingRight();
+
+                            qreal vx = hero->isFacingRight() ? 22.5 : -22.5;
+                            qreal bx = gunPos.x();
+                            qreal by = gunPos.y();
+
+                            qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
+                            qDebug() << "[DEBUG] Bullet velocity:" << vx;
+
+                            Bullet *bullet = new Bullet(bx, by, vx);
+                            bullet->shooter = hero;
+                            bullet->setZValue(100);
+                            addItem(bullet);
+                            qDebug() << "[DEBUG] Bullet created and added to scene";
+                        } else {
+                            qDebug() << "[DEBUG] No ammo left";
+                        }
                     }
                 } else {
-                    qDebug() << "[DEBUG] Hero has no weapon";
+                    qDebug() << "[DEBUG] Hero has no weapon - using fist attack";
+                    // 拳头攻击逻辑：检查Hero前方是否有敌人
+                    QPointF heroPos = hero->scenePos();
+                    QPointF fistPos;
+                    
+                    // 根据Hero朝向决定拳头攻击范围
+                    if (hero->isFacingRight()) {
+                        fistPos = QPointF(heroPos.x() + 120, heroPos.y() - 100); // 右前方
+                    } else {
+                        fistPos = QPointF(heroPos.x() - 20, heroPos.y() - 100); // 左前方
+                    }
+                    
+                    qDebug() << "[DEBUG] Fist attack position:" << fistPos;
+                    
+                    // 检查是否击中Character
+                    if (character && character->isHitByPoint(fistPos)) {
+                        qDebug() << "[DEBUG] Fist hit Character! Dealing 3 damage";
+                        int newHP = std::max(0, character->getHP() - 3); // 确保HP不低于0
+                        character->setHP(newHP);
+                        qDebug() << "[DEBUG] Character HP after fist attack:" << character->getHP();
+                        invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
+                    } else {
+                        qDebug() << "[DEBUG] Fist attack missed";
+                    }
                 }
             } else {
                 qDebug() << "[DEBUG] Hero is null";
@@ -372,6 +459,7 @@ void BattleScene::generateRandomWeapons() {
     weapons.append(new Pistol(nullptr));
     weapons.append(new Shotgun(nullptr));
     weapons.append(new Submachine(nullptr));
+    weapons.append(new Knife(nullptr));
     
     // Shuffle weapon order
     std::random_shuffle(weapons.begin(), weapons.end());

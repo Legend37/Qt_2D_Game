@@ -8,9 +8,6 @@
 void Scene::drawForeground(QPainter *painter, const QRectF &rect) {
     QGraphicsScene::drawForeground(painter, rect);
 }
-//
-// Created by gerw on 8/20/24.
-//
 
 #include <QDateTime>
 #include "Scene.h"

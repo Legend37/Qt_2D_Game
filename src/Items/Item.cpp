@@ -1,7 +1,3 @@
-//
-// Created by gerw on 8/20/24.
-//
-
 #include "Item.h"
 
 Item::Item(QGraphicsItem *parent, const QString &pixmapPath, bool mirrorPixmap) : QGraphicsItem(parent) {

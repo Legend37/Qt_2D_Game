@@ -8,5 +8,6 @@
         <file>Items/Weapon/pistol.png</file>
         <file>Items/Weapon/shotgun.png</file>
         <file>Items/Weapon/submachine.png</file>
+        <file>Items/Weapon/knife.png</file>
     </qresource>
 </RCC>
