@@ -53,6 +53,7 @@ private:
     void updateFallingWeapons();
     QTimer *weaponDropTimer = nullptr;
     QTimer *bulletDebugTimer = nullptr; // 子弹调试定时器
+    QTimer *hitBoxDebugTimer = nullptr; // 碰撞箱调试定时器
     QList<QPair<Weapon*, qint64>> fallingWeapons; // 武器和生成时间
 
     Map *map;
@@ -62,6 +63,7 @@ private:
 
 private slots:
     void debugAllBulletPositions();
+    void debugHitBoxCorners();
 };
 
 #endif //QT_PROGRAMMING_2024_BATTLESCENE_H

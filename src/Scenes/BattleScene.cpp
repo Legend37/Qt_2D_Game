@@ -80,6 +80,11 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     bulletDebugTimer = new QTimer(this);
     connect(bulletDebugTimer, &QTimer::timeout, this, &BattleScene::debugAllBulletPositions);
     bulletDebugTimer->start(1000);
+
+    // 每秒输出一次碰撞箱矩形顶点
+    hitBoxDebugTimer = new QTimer(this);
+    connect(hitBoxDebugTimer, &QTimer::timeout, this, &BattleScene::debugHitBoxCorners);
+    hitBoxDebugTimer->start(1000);
 }
 
 void BattleScene::debugAllBulletPositions() {
@@ -185,6 +190,46 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                 }
             } else {
                 qDebug() << "[DEBUG] Character is null";
+            }
+            break;
+        case Qt::Key_K:
+            qDebug() << "[DEBUG] K key pressed";
+            // hero攻击，发射子弹
+            if (hero != nullptr) {
+                qDebug() << "[DEBUG] Hero exists";
+                if (hero->getWeapon() != nullptr) {
+                    qDebug() << "[DEBUG] Hero has weapon";
+                    Weapon *weapon = hero->getWeapon();
+                    qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
+                    if (weapon->getAmmo() > 0) {
+                        weapon->decAmmo();
+                        QPointF heroPos = hero->pos();
+                        QPointF gunPos = weapon->scenePos();
+                        qDebug() << "[DEBUG] Hero pos:" << heroPos;
+                        qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
+                        qDebug() << "[DEBUG] Hero facing right:" << hero->isFacingRight();
+
+                        qreal vx = hero->isFacingRight() ? 22.5 : -22.5;
+                        qreal bx = gunPos.x();
+                        qreal by = gunPos.y();
+
+                        qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
+                        qDebug() << "[DEBUG] Bullet velocity:" << vx;
+
+                        Bullet *bullet = new Bullet(bx, by, vx);
+                        bullet->shooter = hero; // 设置射手
+                        bullet->setZValue(100);
+                        addItem(bullet);
+                        qDebug() << "[DEBUG] Bullet created and added to scene";
+                        qDebug() << "[DEBUG] Bullet after creation - pos():" << bullet->pos() << "scenePos():" << bullet->scenePos();
+                    } else {
+                        qDebug() << "[DEBUG] No ammo left";
+                    }
+                } else {
+                    qDebug() << "[DEBUG] Hero has no weapon";
+                }
+            } else {
+                qDebug() << "[DEBUG] Hero is null";
             }
             break;
         case Qt::Key_A:
@@ -351,4 +396,34 @@ void BattleScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     
     // 调用父类的鼠标点击事件处理
     Scene::mousePressEvent(event);
+}
+
+void BattleScene::debugHitBoxCorners() {
+    qDebug() << "[DEBUG] === HitBox Debug Info ===";
+    
+    // 输出Character的碰撞箱顶点
+    if (character) {
+        QRectF charHitBox = character->getHitBox();
+        qDebug() << "[DEBUG] Character HitBox:";
+        qDebug() << "  TopLeft:" << charHitBox.topLeft();
+        qDebug() << "  TopRight:" << charHitBox.topRight();
+        qDebug() << "  BottomLeft:" << charHitBox.bottomLeft();
+        qDebug() << "  BottomRight:" << charHitBox.bottomRight();
+        qDebug() << "  Center:" << charHitBox.center();
+        qDebug() << "  Size:" << charHitBox.size();
+    }
+    
+    // 输出Hero的碰撞箱顶点
+    if (hero) {
+        QRectF heroHitBox = hero->getHitBox();
+        qDebug() << "[DEBUG] Hero HitBox:";
+        qDebug() << "  TopLeft:" << heroHitBox.topLeft();
+        qDebug() << "  TopRight:" << heroHitBox.topRight();
+        qDebug() << "  BottomLeft:" << heroHitBox.bottomLeft();
+        qDebug() << "  BottomRight:" << heroHitBox.bottomRight();
+        qDebug() << "  Center:" << heroHitBox.center();
+        qDebug() << "  Size:" << heroHitBox.size();
+    }
+    
+    qDebug() << "[DEBUG] === End HitBox Debug ===";
 }

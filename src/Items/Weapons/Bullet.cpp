@@ -12,7 +12,7 @@ void Bullet::advance(int phase) {
     // 每秒输出一次子弹坐标 (假设60fps，每60帧输出一次)
     static int debugCounter = 0;
     if (debugCounter % 60 == 0) { // 每60帧输出一次 (约每秒)
-        qDebug() << "[DEBUG] Bullet scenePos:" << scenePos() << "center:" << getSceneCenter() << "velocity:" << velocity;
+        // qDebug() << "[DEBUG] Bullet scenePos:" << scenePos() << "center:" << getSceneCenter() << "velocity:" << velocity;
     }
     debugCounter++;
     
@@ -22,7 +22,7 @@ void Bullet::advance(int phase) {
     
     // 每帧都输出移动信息（临时调试）
     if (debugCounter % 10 == 0) {
-        qDebug() << "[DEBUG] Bullet moved from:" << oldPos << "to:" << newPos << "velocity:" << velocity;
+        // qDebug() << "[DEBUG] Bullet moved from:" << oldPos << "to:" << newPos << "velocity:" << velocity;
     }
     
     // 检查碰撞
@@ -32,7 +32,7 @@ void Bullet::advance(int phase) {
     qreal currentX = scenePos().x();
     qreal currentY = scenePos().y();
     if (currentX < -50 || currentX > 1330 || currentY < -1000 || currentY > 2000) {
-        qDebug() << "[DEBUG] Bullet removed (off screen) - pos:" << scenePos() << "bounds: x[-50,1330] y[-1000,2000]";
+        // qDebug() << "[DEBUG] Bullet removed (off screen) - pos:" << scenePos() << "bounds: x[-50,1330] y[-1000,2000]";
         scene()->removeItem(this);
         delete this;
         return;
@@ -41,18 +41,18 @@ void Bullet::advance(int phase) {
 
 void Bullet::checkCollisions() {
     if (!scene()) {
-        qDebug() << "[DEBUG] Bullet checkCollisions: no scene";
+        // qDebug() << "[DEBUG] Bullet checkCollisions: no scene";
         return;
     }
     
     // 尝试将场景转换为BattleScene
     BattleScene* battleScene = qobject_cast<BattleScene*>(scene());
     if (!battleScene) {
-        qDebug() << "[DEBUG] Failed to cast scene to BattleScene";
+        // qDebug() << "[DEBUG] Failed to cast scene to BattleScene";
         return;
     }
     
-    qDebug() << "[DEBUG] Bullet checkCollisions: pos=" << scenePos();
+    // qDebug() << "[DEBUG] Bullet checkCollisions: pos=" << scenePos();
     
     // 获取当前子弹位置 - 使用子弹的中心点
     QPointF bulletPos = scenePos(); // 子弹的中心点就是它的位置
