@@ -2,6 +2,7 @@
 #define QT_PROGRAMMING_2024_CHARACTER_H
 
 #include <QGraphicsEllipseItem>
+#include <QtGlobal>
 #include "../HeadEquipments/HeadEquipment.h"
 #include "../Armors/Armor.h"
 #include "../LegEquipments/LegEquipment.h"
@@ -57,6 +58,12 @@ public:
     
     // 检查给定绝对坐标是否碰到该人物
     bool isHitByPoint(const QPointF& absolutePos) const;
+    
+    // 攻击冷却时间相关方法
+    bool canAttack() const;
+    void startAttackCooldown();
+    qint64 getAttackCooldown() const;
+    void setAttackCooldown(qint64 cooldown);
 
 private:
     void updateWeaponPosition();
@@ -78,6 +85,10 @@ private:
     static constexpr double gravity = 0.02;
     static constexpr double jumpSpeed = -3.0;
     int hp = 100; // Default HP
+    
+    // 攻击冷却时间相关变量
+    qint64 lastAttackTime = 0; // 上次攻击时间（毫秒）
+    qint64 attackCooldown = 500; // 默认攻击冷却时间500毫秒
 };
 
 

@@ -67,10 +67,10 @@ void Bullet::checkCollisions() {
         bool collision = character->checkBulletCollision(bulletPos);
         // qDebug() << "[DEBUG] Character collision result:" << collision;
         if (collision) {
-            // 发生碰撞，角色损失20点生命值
+            // 发生碰撞，角色损失动态伤害值
             int currentHP = character->getHP();
-            character->setHP(std::max(0, currentHP - 20));
-            // qDebug() << "[DEBUG] Bullet hit character! HP:" << currentHP << "->" << character->getHP();
+            character->setHP(std::max(0, currentHP - damage));
+            // qDebug() << "[DEBUG] Bullet hit character! Damage:" << damage << "HP:" << currentHP << "->" << character->getHP();
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
@@ -91,10 +91,10 @@ void Bullet::checkCollisions() {
         bool collision = hero->checkBulletCollision(bulletPos);
         // qDebug() << "[DEBUG] Hero collision result:" << collision;
         if (collision) {
-            // 发生碰撞，Hero损失20点生命值
+            // 发生碰撞，Hero损失动态伤害值
             int currentHP = hero->getHP();
-            hero->setHP(std::max(0, currentHP - 20));
-            // qDebug() << "[DEBUG] Bullet hit hero! HP:" << currentHP << "->" << hero->getHP();
+            hero->setHP(std::max(0, currentHP - damage));
+            // qDebug() << "[DEBUG] Bullet hit hero! Damage:" << damage << "HP:" << currentHP << "->" << hero->getHP();
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);

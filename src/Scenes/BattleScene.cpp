@@ -104,7 +104,6 @@ void BattleScene::debugAllBulletPositions() {
 void BattleScene::spawnRandomWeapon() {
     int type = QRandomGenerator::global()->bounded(5);
     Weapon *weapon = nullptr;
-    type = 5; // Force to spawn Ball for testing
     if (type == 0) weapon = new Pistol(nullptr);
     else if (type == 1) weapon = new Shotgun(nullptr);
     else if (type == 2) weapon = new Submachine(nullptr);
@@ -166,6 +165,41 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
             // character攻击
             if (character != nullptr) {
                 qDebug() << "[DEBUG] Character exists";
+                
+                // 检查攻击冷却时间
+                if (!character->canAttack()) {
+                    qDebug() << "[DEBUG] Character attack on cooldown, ignoring";
+                    break;
+                }
+                
+                if (character->getWeapon() != nullptr) {
+                    qDebug() << "[DEBUG] Character has weapon";
+                    Weapon *weapon = character->getWeapon();
+                    
+                    // 根据武器类型设置攻击冷却时间
+                    if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
+                        character->setAttackCooldown(pistol->getFireRate());
+                        qDebug() << "[DEBUG] Set pistol fire rate:" << pistol->getFireRate() << "ms";
+                    } else if (auto shotgun = dynamic_cast<Shotgun*>(weapon)) {
+                        character->setAttackCooldown(shotgun->getFireRate());
+                        qDebug() << "[DEBUG] Set shotgun fire rate:" << shotgun->getFireRate() << "ms";
+                    } else if (auto submachine = dynamic_cast<Submachine*>(weapon)) {
+                        character->setAttackCooldown(submachine->getFireRate());
+                        qDebug() << "[DEBUG] Set submachine fire rate:" << submachine->getFireRate() << "ms";
+                    } else {
+                        // 其他武器使用默认冷却时间
+                        character->setAttackCooldown(500);
+                        qDebug() << "[DEBUG] Set default fire rate: 500ms";
+                    }
+                } else {
+                    // 拳头攻击使用默认冷却时间
+                    character->setAttackCooldown(500);
+                    qDebug() << "[DEBUG] Set fist attack fire rate: 500ms";
+                }
+                
+                // 开始攻击冷却计时
+                character->startAttackCooldown();
+                
                 if (character->getWeapon() != nullptr) {
                     qDebug() << "[DEBUG] Character has weapon";
                     Weapon *weapon = character->getWeapon();
@@ -252,14 +286,32 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
                             qDebug() << "[DEBUG] Character facing right:" << character->isFacingRight();
                             
-                            qreal vx = character->isFacingRight() ? 22.5 : -22.5;
+                            // 根据武器类型获取不同的属性
+                            qreal bulletSpeed = 22.5; // 默认速度
+                            int bulletDamage = 20;     // 默认伤害
+                            
+                            if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
+                                bulletSpeed = pistol->getBulletSpeed();
+                                bulletDamage = pistol->getBulletDamage();
+                                qDebug() << "[DEBUG] Using Pistol - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                            } else if (auto shotgun = dynamic_cast<Shotgun*>(weapon)) {
+                                bulletSpeed = shotgun->getBulletSpeed();
+                                bulletDamage = shotgun->getBulletDamage();
+                                qDebug() << "[DEBUG] Using Shotgun - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                            } else if (auto submachine = dynamic_cast<Submachine*>(weapon)) {
+                                bulletSpeed = submachine->getBulletSpeed();
+                                bulletDamage = submachine->getBulletDamage();
+                                qDebug() << "[DEBUG] Using Submachine - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                            }
+                            
+                            qreal vx = character->isFacingRight() ? bulletSpeed : -bulletSpeed;
                             qreal bx = gunPos.x();
                             qreal by = gunPos.y();
                             
                             qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
                             qDebug() << "[DEBUG] Bullet velocity:" << vx;
                             
-                            Bullet *bullet = new Bullet(bx, by, vx);
+                            Bullet *bullet = new Bullet(bx, by, vx, bulletDamage);
                             bullet->shooter = character;
                             bullet->setZValue(100);
                             addItem(bullet);
@@ -303,6 +355,41 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
             // hero攻击
             if (hero != nullptr) {
                 qDebug() << "[DEBUG] Hero exists";
+                
+                // 检查攻击冷却时间
+                if (!hero->canAttack()) {
+                    qDebug() << "[DEBUG] Hero attack on cooldown, ignoring";
+                    break;
+                }
+                
+                if (hero->getWeapon() != nullptr) {
+                    qDebug() << "[DEBUG] Hero has weapon";
+                    Weapon *weapon = hero->getWeapon();
+                    
+                    // 根据武器类型设置攻击冷却时间
+                    if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
+                        hero->setAttackCooldown(pistol->getFireRate());
+                        qDebug() << "[DEBUG] Set hero pistol fire rate:" << pistol->getFireRate() << "ms";
+                    } else if (auto shotgun = dynamic_cast<Shotgun*>(weapon)) {
+                        hero->setAttackCooldown(shotgun->getFireRate());
+                        qDebug() << "[DEBUG] Set hero shotgun fire rate:" << shotgun->getFireRate() << "ms";
+                    } else if (auto submachine = dynamic_cast<Submachine*>(weapon)) {
+                        hero->setAttackCooldown(submachine->getFireRate());
+                        qDebug() << "[DEBUG] Set hero submachine fire rate:" << submachine->getFireRate() << "ms";
+                    } else {
+                        // 其他武器使用默认冷却时间
+                        hero->setAttackCooldown(500);
+                        qDebug() << "[DEBUG] Set hero default fire rate: 500ms";
+                    }
+                } else {
+                    // 拳头攻击使用默认冷却时间
+                    hero->setAttackCooldown(500);
+                    qDebug() << "[DEBUG] Set hero fist attack fire rate: 500ms";
+                }
+                
+                // 开始攻击冷却计时
+                hero->startAttackCooldown();
+                
                 if (hero->getWeapon() != nullptr) {
                     qDebug() << "[DEBUG] Hero has weapon";
                     Weapon *weapon = hero->getWeapon();
@@ -389,14 +476,32 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
                             qDebug() << "[DEBUG] Hero facing right:" << hero->isFacingRight();
 
-                            qreal vx = hero->isFacingRight() ? 22.5 : -22.5;
+                            // 根据武器类型获取不同的属性
+                            qreal bulletSpeed = 22.5; // 默认速度
+                            int bulletDamage = 20;     // 默认伤害
+                            
+                            if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
+                                bulletSpeed = pistol->getBulletSpeed();
+                                bulletDamage = pistol->getBulletDamage();
+                                qDebug() << "[DEBUG] Using Pistol - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                            } else if (auto shotgun = dynamic_cast<Shotgun*>(weapon)) {
+                                bulletSpeed = shotgun->getBulletSpeed();
+                                bulletDamage = shotgun->getBulletDamage();
+                                qDebug() << "[DEBUG] Using Shotgun - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                            } else if (auto submachine = dynamic_cast<Submachine*>(weapon)) {
+                                bulletSpeed = submachine->getBulletSpeed();
+                                bulletDamage = submachine->getBulletDamage();
+                                qDebug() << "[DEBUG] Using Submachine - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                            }
+
+                            qreal vx = hero->isFacingRight() ? bulletSpeed : -bulletSpeed;
                             qreal bx = gunPos.x();
                             qreal by = gunPos.y();
 
                             qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
                             qDebug() << "[DEBUG] Bullet velocity:" << vx;
 
-                            Bullet *bullet = new Bullet(bx, by, vx);
+                            Bullet *bullet = new Bullet(bx, by, vx, bulletDamage);
                             bullet->shooter = hero;
                             bullet->setZValue(100);
                             addItem(bullet);
@@ -562,7 +667,37 @@ Mountable *BattleScene::pickupMountable(Character *character, Mountable *mountab
     if (auto armor = dynamic_cast<Armor *>(mountable)) {
         return character->pickupArmor(armor);
     } else if (auto weapon = dynamic_cast<Weapon *>(mountable)) {
-        return character->pickupWeapon(weapon);
+        auto oldWeapon = character->pickupWeapon(weapon);
+        
+        // 如果有旧武器被替换掉落，设置其剩余时间为0.5秒
+        if (oldWeapon) {
+            qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+            qint64 shortLifeTime = currentTime - 19500; // 20000 - 500 = 19500, 剩余0.5秒
+            
+            // 更新 fallingWeapons 列表中该武器的时间戳
+            for (int i = 0; i < fallingWeapons.size(); ++i) {
+                if (fallingWeapons[i].first == oldWeapon) {
+                    fallingWeapons[i].second = shortLifeTime;
+                    qDebug() << "[DEBUG] Set dropped weapon remaining time to 0.5 seconds";
+                    break;
+                }
+            }
+            
+            // 如果旧武器不在 fallingWeapons 列表中，添加它（设置为短生命周期）
+            bool found = false;
+            for (const auto& pair : fallingWeapons) {
+                if (pair.first == oldWeapon) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                fallingWeapons.append(qMakePair(oldWeapon, shortLifeTime));
+                qDebug() << "[DEBUG] Added dropped weapon to fallingWeapons with 0.5s remaining time";
+            }
+        }
+        
+        return oldWeapon;
     }
     return nullptr;
 }

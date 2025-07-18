@@ -3,6 +3,7 @@
 //
 
 #include <QTransform>
+#include <QDateTime>
 #include "Character.h"
 
 Character::Character(QGraphicsItem *parent) : Item(parent, "") {
@@ -194,5 +195,26 @@ bool Character::isHitByPoint(const QPointF& absolutePos) const {
     // 以人物pos为左下角，pos.x+100, pos.y-200为右上角的矩形
     QRectF hitRect(charPos.x(), charPos.y() - 200, 100, 200);
     return hitRect.contains(absolutePos);
+}
+
+// 检查是否可以攻击（冷却时间是否结束）
+bool Character::canAttack() const {
+    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+    return (currentTime - lastAttackTime) >= attackCooldown;
+}
+
+// 开始攻击冷却计时
+void Character::startAttackCooldown() {
+    lastAttackTime = QDateTime::currentMSecsSinceEpoch();
+}
+
+// 获取攻击冷却时间（毫秒）
+qint64 Character::getAttackCooldown() const {
+    return attackCooldown;
+}
+
+// 设置攻击冷却时间（毫秒）
+void Character::setAttackCooldown(qint64 cooldown) {
+    attackCooldown = cooldown;
 }
 
