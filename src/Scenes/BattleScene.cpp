@@ -79,6 +79,11 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     connect(weaponDropTimer, &QTimer::timeout, this, &BattleScene::spawnRandomWeapon);
     weaponDropTimer->start(10000);
 
+    // 每8秒掉落一个随机药品
+    medicineDropTimer = new QTimer(this);
+    connect(medicineDropTimer, &QTimer::timeout, this, &BattleScene::spawnRandomMedicine);
+    medicineDropTimer->start(8000);
+
     // 每秒输出一次所有子弹的绝对位置
     bulletDebugTimer = new QTimer(this);
     connect(bulletDebugTimer, &QTimer::timeout, this, &BattleScene::debugAllBulletPositions);
@@ -114,6 +119,22 @@ void BattleScene::spawnRandomWeapon() {
     weapon->setPos(randomX, sceneRect().top());
     addItem(weapon);
     fallingWeapons.append(qMakePair(weapon, QDateTime::currentMSecsSinceEpoch()));
+}
+
+void BattleScene::spawnRandomMedicine() {
+    int type = QRandomGenerator::global()->bounded(3);
+    Medicine *medicine = nullptr;
+    if (type == 0) medicine = new Bandage(nullptr);
+    else if (type == 1) medicine = new Medkit(nullptr);
+    else medicine = new Adrenaline(nullptr);
+    
+    medicine->unmount();
+    qreal randomX = sceneRect().left() + 100 + QRandomGenerator::global()->bounded((int)sceneRect().width() - 200);
+    medicine->setPos(randomX, sceneRect().top());
+    addItem(medicine);
+    fallingMedicines.append(qMakePair(medicine, QDateTime::currentMSecsSinceEpoch()));
+    
+    qDebug() << "[DEBUG] Spawned medicine:" << medicine->getMedicineName() << "at position:" << medicine->pos();
 }
 
 // Update gravity
@@ -152,6 +173,43 @@ void BattleScene::updateFallingWeapons() {
     }
 }
 
+// 更新掉落的药品
+void BattleScene::updateFallingMedicines() {
+    const qreal gravity = 0.5; // 重力加速度
+    const qreal maxY = map->getFloorHeight();
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    QList<int> toRemove;
+    QList<Medicine*> toDelete;
+    
+    for (int i = 0; i < fallingMedicines.size(); ++i) {
+        Medicine *medicine = fallingMedicines[i].first;
+        qint64 born = fallingMedicines[i].second;
+        
+        // 10秒生存时间，如果未被装载则删除
+        if (now - born > 10000 && !medicine->isMounted()) {
+            removeItem(medicine);
+            toDelete.append(medicine);
+            toRemove.append(i);
+            qDebug() << "[DEBUG] Medicine" << medicine->getMedicineName() << "expired after 10 seconds";
+            continue;
+        }
+        
+        // 掉落物理
+        QPointF pos = medicine->pos();
+        if (pos.y() < maxY) {
+            medicine->setPos(pos.x(), std::min(maxY, pos.y() + gravity * 16));
+        }
+    }
+    
+    // 清理已移除的项目
+    for (int i = toRemove.size() - 1; i >= 0; --i) {
+        fallingMedicines.removeAt(toRemove[i]);
+    }
+    for (Medicine* m : toDelete) {
+        delete m;
+    }
+}
+
 void BattleScene::processInput() {
     Scene::processInput();
     if (character != nullptr) character->processInput();
@@ -179,53 +237,53 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                     // 根据武器类型设置攻击冷却时间
                     if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
                         character->setAttackCooldown(pistol->getFireRate());
-                        qDebug() << "[DEBUG] Set pistol fire rate:" << pistol->getFireRate() << "ms";
+                        // qDebug() << "[DEBUG] Set pistol fire rate:" << pistol->getFireRate() << "ms";
                     } else if (auto shotgun = dynamic_cast<Shotgun*>(weapon)) {
                         character->setAttackCooldown(shotgun->getFireRate());
-                        qDebug() << "[DEBUG] Set shotgun fire rate:" << shotgun->getFireRate() << "ms";
+                        // qDebug() << "[DEBUG] Set shotgun fire rate:" << shotgun->getFireRate() << "ms";
                     } else if (auto submachine = dynamic_cast<Submachine*>(weapon)) {
                         character->setAttackCooldown(submachine->getFireRate());
-                        qDebug() << "[DEBUG] Set submachine fire rate:" << submachine->getFireRate() << "ms";
+                        // qDebug() << "[DEBUG] Set submachine fire rate:" << submachine->getFireRate() << "ms";
                     } else {
                         // 其他武器使用默认冷却时间
                         character->setAttackCooldown(500);
-                        qDebug() << "[DEBUG] Set default fire rate: 500ms";
+                        // qDebug() << "[DEBUG] Set default fire rate: 500ms";
                     }
                 } else {
                     // 拳头攻击使用默认冷却时间
                     character->setAttackCooldown(500);
-                    qDebug() << "[DEBUG] Set fist attack fire rate: 500ms";
+                    // qDebug() << "[DEBUG] Set fist attack fire rate: 500ms";
                 }
                 
                 // 开始攻击冷却计时
                 character->startAttackCooldown();
                 
                 if (character->getWeapon() != nullptr) {
-                    qDebug() << "[DEBUG] Character has weapon";
+                    // qDebug() << "[DEBUG] Character has weapon";
                     Weapon *weapon = character->getWeapon();
                     
                     // 检查是否为小刀
                     if (weapon->getWeaponName() == "Knife") {
-                        qDebug() << "[DEBUG] Character using knife attack";
+                        // qDebug() << "[DEBUG] Character using knife attack";
                         // 小刀攻击逻辑：检查小刀位置是否在对方碰撞箱内
                         QPointF knifePos = weapon->scenePos();
-                        qDebug() << "[DEBUG] Knife position:" << knifePos;
+                        // qDebug() << "[DEBUG] Knife position:" << knifePos;
                         
                         // 检查是否击中Hero
                         if (hero && hero->isHitByPoint(knifePos)) {
-                            qDebug() << "[DEBUG] Knife hit Hero! Dealing 10 damage";
+                            // qDebug() << "[DEBUG] Knife hit Hero! Dealing 10 damage";
                             int newHP = std::max(0, hero->getHP() - 10); // 确保HP不低于0
                             hero->setHP(newHP);
-                            qDebug() << "[DEBUG] Hero HP after knife attack:" << hero->getHP();
+                            // qDebug() << "[DEBUG] Hero HP after knife attack:" << hero->getHP();
                             invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
                         } else {
-                            qDebug() << "[DEBUG] Knife attack missed";
+                            // qDebug() << "[DEBUG] Knife attack missed";
                         }
                     } else if (weapon->getWeaponName() == "Ball") {
-                        qDebug() << "[DEBUG] Character using ball attack";
+                        // qDebug() << "[DEBUG] Character using ball attack";
                         // 铅球攻击逻辑：投掷一个新的Ball对象
                         if (weapon->getAmmo() > 0) {
-                            qDebug() << "[DEBUG] Ball used, creating thrown ball";
+                            // qDebug() << "[DEBUG] Ball used, creating thrown ball";
                             
                             // 创建一个新的Ball对象用于投掷
                             Ball* thrownBall = new Ball(nullptr);
@@ -244,47 +302,47 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             
                             // 添加到场景中
                             addItem(thrownBall);
-                            qDebug() << "[DEBUG] Thrown ball created at pos:" << thrownBall->pos() << "with velocity:" << vx << "," << vy;
+                            // qDebug() << "[DEBUG] Thrown ball created at pos:" << thrownBall->pos() << "with velocity:" << vx << "," << vy;
                             
                             // 原有武器处理逻辑
-                            qDebug() << "[DEBUG] Step 1: About to call removeFallingWeapon";
+                            // qDebug() << "[DEBUG] Step 1: About to call removeFallingWeapon";
                             
                             // 武器用完后消失
                             // 先从 fallingWeapons 列表中移除，再安全删除
                             removeFallingWeapon(weapon);
-                            qDebug() << "[DEBUG] Step 2: removeFallingWeapon completed";
+                            // qDebug() << "[DEBUG] Step 2: removeFallingWeapon completed";
                             
                             removeItem(weapon);
-                            qDebug() << "[DEBUG] Step 3: removeItem completed";
+                            // qDebug() << "[DEBUG] Step 3: removeItem completed";
                             
-                            qDebug() << "[DEBUG] Step 4a: About to call character->pickupWeapon(nullptr)";
-                            qDebug() << "[DEBUG] Step 4b: character pointer is" << character;
+                            // qDebug() << "[DEBUG] Step 4a: About to call character->pickupWeapon(nullptr)";
+                            // qDebug() << "[DEBUG] Step 4b: character pointer is" << character;
                             character->pickupWeapon(nullptr);
-                            qDebug() << "[DEBUG] Step 4: pickupWeapon(nullptr) completed";
+                            // qDebug() << "[DEBUG] Step 4: pickupWeapon(nullptr) completed";
                             
                             // 使用定时器延迟删除，避免立即删除导致的问题
-                            qDebug() << "[DEBUG] Step 5: About to schedule weapon deletion";
+                            // qDebug() << "[DEBUG] Step 5: About to schedule weapon deletion";
                             QTimer::singleShot(0, [weapon]() {
-                                qDebug() << "[DEBUG] Lambda: About to delete weapon";
+                                // qDebug() << "[DEBUG] Lambda: About to delete weapon";
                                 delete weapon;
-                                qDebug() << "[DEBUG] Lambda: Weapon deleted successfully";
+                                // qDebug() << "[DEBUG] Lambda: Weapon deleted successfully";
                             });
-                            qDebug() << "[DEBUG] Step 6: Weapon deletion scheduled";
+                            // qDebug() << "[DEBUG] Step 6: Weapon deletion scheduled";
                             
-                            qDebug() << "[DEBUG] Character is now empty-handed";
+                            // qDebug() << "[DEBUG] Character is now empty-handed";
                         } else {
-                            qDebug() << "[DEBUG] Ball has no ammo left";
+                            // qDebug() << "[DEBUG] Ball has no ammo left";
                         }
                     } else {
                         // 远程武器攻击逻辑
-                        qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
+                        // qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
                         if (weapon->getAmmo() > 0) {
                             weapon->decAmmo();
                             QPointF charPos = character->pos();
                             QPointF gunPos = weapon->scenePos();
-                            qDebug() << "[DEBUG] Character pos:" << charPos;
-                            qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
-                            qDebug() << "[DEBUG] Character facing right:" << character->isFacingRight();
+                            // qDebug() << "[DEBUG] Character pos:" << charPos;
+                            // qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
+                            // qDebug() << "[DEBUG] Character facing right:" << character->isFacingRight();
                             
                             // 根据武器类型获取不同的属性
                             qreal bulletSpeed = 22.5; // 默认速度
@@ -293,35 +351,35 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
                                 bulletSpeed = pistol->getBulletSpeed();
                                 bulletDamage = pistol->getBulletDamage();
-                                qDebug() << "[DEBUG] Using Pistol - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                                // qDebug() << "[DEBUG] Using Pistol - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
                             } else if (auto shotgun = dynamic_cast<Shotgun*>(weapon)) {
                                 bulletSpeed = shotgun->getBulletSpeed();
                                 bulletDamage = shotgun->getBulletDamage();
-                                qDebug() << "[DEBUG] Using Shotgun - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                                // qDebug() << "[DEBUG] Using Shotgun - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
                             } else if (auto submachine = dynamic_cast<Submachine*>(weapon)) {
                                 bulletSpeed = submachine->getBulletSpeed();
                                 bulletDamage = submachine->getBulletDamage();
-                                qDebug() << "[DEBUG] Using Submachine - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
+                                // qDebug() << "[DEBUG] Using Submachine - Speed:" << bulletSpeed << "Damage:" << bulletDamage;
                             }
                             
                             qreal vx = character->isFacingRight() ? bulletSpeed : -bulletSpeed;
                             qreal bx = gunPos.x();
                             qreal by = gunPos.y();
                             
-                            qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
-                            qDebug() << "[DEBUG] Bullet velocity:" << vx;
+                            // qDebug() << "[DEBUG] Bullet spawn pos:" << bx << "," << by;
+                            // qDebug() << "[DEBUG] Bullet velocity:" << vx;
                             
                             Bullet *bullet = new Bullet(bx, by, vx, bulletDamage);
                             bullet->shooter = character;
                             bullet->setZValue(100);
                             addItem(bullet);
-                            qDebug() << "[DEBUG] Bullet created and added to scene";
+                            // qDebug() << "[DEBUG] Bullet created and added to scene";
                         } else {
-                            qDebug() << "[DEBUG] No ammo left";
+                            // qDebug() << "[DEBUG] No ammo left";
                         }
                     }
                 } else {
-                    qDebug() << "[DEBUG] Character has no weapon - using fist attack";
+                    // qDebug() << "[DEBUG] Character has no weapon - using fist attack";
                     // 拳头攻击逻辑：检查角色前方是否有敌人
                     QPointF charPos = character->scenePos();
                     QPointF fistPos;
@@ -333,21 +391,21 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         fistPos = QPointF(charPos.x() - 20, charPos.y() - 100); // 左前方
                     }
                     
-                    qDebug() << "[DEBUG] Fist attack position:" << fistPos;
+                    // qDebug() << "[DEBUG] Fist attack position:" << fistPos;
                     
                     // 检查是否击中Hero
                     if (hero && hero->isHitByPoint(fistPos)) {
-                        qDebug() << "[DEBUG] Fist hit Hero! Dealing 3 damage";
+                        // qDebug() << "[DEBUG] Fist hit Hero! Dealing 3 damage";
                         int newHP = std::max(0, hero->getHP() - 3); // 确保HP不低于0
                         hero->setHP(newHP);
-                        qDebug() << "[DEBUG] Hero HP after fist attack:" << hero->getHP();
+                        // qDebug() << "[DEBUG] Hero HP after fist attack:" << hero->getHP();
                         invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
                     } else {
-                        qDebug() << "[DEBUG] Fist attack missed";
+                        // qDebug() << "[DEBUG] Fist attack missed";
                     }
                 }
             } else {
-                qDebug() << "[DEBUG] Character is null";
+                // qDebug() << "[DEBUG] Character is null";
             }
             break;
         case Qt::Key_K:
@@ -358,28 +416,28 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                 
                 // 检查攻击冷却时间
                 if (!hero->canAttack()) {
-                    qDebug() << "[DEBUG] Hero attack on cooldown, ignoring";
+                    // qDebug() << "[DEBUG] Hero attack on cooldown, ignoring";
                     break;
                 }
                 
                 if (hero->getWeapon() != nullptr) {
-                    qDebug() << "[DEBUG] Hero has weapon";
+                    // qDebug() << "[DEBUG] Hero has weapon";
                     Weapon *weapon = hero->getWeapon();
                     
                     // 根据武器类型设置攻击冷却时间
                     if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
                         hero->setAttackCooldown(pistol->getFireRate());
-                        qDebug() << "[DEBUG] Set hero pistol fire rate:" << pistol->getFireRate() << "ms";
+                        // qDebug() << "[DEBUG] Set hero pistol fire rate:" << pistol->getFireRate() << "ms";
                     } else if (auto shotgun = dynamic_cast<Shotgun*>(weapon)) {
                         hero->setAttackCooldown(shotgun->getFireRate());
-                        qDebug() << "[DEBUG] Set hero shotgun fire rate:" << shotgun->getFireRate() << "ms";
+                        // qDebug() << "[DEBUG] Set hero shotgun fire rate:" << shotgun->getFireRate() << "ms";
                     } else if (auto submachine = dynamic_cast<Submachine*>(weapon)) {
                         hero->setAttackCooldown(submachine->getFireRate());
-                        qDebug() << "[DEBUG] Set hero submachine fire rate:" << submachine->getFireRate() << "ms";
+                        // qDebug() << "[DEBUG] Set hero submachine fire rate:" << submachine->getFireRate() << "ms";
                     } else {
                         // 其他武器使用默认冷却时间
                         hero->setAttackCooldown(500);
-                        qDebug() << "[DEBUG] Set hero default fire rate: 500ms";
+                        // qDebug() << "[DEBUG] Set hero default fire rate: 500ms";
                     }
                 } else {
                     // 拳头攻击使用默认冷却时间
@@ -609,6 +667,16 @@ void BattleScene::keyReleaseEvent(QKeyEvent *event) {
 void BattleScene::update() {
     Scene::update();
     updateFallingWeapons();
+    updateFallingMedicines();
+    
+    // 每10帧重新绘制血量条
+    frameCounter++;
+    if (frameCounter >= 10) {
+        frameCounter = 0;
+        // 强制重绘前景（血量条在drawForeground中绘制）
+        invalidate(sceneRect(), QGraphicsScene::ForegroundLayer);
+    }
+    
     advance();
 }
 
@@ -634,11 +702,41 @@ void BattleScene::processPicking() {
                 spareArmor = oldArmor;
             }
         }
+        
+        // 检查附近的药品
+        auto medicine = findNearestMedicine(character->pos(), 100.);
+        if (medicine != nullptr) {
+            character->pickupMedicine(medicine);
+            // 从掉落药品列表中移除
+            for (int i = 0; i < fallingMedicines.size(); ++i) {
+                if (fallingMedicines[i].first == medicine) {
+                    fallingMedicines.removeAt(i);
+                    break;
+                }
+            }
+            removeItem(medicine);
+            delete medicine;
+        }
     }
     if (hero && hero->isPicking()) {
         auto mountable = findNearestUnmountedMountable(hero->pos(), 100.);
         if (mountable != nullptr) {
             pickupMountable(hero, mountable);
+        }
+        
+        // Hero也可以拾取药品
+        auto medicine = findNearestMedicine(hero->pos(), 100.);
+        if (medicine != nullptr) {
+            hero->pickupMedicine(medicine);
+            // 从掉落药品列表中移除
+            for (int i = 0; i < fallingMedicines.size(); ++i) {
+                if (fallingMedicines[i].first == medicine) {
+                    fallingMedicines.removeAt(i);
+                    break;
+                }
+            }
+            removeItem(medicine);
+            delete medicine;
         }
     }
 }
@@ -654,6 +752,25 @@ Mountable *BattleScene::findNearestUnmountedMountable(const QPointF &pos, qreal 
                 if (distance < minDistance) {
                     minDistance = distance;
                     nearest = mountable;
+                }
+            }
+        }
+    }
+
+    return nearest;
+}
+
+Medicine *BattleScene::findNearestMedicine(const QPointF &pos, qreal distance_threshold) {
+    Medicine *nearest = nullptr;
+    qreal minDistance = distance_threshold;
+
+    for (QGraphicsItem *item: items()) {
+        if (auto medicine = dynamic_cast<Medicine *>(item)) {
+            if (!medicine->isMounted()) {
+                qreal distance = QLineF(pos, item->pos()).length();
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = medicine;
                 }
             }
         }

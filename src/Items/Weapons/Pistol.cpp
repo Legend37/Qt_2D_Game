@@ -1,7 +1,8 @@
 #include "Pistol.h"
 
-Pistol::Pistol(QGraphicsItem *parent) 
-    : Weapon(parent, ":/Items/Weapon/pistol.png", "Pistol", true) {
+Pistol::Pistol(QGraphicsItem *parent)
+    : Item(parent, ":/Items/Weapon/pistol.png", true),
+      Weapon(parent, ":/Items/Weapon/pistol.png", "Pistol", true) {
     // 放大手枪到2倍大小
     setScale(2.0);
 }

@@ -4,7 +4,9 @@
 
 #include <QTransform>
 #include <QDateTime>
+#include <QGraphicsScene>
 #include "Character.h"
+#include "../Medicines/Medicine.h"
 
 Character::Character(QGraphicsItem *parent) : Item(parent, "") {
 //    ellipseItem = new QGraphicsEllipseItem(-5, -5, 10, 10, this);
@@ -55,7 +57,13 @@ void Character::setCrouchDown(bool crouchDown) {
 
 void Character::processInput() {
     auto newVelocity = QPointF(0, velocity.y()); // Reset horizontal velocity
-    const auto moveSpeed = 0.3;
+    auto moveSpeed = 0.5;
+    
+    // 如果在冰块上，移动速度增加50%
+    if (isOnIceBlock()) {
+        moveSpeed *= 1.5;
+        qDebug() << "[DEBUG] Character on ice block, speed boosted to:" << moveSpeed;
+    }
     
     if (isCrouchDown()) {
         if (isLeftDown()) {
@@ -71,6 +79,7 @@ void Character::processInput() {
         }
         setTransform(transform);
         updateWeaponPosition(); // 下蹲时也更新武器位置
+        updateVisibilityBasedOnGrass(); // 检查是否在草地上并更新可见性
     } else {
         if (isLeftDown()) {
             newVelocity.setX(newVelocity.x() - moveSpeed);
@@ -89,6 +98,7 @@ void Character::processInput() {
         }
         setTransform(transform);
         updateWeaponPosition(); // 更新武器位置
+        updateVisibilityBasedOnGrass(); // 恢复可见性（如果不在下蹲状态）
     }
     setVelocity(newVelocity);
 
@@ -169,6 +179,24 @@ Weapon *Character::pickupWeapon(Weapon *newWeapon) {
     return oldWeapon;
 }
 
+void Character::pickupMedicine(Medicine* medicine) {
+    if (!medicine) return;
+    
+    int oldHP = getHP();
+    qDebug() << "[DEBUG] Character picked up medicine:" << medicine->getMedicineName() << "Current HP:" << oldHP;
+    
+    // 立即使用药品
+    medicine->applyEffect(this);
+    
+    int newHP = getHP();
+    qDebug() << "[DEBUG] Medicine effect applied - HP changed from" << oldHP << "to" << newHP;
+    
+    // 强制更新场景显示
+    if (scene()) {
+        scene()->update();
+    }
+}
+
 void Character::updateWeaponPosition() {
     if (weapon != nullptr) {
         // 武器始终在角色中心上方，不需要根据朝向调整位置
@@ -216,5 +244,51 @@ qint64 Character::getAttackCooldown() const {
 // 设置攻击冷却时间（毫秒）
 void Character::setAttackCooldown(qint64 cooldown) {
     attackCooldown = cooldown;
+}
+
+// 检查角色是否在草地区域
+bool Character::isOnGrassArea() const {
+    QPointF charPos = scenePos();
+    qreal x = charPos.x();
+    
+    // 检查是否在地面上
+    if (!isOnGround()) {
+        return false;
+    }
+    
+    // 检查是否在草地区域：(300-450) 或 (900-1050)
+    return (x >= 300 && x <= 450) || (x >= 900 && x <= 1050);
+}
+
+// 检查角色是否在冰块区域
+bool Character::isOnIceBlock() const {
+    QPointF charPos = scenePos();
+    qreal x = charPos.x();
+    
+    // 检查是否在地面上
+    if (!isOnGround()) {
+        return false;
+    }
+    
+    // 检查是否在冰块区域：(576-710)
+    return (x >= 576 && x <= 710);
+}
+
+// 根据是否在草地上以及是否下蹲来更新可见性
+void Character::updateVisibilityBasedOnGrass() {
+    if (isCrouchDown() && isOnGrassArea()) {
+        // 在草地上下蹲时隐藏角色和武器
+        setVisible(false);
+        if (weapon) {
+            weapon->setVisible(false);
+        }
+        qDebug() << "[DEBUG] Character hidden in grass at position:" << scenePos();
+    } else {
+        // 其他情况下显示角色和武器
+        setVisible(true);
+        if (weapon) {
+            weapon->setVisible(true);
+        }
+    }
 }
 

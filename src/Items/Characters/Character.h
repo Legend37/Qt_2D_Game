@@ -48,6 +48,9 @@ public:
     Armor* pickupArmor(Armor* newArmor);
 
     Weapon* pickupWeapon(Weapon* newWeapon);
+    
+    // 拾取药品
+    void pickupMedicine(class Medicine* medicine);
 
     int getHP() const { return hp; }
     void setHP(int value) { hp = value; }
@@ -64,9 +67,16 @@ public:
     void startAttackCooldown();
     qint64 getAttackCooldown() const;
     void setAttackCooldown(qint64 cooldown);
+    
+    // 草地隐藏功能
+    bool isOnGrassArea() const;
+    
+    // 冰块速度提升功能
+    bool isOnIceBlock() const;
 
 private:
     void updateWeaponPosition();
+    void updateVisibilityBasedOnGrass();
 
 protected:
     HeadEquipment *headEquipment{};

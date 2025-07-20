@@ -9,7 +9,7 @@
 #include "../Item.h"
 #include "../Mountable.h"
 
-class LegEquipment: public Item, public Mountable {
+class LegEquipment: public virtual Item, public virtual Mountable {
 public:
     explicit LegEquipment(QGraphicsItem *parent, const QString &pixmapPath);
 

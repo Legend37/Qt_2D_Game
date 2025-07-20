@@ -1,6 +1,8 @@
 #include "Knife.h"
 
-Knife::Knife(QGraphicsItem *parent) : Weapon(parent, ":/Items/Weapon/knife.png", "Knife") {
+Knife::Knife(QGraphicsItem *parent) 
+    : Item(parent, ":/Items/Weapon/knife.png", false),
+      Weapon(parent, ":/Items/Weapon/knife.png", "Knife") {
     // Knife 不能发射子弹，所以弹药设为0
     setAmmo(0);
     

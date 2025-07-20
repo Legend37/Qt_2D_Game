@@ -7,12 +7,20 @@
 
 
 #include "Map.h"
+#include <QGraphicsPixmapItem>
 
 class Battlefield: public Map {
 public:
     explicit Battlefield(QGraphicsItem *parent= nullptr);
 
     qreal getFloorHeight() override;
+
+private:
+    void setupGrassElements();
+    void setupIceBlock();
+    QGraphicsPixmapItem *grass1;
+    QGraphicsPixmapItem *grass2;
+    QGraphicsPixmapItem *iceBlock;
 };
 
 

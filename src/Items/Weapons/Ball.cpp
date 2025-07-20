@@ -6,7 +6,9 @@
 #include <QDateTime>
 #include <QTimer>
 
-Ball::Ball(QGraphicsItem *parent) : Weapon(parent, ":/Items/Weapon/ball.png", "Ball") {
+Ball::Ball(QGraphicsItem *parent) 
+    : Item(parent, ":/Items/Weapon/ball.png", false),
+      Weapon(parent, ":/Items/Weapon/ball.png", "Ball") {
     // 设置初始弹药数量为1（只能使用一次）
     setAmmo(1);
     
@@ -36,13 +38,15 @@ void Ball::advance(int phase) {
     // 如果已标记不活跃，停止运动
     if (!active) return;
     
-    // 检查是否超过生存时间
-    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
-    if (currentTime - creationTime > maxLifetime) {
-        if (scene()) {
-            this->deleteLater();
+    // 只有在未被挂载时才检查生存时间
+    if (!isMounted()) {
+        qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+        if (currentTime - creationTime > maxLifetime) {
+            if (scene()) {
+                this->deleteLater();
+            }
+            return;
         }
-        return;
     }
     
     // 应用重力 - 根据是否为投掷模式使用不同的重力值

@@ -4,7 +4,7 @@
 #include "../Item.h"
 #include "../Mountable.h"
 
-class Weapon : public Item, public Mountable {
+class Weapon : public virtual Item, public virtual Mountable {
 public:
     explicit Weapon(QGraphicsItem *parent, const QString &imagePath, const QString &weaponName, bool mirrorPixmap = true);
 

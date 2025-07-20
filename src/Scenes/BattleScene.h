@@ -19,6 +19,11 @@
 #include "../Items/Weapons/Shotgun.h"
 #include "../Items/Weapons/Submachine.h"
 #include "../Items/Weapons/Knife.h"
+#include "../Items/Weapons/Ball.h"
+#include "../Items/Medicines/Bandage.h"
+#include "../Items/Medicines/Medkit.h"
+#include "../Items/Medicines/Adrenaline.h"
+#include "../Items/Weapons/Knife.h"
 
 class Weapon;
 
@@ -50,20 +55,27 @@ protected:
 
 private:
     Mountable *findNearestUnmountedMountable(const QPointF &pos, qreal distance_threshold = std::numeric_limits<qreal>::max());
+    Medicine *findNearestMedicine(const QPointF &pos, qreal distance_threshold = std::numeric_limits<qreal>::max());
     Mountable * pickupMountable(Character *character, Mountable *mountable);
     void generateRandomWeapons();
 
     void spawnRandomWeapon();
+    void spawnRandomMedicine();
     void updateFallingWeapons();
+    void updateFallingMedicines();
     QTimer *weaponDropTimer = nullptr;
+    QTimer *medicineDropTimer = nullptr; // 药品掉落定时器
     QTimer *bulletDebugTimer = nullptr; // 子弹调试定时器
     QTimer *hitBoxDebugTimer = nullptr; // 碰撞箱调试定时器
     QList<QPair<Weapon*, qint64>> fallingWeapons; // 武器和生成时间
+    QList<QPair<Medicine*, qint64>> fallingMedicines; // 药品和生成时间
 
     Map *map;
     Character *character;
     Hero *hero;
     Armor *spareArmor;
+    
+    int frameCounter = 0; // 帧计数器，用于控制血量条重绘频率
 
 private slots:
     void debugAllBulletPositions();

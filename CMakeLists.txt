@@ -64,6 +64,14 @@ add_executable(qt_2025_game src/main.cpp
         src/Items/Weapons/Ball.h
         src/Items/Weapons/Bullet.cpp
         src/Items/Weapons/Bullet.h
+        src/Items/Medicines/Medicine.cpp
+        src/Items/Medicines/Medicine.h
+        src/Items/Medicines/Bandage.cpp
+        src/Items/Medicines/Bandage.h
+        src/Items/Medicines/Medkit.cpp
+        src/Items/Medicines/Medkit.h
+        src/Items/Medicines/Adrenaline.cpp
+        src/Items/Medicines/Adrenaline.h
         src/Items/Platform.cpp
         src/Items/Platform.h)
 target_link_libraries(qt_2025_game
