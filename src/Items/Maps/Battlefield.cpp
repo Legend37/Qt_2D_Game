@@ -3,10 +3,13 @@
 //
 
 #include "Battlefield.h"
+#include "../Platform.h"
+#include "../Characters/Character.h"
 #include <QPixmap>
 #include <QDebug>
 
 Battlefield::Battlefield(QGraphicsItem *parent) : Map(parent, ":/Items/Maps/Battlefield/background.jpg") {
+    setupPlatform();
     setupGrassElements();
     setupIceBlock();
 }
@@ -42,7 +45,7 @@ void Battlefield::setupGrassElements() {
 void Battlefield::setupIceBlock() {
     QPixmap icePixmap(":/Items/Maps/Battlefield/Ice_block.png");
     if (icePixmap.isNull()) {
-        qDebug() << "[ERROR] Failed to load ice block texture!";
+        // qDebug() << "[ERROR] Failed to load ice block texture!";
         return;
     }
     
@@ -51,15 +54,37 @@ void Battlefield::setupIceBlock() {
     
     // 创建冰块元素，使用相对坐标
     iceBlock = new QGraphicsPixmapItem(icePixmap, this);
-    iceBlock->setPos(mapRect.width() * 0.45, mapRect.height() * 0.65); // 大约在地图的39%和69%位置 (中央偏下)
     iceBlock->setZValue(2); // 确保冰块在草地之上
     
-    qDebug() << "[DEBUG] Ice block created at relative position";
-    qDebug() << "[DEBUG] Map rect:" << mapRect;
-    qDebug() << "[DEBUG] Ice block pos:" << iceBlock->pos();
+    // qDebug() << "[DEBUG] Ice block created at relative position";
+    // qDebug() << "[DEBUG] Map rect:" << mapRect;
+    // qDebug() << "[DEBUG] Ice block pos:" << iceBlock->pos();
+}
+
+void Battlefield::setupPlatform() {
+    // 获取场景边界来确定平台尺寸
+    QRectF sceneRect = QRectF(0, 0, 1280, 720); // 默认场景大小
+    
+    // 创建横跨整个场景宽度的岩石平台，y坐标为600
+    qreal platformY = 600;
+    qreal platformWidth = sceneRect.width();
+    qreal platformHeight = 40; // 平台厚度
+    
+    groundPlatform = new Platform(0, platformY, platformWidth, platformHeight, this);
+    
 }
 
 qreal Battlefield::getFloorHeight() {
-    auto sceneRect = sceneBoundingRect();
-    return (sceneRect.top() + sceneRect.bottom()) * 0.63;
+    // 地面高度现在是平台顶部
+    return 600;
+}
+
+bool Battlefield::isCharacterOnGround(Character* character) const {
+    if (!character || !groundPlatform) return false;
+    
+    // 获取角色的碰撞箱
+    QRectF characterRect = character->getHitBox();
+    
+    // 检查角色是否站在平台上
+    return groundPlatform->isCharacterOnTop(characterRect);
 }

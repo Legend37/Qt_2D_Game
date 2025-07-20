@@ -56,7 +56,7 @@ void Ball::advance(int phase) {
     // 调试输出重力应用情况
     static int gravityDebugCounter = 0;
     if (gravityDebugCounter % 15 == 0) {
-        qDebug() << "[DEBUG] Ball gravity applied: vy =" << velocity.y() << "gravity =" << currentGravity << "isThrown =" << isThrown;
+        // qDebug() << "[DEBUG] Ball gravity applied: vy =" << velocity.y() << "gravity =" << currentGravity << "isThrown =" << isThrown;
     }
     gravityDebugCounter++;
     
@@ -68,7 +68,7 @@ void Ball::advance(int phase) {
     // 调试输出
     static int debugCounter = 0;
     if (debugCounter % 30 == 0) {
-        qDebug() << "[DEBUG] Ball pos:" << newPos << "velocity:" << velocity;
+        // qDebug() << "[DEBUG] Ball pos:" << newPos << "velocity:" << velocity;
     }
     debugCounter++;
     
@@ -79,14 +79,27 @@ void Ball::advance(int phase) {
             // 获取地面高度
             qreal groundY = battleScene->getGroundHeight();
             if (newPos.y() >= groundY) {
-                qDebug() << "[DEBUG] Ball hit ground, removing";
-                // 只有当球是掉落武器时才从 BattleScene 的列表中移除
-                // 投掷的球不在 fallingWeapons 列表中，不需要移除
-                if (!shooter) {
-                    QMetaObject::invokeMethod(battleScene, "removeFallingWeapon", Q_ARG(Weapon*, this));
+                // 球落地，停止运动
+                setPos(scenePos().x(), groundY);
+                velocity = QPointF(0, 0);
+                
+                // 如果尚未开始地面计时，开始计时
+                if (groundTimer == 0) {
+                    groundTimer = QDateTime::currentMSecsSinceEpoch();
+                    qDebug() << "[DEBUG] Ball hit ground, starting 10s timer";
                 }
-                this->deleteLater();
-                return;
+                
+                // 检查是否已在地面停留10秒
+                qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+                if (currentTime - groundTimer >= 10000) { // 10秒
+                    qDebug() << "[DEBUG] Ball removed after 10s on ground";
+                    // 只有当球是掉落武器时才从 BattleScene 的列表中移除
+                    if (!shooter) {
+                        QMetaObject::invokeMethod(battleScene, "removeFallingWeapon", Q_ARG(Weapon*, this));
+                    }
+                    this->deleteLater();
+                    return;
+                }
             }
         }
         
@@ -94,7 +107,7 @@ void Ball::advance(int phase) {
         qreal currentX = scenePos().x();
         qreal currentY = scenePos().y();
         if (currentX < -50 || currentX > 1330 || currentY > 1000) {
-            qDebug() << "[DEBUG] Ball removed (off screen)";
+            // qDebug() << "[DEBUG] Ball removed (off screen)";
             this->deleteLater();
             return;
         }
@@ -116,9 +129,9 @@ void Ball::checkCollisions() {
     Character* character = battleScene->getCharacter();
     if (character && character != shooter) {
         if (character->checkBulletCollision(ballPos)) {
-            qDebug() << "[DEBUG] Ball hit character! Dealing 15 damage";
+            qDebug() << "[DEBUG] Ball hit character! Dealing 50 damage";
             int currentHP = character->getHP();
-            character->setHP(std::max(0, currentHP - 15));
+            character->setHP(std::max(0, currentHP - 50));
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
@@ -133,7 +146,7 @@ void Ball::checkCollisions() {
     Character* hero = battleScene->getHero();
     if (hero && hero != shooter) {
         if (hero->checkBulletCollision(ballPos)) {
-            qDebug() << "[DEBUG] Ball hit hero! Dealing 15 damage";
+            qDebug() << "[DEBUG] Ball hit hero! Dealing 50 damage";
             int currentHP = hero->getHP();
             hero->setHP(std::max(0, currentHP - 50));
             

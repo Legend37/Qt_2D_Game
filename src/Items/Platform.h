@@ -1,11 +1,10 @@
 #ifndef QT_PROGRAMMING_2024_PLATFORM_H
 #define QT_PROGRAMMING_2024_PLATFORM_H
 
-#include <QGraphicsRectItem>
-#include <QBrush>
-#include <QPen>
+#include "Item.h"
+#include <QRectF>
 
-class Platform : public QGraphicsRectItem {
+class Platform : public Item {
 public:
     Platform(qreal x, qreal y, qreal width, qreal height, QGraphicsItem *parent = nullptr);
     
@@ -20,6 +19,13 @@ public:
     
     // 获取平台底部Y坐标  
     qreal getBottomY() const;
+    
+    // 获取平台矩形
+    QRectF getPlatformRect() const;
+
+private:
+    qreal platformWidth;
+    qreal platformHeight;
 };
 
 #endif //QT_PROGRAMMING_2024_PLATFORM_H

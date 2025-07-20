@@ -1,15 +1,45 @@
 #include "Platform.h"
+#include <QPixmap>
+#include <QGraphicsPixmapItem>
+#include <QDebug>
 
 Platform::Platform(qreal x, qreal y, qreal width, qreal height, QGraphicsItem *parent)
-    : QGraphicsRectItem(x, y, width, height, parent) {
+    : Item(parent, ""), 
+      platformWidth(width), platformHeight(height) {
     
-    // 设置平台外观
-    setBrush(QColor(139, 69, 19)); // 棕色平台
-    setPen(QPen(QColor(101, 67, 33), 2)); // 深棕色边框
+    // 设置平台位置
+    setPos(x, y);
+    
+// 加载岩石纹理
+    QPixmap rockPixmap(":/Items/Maps/Battlefield/rock.png");
+    if (rockPixmap.isNull()) {
+        qDebug() << "[ERROR] Failed to load rock texture!";
+        return;
+    }
+    
+    // 计算需要多少个岩石图片来填满宽度
+    qreal rockWidth = rockPixmap.width();
+    qreal rockHeight = rockPixmap.height();
+    int tilesNeeded = static_cast<int>(width / rockWidth) + 1; // +1确保完全覆盖
+    
+    // 计算统一缩放比例以匹配平台高度
+    qreal scale = height / rockHeight;
+    qreal scaledRockWidth = rockWidth * scale;
+    
+    // 创建多个岩石图片项来拼接
+    for (int i = 0; i < tilesNeeded; ++i) {
+        QGraphicsPixmapItem* rockTile = new QGraphicsPixmapItem(rockPixmap, this);
+        rockTile->setPos(i * scaledRockWidth, 0); // 使用缩放后的宽度来排列
+        rockTile->setScale(scale); // 统一缩放保持比例
+        rockTile->setZValue(0);
+        qDebug() << "[DEBUG] rockTile" << i << "y pos:" << mapToScene(rockTile->pos()).y();
+    }
+    
+    qDebug() << "[DEBUG] Platform created with" << tilesNeeded << "rock tiles, scale:" << scale;
 }
 
 bool Platform::isCharacterOnTop(const QRectF& characterRect) const {
-    QRectF platformRect = rect().translated(pos());
+    QRectF platformRect = getPlatformRect();
     
     // 检查水平重叠
     bool horizontalOverlap = characterRect.right() > platformRect.left() && 
@@ -28,7 +58,7 @@ bool Platform::isCharacterOnTop(const QRectF& characterRect) const {
 bool Platform::isCharacterHittingFromBelow(const QRectF& characterRect, qreal velocityY) const {
     if (velocityY >= 0) return false; // 只检查向上运动
     
-    QRectF platformRect = rect().translated(pos());
+    QRectF platformRect = getPlatformRect();
     
     // 检查水平重叠
     bool horizontalOverlap = characterRect.right() > platformRect.left() && 
@@ -42,9 +72,13 @@ bool Platform::isCharacterHittingFromBelow(const QRectF& characterRect, qreal ve
 }
 
 qreal Platform::getTopY() const {
-    return pos().y() + rect().top();
+    return pos().y();
 }
 
 qreal Platform::getBottomY() const {
-    return pos().y() + rect().bottom();
+    return pos().y() + platformHeight;
+}
+
+QRectF Platform::getPlatformRect() const {
+    return QRectF(pos().x(), pos().y(), platformWidth, platformHeight);
 }

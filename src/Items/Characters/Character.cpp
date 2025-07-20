@@ -7,6 +7,7 @@
 #include <QGraphicsScene>
 #include "Character.h"
 #include "../Medicines/Medicine.h"
+#include "../Maps/Battlefield.h"
 
 Character::Character(QGraphicsItem *parent) : Item(parent, "") {
 //    ellipseItem = new QGraphicsEllipseItem(-5, -5, 10, 10, this);
@@ -62,7 +63,7 @@ void Character::processInput() {
     // 如果在冰块上，移动速度增加50%
     if (isOnIceBlock()) {
         moveSpeed *= 1.5;
-        qDebug() << "[DEBUG] Character on ice block, speed boosted to:" << moveSpeed;
+        // qDebug() << "[DEBUG] Character on ice block, speed boosted to:" << moveSpeed;
     }
     
     if (isCrouchDown()) {
@@ -124,13 +125,18 @@ void Character::applyGravity(double deltaTime) {
     if (!isOnGround()) {
         velocity.setY(velocity.y() + gravity * deltaTime);
     }
-    // Check if the character is on the ground
-    // If the character's position is below the ground level, reset its position to the ground
-    double newY = pos().y() + velocity.y() * deltaTime;
-    if (newY >= groundY) {
-        setPos(pos().x(), groundY);
+    
+    // 应用移动
+    QPointF newPos = pos() + QPointF(0, velocity.y() * deltaTime);
+    
+    // 检查是否撞击到平台或地面
+    if (newPos.y() >= groundY) {
+        newPos.setY(groundY);
         velocity.setY(0);
     }
+    
+    setPos(newPos);
+    
     // 每秒输出一次(200,500)是否在碰撞箱内（假设60fps）
     static int frameCounter = 0;
     frameCounter++;
@@ -141,6 +147,23 @@ void Character::setGroundY(double groundY) {
 }
 
 bool Character::isOnGround() const {
+    // 先检查基本的Y坐标判定（兜底机制）
+    if (pos().y() < groundY) {
+        return false;
+    }
+    
+    // 尝试获取BattleScene，使用平台判定
+    if (scene()) {
+        // 检查场景中是否有Battlefield
+        auto items = scene()->items();
+        for (auto item : items) {
+            if (auto battlefield = dynamic_cast<class Battlefield*>(item)) {
+                return battlefield->isCharacterOnGround(const_cast<Character*>(this));
+            }
+        }
+    }
+    
+    // 如果没有找到Battlefield，使用传统的Y坐标判定
     return pos().y() >= groundY;
 }
 
@@ -183,13 +206,13 @@ void Character::pickupMedicine(Medicine* medicine) {
     if (!medicine) return;
     
     int oldHP = getHP();
-    qDebug() << "[DEBUG] Character picked up medicine:" << medicine->getMedicineName() << "Current HP:" << oldHP;
+    // qDebug() << "[DEBUG] Character picked up medicine:" << medicine->getMedicineName() << "Current HP:" << oldHP;
     
     // 立即使用药品
     medicine->applyEffect(this);
     
     int newHP = getHP();
-    qDebug() << "[DEBUG] Medicine effect applied - HP changed from" << oldHP << "to" << newHP;
+    // qDebug() << "[DEBUG] Medicine effect applied - HP changed from" << oldHP << "to" << newHP;
     
     // 强制更新场景显示
     if (scene()) {
