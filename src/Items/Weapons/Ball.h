@@ -38,7 +38,7 @@ private:
     static constexpr qreal thrownGravity = 1.6; // 投掷武器的重力加速度
     qint64 creationTime; // 创建时间
     qint64 groundTimer = 0; // 球落地时间戳，用于10秒消失计时
-    static constexpr qint64 maxLifetime = 10000; // 最大生存时间10秒
+    static constexpr qint64 maxLifetime = 60000; // 最大生存时间60秒（防止球卡在空中）
     bool active = true; // 标记铅球是否仍在运动
     bool isThrown = false; // 是否为投掷模式
 };

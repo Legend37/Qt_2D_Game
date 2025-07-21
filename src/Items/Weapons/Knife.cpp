@@ -12,7 +12,7 @@ Knife::Knife(QGraphicsItem *parent)
 
 void Knife::mountToParent() {
     Weapon::mountToParent();
-    // 小刀在角色中心上方，和其他武器一样的位置
-    setPos(0, -30);
+    // 小刀在角色右前方，和其他武器一样的位置
+    setPos(33, -85);
     setRotation(0); // 保持水平
 }

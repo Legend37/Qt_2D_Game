@@ -32,10 +32,7 @@ Platform::Platform(qreal x, qreal y, qreal width, qreal height, QGraphicsItem *p
         rockTile->setPos(i * scaledRockWidth, 0); // 使用缩放后的宽度来排列
         rockTile->setScale(scale); // 统一缩放保持比例
         rockTile->setZValue(0);
-        qDebug() << "[DEBUG] rockTile" << i << "y pos:" << mapToScene(rockTile->pos()).y();
     }
-    
-    qDebug() << "[DEBUG] Platform created with" << tilesNeeded << "rock tiles, scale:" << scale;
 }
 
 bool Platform::isCharacterOnTop(const QRectF& characterRect) const {

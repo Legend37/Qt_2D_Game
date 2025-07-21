@@ -9,7 +9,7 @@ Pistol::Pistol(QGraphicsItem *parent)
 
 void Pistol::mountToParent() {
     Weapon::mountToParent();
-    // 手枪在角色中心上方
-    setPos(0, -35);
+    // 手枪在角色右前方
+    setPos(33, -85);
     setRotation(0); // 保持水平
 }

@@ -20,16 +20,21 @@ public:
     
     // 检查角色是否站在地面上（平台上）
     bool isCharacterOnGround(Character* character) const;
+    
+    // 检查角色是否站在任何平台上（包括跳跃平台）
+    bool isCharacterOnAnyPlatform(Character* character, qreal velocityY) const;
 
 private:
     void setupGrassElements();
     void setupIceBlock();
     void setupPlatform();
+    void setupJumpablePlatforms(); // 设置可跳跃平台
     
     QGraphicsPixmapItem *grass1;
     QGraphicsPixmapItem *grass2;
     QGraphicsPixmapItem *iceBlock;
     Platform *groundPlatform; // 地面平台
+    QVector<Platform*> jumpablePlatforms; // 可跳跃平台列表
 };
 
 

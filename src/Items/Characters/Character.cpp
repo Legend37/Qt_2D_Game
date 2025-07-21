@@ -62,8 +62,9 @@ void Character::processInput() {
     
     // 如果在冰块上，移动速度增加50%
     if (isOnIceBlock()) {
-        moveSpeed *= 1.5;
-        // qDebug() << "[DEBUG] Character on ice block, speed boosted to:" << moveSpeed;
+        // moveSpeed *= 1.5;
+        // qDebug() << "[DEBUG] Character on ice block, 
+        // speed boosted to:" << moveSpeed << "Position:" << scenePos() << "HitBox:" << getHitBox();
     }
     
     if (isCrouchDown()) {
@@ -122,14 +123,36 @@ void Character::jump() {
 }
 
 void Character::applyGravity(double deltaTime) {
-    if (!isOnGround()) {
+    bool onGround = false;
+    
+    // 检查是否在任何平台上
+    if (scene()) {
+        auto items = scene()->items();
+        for (auto item : items) {
+            if (auto battlefield = dynamic_cast<class Battlefield*>(item)) {
+                // 检查是否在地面平台上
+                if (battlefield->isCharacterOnGround(const_cast<Character*>(this))) {
+                    onGround = true;
+                    break;
+                }
+                // 检查是否在可跳跃平台上（仅在下降时）
+                if (velocity.y() > 0 && battlefield->isCharacterOnAnyPlatform(const_cast<Character*>(this), velocity.y())) {
+                    onGround = true;
+                    velocity.setY(0); // 停止下降
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (!onGround) {
         velocity.setY(velocity.y() + gravity * deltaTime);
     }
     
     // 应用移动
     QPointF newPos = pos() + QPointF(0, velocity.y() * deltaTime);
     
-    // 检查是否撞击到平台或地面
+    // 检查是否撞击到地面（兜底机制）
     if (newPos.y() >= groundY) {
         newPos.setY(groundY);
         velocity.setY(0);
@@ -206,13 +229,13 @@ void Character::pickupMedicine(Medicine* medicine) {
     if (!medicine) return;
     
     int oldHP = getHP();
-    // qDebug() << "[DEBUG] Character picked up medicine:" << medicine->getMedicineName() << "Current HP:" << oldHP;
+    qDebug() << "[DEBUG] Character picked up medicine:" << medicine->getMedicineName() << "Current HP:" << oldHP << "Position:" << scenePos() << "HitBox:" << getHitBox();
     
     // 立即使用药品
     medicine->applyEffect(this);
     
     int newHP = getHP();
-    // qDebug() << "[DEBUG] Medicine effect applied - HP changed from" << oldHP << "to" << newHP;
+    qDebug() << "[DEBUG] Medicine effect applied - HP changed from" << oldHP << "to" << newHP;
     
     // 强制更新场景显示
     if (scene()) {
@@ -231,7 +254,8 @@ void Character::updateWeaponPosition() {
 
 QRectF Character::getHitBox() const {
     QPointF charPos = scenePos();
-    return QRectF(charPos.x(), charPos.y() - 200, 100, 200);
+    // 碰撞箱：左上角(x-40, y-100)，右下角(x+40, y)，宽度80，高度100
+    return QRectF(charPos.x() - 40, charPos.y() - 200, 80, 200);
 }
 
 // 判断给定的坐标是否在碰撞箱中
@@ -243,8 +267,8 @@ bool Character::checkBulletCollision(const QPointF& bulletPos) const {
 // 检查给定绝对坐标是否碰到该人物
 bool Character::isHitByPoint(const QPointF& absolutePos) const {
     QPointF charPos = scenePos();
-    // 以人物pos为左下角，pos.x+100, pos.y-200为右上角的矩形
-    QRectF hitRect(charPos.x(), charPos.y() - 200, 100, 200);
+    // 碰撞箱：左上角(x-40, y-100)，右下角(x+40, y)，宽度80，高度100
+    QRectF hitRect(charPos.x() - 40, charPos.y() - 200, 80, 200);
     return hitRect.contains(absolutePos);
 }
 
@@ -305,7 +329,7 @@ void Character::updateVisibilityBasedOnGrass() {
         if (weapon) {
             weapon->setVisible(false);
         }
-        qDebug() << "[DEBUG] Character hidden in grass at position:" << scenePos();
+        qDebug() << "[DEBUG] Character hidden in grass at position:" << scenePos() << "HitBox:" << getHitBox();
     } else {
         // 其他情况下显示角色和武器
         setVisible(true);

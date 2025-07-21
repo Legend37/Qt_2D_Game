@@ -28,7 +28,7 @@ void Ball::mountToParent() {
     // 铅球的挂载逻辑，可以放大显示
     Weapon::mountToParent(); // 调用基类的挂载方法
     setScale(1.5); // 稍微放大一点
-    setPos(-80, -140); // 调整位置
+    setPos(33, -85); // 与其他武器位置一致
     setRotation(0);
     setZValue(2);
 }
@@ -36,14 +36,41 @@ void Ball::mountToParent() {
 void Ball::advance(int phase) {
     if (phase == 0) return;
     // 如果已标记不活跃，停止运动
-    if (!active) return;
+    if (!active) {
+        // qDebug() << "[DEBUG] Ball" << this << "is inactive, skipping advance()";
+        return;
+    }
     
     // 只有在未被挂载时才检查生存时间
     if (!isMounted()) {
         qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
         if (currentTime - creationTime > maxLifetime) {
+            qDebug() << "[DEBUG] Ball lifetime expired - Ball pointer:" << this;
+            qDebug() << "[DEBUG] Ball lifetime expired - Active status:" << active;
+            qDebug() << "[DEBUG] Ball lifetime expired - Time alive:" << (currentTime - creationTime) << "ms";
+            
+            // 防止重复删除
+            if (!active) {
+                qDebug() << "[DEBUG] Ball already inactive when lifetime expired, skipping";
+                return;
+            }
+            active = false;
+            
             if (scene()) {
-                this->deleteLater();
+                scene()->removeItem(this);
+                qDebug() << "[DEBUG] Ball removed from scene (lifetime expired)";
+                
+                // 使用定时器延迟删除，避免立即删除导致的问题
+                qDebug() << "[DEBUG] Scheduling Ball deletion (lifetime expired)";
+                QTimer::singleShot(0, [this]() {
+                    qDebug() << "[DEBUG] Lambda: Deleting Ball (lifetime expired)" << this;
+                    try {
+                        delete this;
+                        qDebug() << "[DEBUG] Lambda: Ball lifetime deletion completed";
+                    } catch (...) {
+                        qDebug() << "[DEBUG] Lambda: ERROR during Ball lifetime deletion";
+                    }
+                });
             }
             return;
         }
@@ -83,22 +110,70 @@ void Ball::advance(int phase) {
                 setPos(scenePos().x(), groundY);
                 velocity = QPointF(0, 0);
                 
-                // 如果尚未开始地面计时，开始计时
-                if (groundTimer == 0) {
-                    groundTimer = QDateTime::currentMSecsSinceEpoch();
-                    qDebug() << "[DEBUG] Ball hit ground, starting 10s timer";
-                }
-                
-                // 检查是否已在地面停留10秒
-                qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
-                if (currentTime - groundTimer >= 10000) { // 10秒
-                    qDebug() << "[DEBUG] Ball removed after 10s on ground";
-                    // 只有当球是掉落武器时才从 BattleScene 的列表中移除
-                    if (!shooter) {
-                        QMetaObject::invokeMethod(battleScene, "removeFallingWeapon", Q_ARG(Weapon*, this));
+                // 检查是否是投掷的Ball（有shooter）
+                if (shooter) {
+                    
+                    // 防止重复删除
+                    if (!active) {
+                        return;
                     }
-                    this->deleteLater();
+                    active = false;
+                    
+                    // 从场景中移除
+                    if (scene()) {
+                        scene()->removeItem(this);
+                    }
+                    
+                    // 立即删除
+                    QTimer::singleShot(0, [this]() {
+                        try {
+                            delete this;
+                        } catch (...) {
+                            qDebug() << "[DEBUG] ERROR during thrown Ball deletion";
+                        }
+                    });
                     return;
+                } else {
+                    // 掉落的Ball（无shooter）进入10秒计时逻辑
+                    // 如果尚未开始地面计时，开始计时
+                    if (groundTimer == 0) {
+                        groundTimer = QDateTime::currentMSecsSinceEpoch();
+                    }
+                    
+                    // 检查是否已在地面停留10秒
+                    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+                    if (currentTime - groundTimer >= 10000) { // 10秒
+                        
+                        // 标记为非活跃状态，防止重复删除
+                        if (!active) {
+                            qDebug() << "[DEBUG] Dropped Ball already inactive, skipping deletion";
+                            return;
+                        }
+                        active = false;
+                        
+                        try {
+                            battleScene->removeFallingWeapon(this);
+                        } catch (...) {
+                        }
+                        
+                        // 从场景中移除
+                        try {
+                            battleScene->removeItem(this);
+                        } catch (...) {
+                            qDebug() << "[DEBUG] ERROR: Exception while removing from scene";
+                        }
+                        
+                        // 使用定时器延迟删除，避免立即删除导致的问题
+                        QTimer::singleShot(0, [this]() {
+                            try {
+                                delete this;
+                            } catch (...) {
+                                qDebug() << "[DEBUG] Lambda: ERROR during dropped Ball deletion";
+                            }
+                        });
+                        qDebug() << "[DEBUG] Dropped Ball deletion scheduled, returning from advance()";
+                        return;
+                    }
                 }
             }
         }
@@ -107,8 +182,28 @@ void Ball::advance(int phase) {
         qreal currentX = scenePos().x();
         qreal currentY = scenePos().y();
         if (currentX < -50 || currentX > 1330 || currentY > 1000) {
-            // qDebug() << "[DEBUG] Ball removed (off screen)";
-            this->deleteLater();
+            
+            // 防止重复删除
+            if (!active) {
+                qDebug() << "[DEBUG] Ball already inactive when off-screen, skipping";
+                return;
+            }
+            active = false;
+            
+            // 从场景中移除
+            if (scene()) {
+                scene()->removeItem(this);
+                qDebug() << "[DEBUG] Ball removed from scene (off-screen)";
+            }
+            
+            // 使用定时器延迟删除，避免立即删除导致的问题
+            QTimer::singleShot(0, [this]() {
+                try {
+                    delete this;
+                } catch (...) {
+                    qDebug() << "[DEBUG] Lambda: ERROR during Ball off-screen deletion";
+                }
+            });
             return;
         }
     }
@@ -129,15 +224,33 @@ void Ball::checkCollisions() {
     Character* character = battleScene->getCharacter();
     if (character && character != shooter) {
         if (character->checkBulletCollision(ballPos)) {
-            qDebug() << "[DEBUG] Ball hit character! Dealing 50 damage";
+            
+            // 防止重复删除
+            if (!active) {
+                qDebug() << "[DEBUG] Ball already inactive during collision, skipping";
+                return;
+            }
+            active = false;
+            
             int currentHP = character->getHP();
             character->setHP(std::max(0, currentHP - 50));
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
             
-            // 移除铅球
-            this->deleteLater();
+            // 从场景中移除
+            if (scene()) {
+                scene()->removeItem(this);
+            }
+            
+            // 使用定时器延迟删除，避免立即删除导致的问题
+            QTimer::singleShot(0, [this]() {
+                try {
+                    delete this;
+                } catch (...) {
+                    qDebug() << "[DEBUG] Lambda: ERROR during Ball collision deletion";
+                }
+            });
             return;
         }
     }
@@ -146,15 +259,33 @@ void Ball::checkCollisions() {
     Character* hero = battleScene->getHero();
     if (hero && hero != shooter) {
         if (hero->checkBulletCollision(ballPos)) {
-            qDebug() << "[DEBUG] Ball hit hero! Dealing 50 damage";
+            
+            // 防止重复删除
+            if (!active) {
+                qDebug() << "[DEBUG] Ball already inactive during hero collision, skipping";
+                return;
+            }
+            active = false;
+            
             int currentHP = hero->getHP();
             hero->setHP(std::max(0, currentHP - 50));
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
             
-            // 移除铅球
-            this->deleteLater();
+            // 从场景中移除
+            if (scene()) {
+                scene()->removeItem(this);
+            }
+            
+            // 使用定时器延迟删除，避免立即删除导致的问题
+            QTimer::singleShot(0, [this]() {
+                try {
+                    delete this;
+                } catch (...) {
+                    qDebug() << "[DEBUG] Lambda: ERROR during Ball hero collision deletion";
+                }
+            });
             return;
         }
     }
