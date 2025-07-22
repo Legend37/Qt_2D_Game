@@ -12,32 +12,64 @@
 Battlefield::Battlefield(QGraphicsItem *parent) : Map(parent, ":/Items/Maps/Battlefield/background.jpg") {
     setupPlatform();
     setupJumpablePlatforms();
-    // 草地和冰块贴图已移除
+    setupGrassElements(); // 重新启用草地显示
 }
 
 void Battlefield::setupGrassElements() {
-    // 草地贴图显示已被删除
-    /*
     // 创建草地图像
     QPixmap grassPixmap(":/Items/Maps/Battlefield/grass.png");
     
     if (grassPixmap.isNull()) {
+        qDebug() << "[ERROR] Failed to load grass.png";
         return;
     }
     
-    // 获取地图的边界矩形
-    QRectF mapRect = boundingRect();
+    qreal grassWidth = grassPixmap.width();
+    qreal grassHeight = grassPixmap.height();
+    qreal yPosition = 580; // 草地y位置，在地面平台上方
     
-    // 创建第一个草地元素，使用相对坐标
-    grass1 = new QGraphicsPixmapItem(grassPixmap, this);
-    grass1->setPos(mapRect.width() * 0.23, mapRect.height() * 0.625); // 大约在地图的23%和62.5%位置
-    grass1->setZValue(1); // 确保草地在背景之上
+    // 第一个草地区域：覆盖(300-450)，宽度150像素
+    qreal area1Start = 300;
+    qreal area1Width = 150; // 450 - 300
+    int tiles1Needed = static_cast<int>(std::ceil(area1Width / grassWidth));
     
-    // 创建第二个草地元素，使用相对坐标
-    grass2 = new QGraphicsPixmapItem(grassPixmap, this);
-    grass2->setPos(mapRect.width() * 0.70, mapRect.height() * 0.625); // 大约在地图的70%和62.5%位置
-    grass2->setZValue(1); // 确保草地在背景之上
-    */
+    for (int i = 0; i < tiles1Needed; ++i) {
+        QGraphicsPixmapItem* grassTile = new QGraphicsPixmapItem(grassPixmap, this);
+        qreal tileX = area1Start + i * grassWidth - 40; // 向左偏移40像素
+        
+        // 如果最后一个瓦片超出区域边界，进行裁剪（基于原始位置计算）
+        if ((area1Start + i * grassWidth) + grassWidth > area1Start + area1Width) {
+            qreal remainingWidth = (area1Start + area1Width) - (area1Start + i * grassWidth);
+            QPixmap clippedPixmap = grassPixmap.copy(0, 0, remainingWidth, grassPixmap.height());
+            grassTile->setPixmap(clippedPixmap);
+        }
+        
+        grassTile->setPos(tileX, yPosition); // 使用偏移后的位置
+        grassTile->setZValue(1); // 确保草地在背景之上
+    }
+    
+    // 第二个草地区域：覆盖(900-1050)，宽度150像素
+    qreal area2Start = 900;
+    qreal area2Width = 150; // 1050 - 900
+    int tiles2Needed = static_cast<int>(std::ceil(area2Width / grassWidth));
+    
+    for (int i = 0; i < tiles2Needed; ++i) {
+        QGraphicsPixmapItem* grassTile = new QGraphicsPixmapItem(grassPixmap, this);
+        qreal tileX = area2Start + i * grassWidth - 40; // 向左偏移40像素
+        
+        // 如果最后一个瓦片超出区域边界，进行裁剪（基于原始位置计算）
+        if ((area2Start + i * grassWidth) + grassWidth > area2Start + area2Width) {
+            qreal remainingWidth = (area2Start + area2Width) - (area2Start + i * grassWidth);
+            QPixmap clippedPixmap = grassPixmap.copy(0, 0, remainingWidth, grassPixmap.height());
+            grassTile->setPixmap(clippedPixmap);
+        }
+        
+        grassTile->setPos(tileX, yPosition); // 使用偏移后的位置
+        grassTile->setZValue(1); // 确保草地在背景之上
+    }
+    
+    qDebug() << "[DEBUG] Grass elements created - Area1: tiles=" << tiles1Needed 
+             << "Area2: tiles=" << tiles2Needed << "at y=" << yPosition;
 }
 
 void Battlefield::setupIceBlock() {

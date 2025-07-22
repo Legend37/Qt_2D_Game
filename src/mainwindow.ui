@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>885</width>
-    <height>639</height>
+    <width>1200</width>
+    <height>720</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,8 @@
      <rect>
       <x>-15</x>
       <y>1</y>
-      <width>821</width>
-      <height>591</height>
+      <width>1200</width>
+      <height>720</height>
      </rect>
     </property>
    </widget>
@@ -30,10 +30,16 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>885</width>
+     <width>995</width>
      <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>2D格斗游戏</string>
+    </property>
+   </widget>
+   <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

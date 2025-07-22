@@ -30,8 +30,6 @@ private:
     void setupPlatform();
     void setupJumpablePlatforms(); // 设置可跳跃平台
     
-    QGraphicsPixmapItem *grass1;
-    QGraphicsPixmapItem *grass2;
     QGraphicsPixmapItem *iceBlock;
     Platform *groundPlatform; // 地面平台
     QVector<Platform*> jumpablePlatforms; // 可跳跃平台列表

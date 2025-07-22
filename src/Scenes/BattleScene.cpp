@@ -57,20 +57,16 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     setSceneRect(0, 0, 1280, 720);
     map = new Battlefield();
     character = new Link();
-    spareArmor = new FlamebreakerArmor();
     addItem(map);
     addItem(character);
-    addItem(spareArmor);
     map->scaleToFitScene(this);
-    character->setPos(map->getSpawnPos());
+    character->setPos(QPointF(100, map->getFloorHeight() - 100)); // 固定在x=100位置
     character->setGroundY(map->getFloorHeight());
-    spareArmor->unmount();
-    spareArmor->setPos(sceneRect().left() + (sceneRect().right() - sceneRect().left()) * 0.75, map->getFloorHeight());
     
     // Create second character Hero
     hero = new Hero();
     addItem(hero);
-    hero->setPos(map->getSpawnPos() + QPointF(400, 0)); // A bit to the right
+    hero->setPos(QPointF(1100, map->getFloorHeight() - 100)); // 固定在x=1100位置
     hero->setGroundY(map->getFloorHeight());
     
 
@@ -258,6 +254,9 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                 // 开始攻击冷却计时
                 character->startAttackCooldown();
                 
+                // 触发攻击特效
+                character->triggerAttackEffect();
+                
                 if (character->getWeapon() != nullptr) {
                     // qDebug() << "[DEBUG] Character has weapon";
                     Weapon *weapon = character->getWeapon();
@@ -281,8 +280,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         // 检查是否击中Hero
                         if (hero && hero->isHitByPoint(knifePos)) {
                             // qDebug() << "[DEBUG] Knife hit Hero! Dealing 10 damage";
-                            int newHP = std::max(0, hero->getHP() - 10); // 确保HP不低于0
-                            hero->setHP(newHP);
+                            hero->takeDamage(10); // 使用takeDamage函数
                             // qDebug() << "[DEBUG] Hero HP after knife attack:" << hero->getHP();
                             invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
                         } else {
@@ -407,8 +405,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                     // 检查是否击中Hero
                     if (hero && hero->isHitByPoint(fistPos)) {
                         qDebug() << "[DEBUG] Fist hit Hero! Dealing 3 damage";
-                        int newHP = std::max(0, hero->getHP() - 3); // 确保HP不低于0
-                        hero->setHP(newHP);
+                        hero->takeDamage(3); // 使用takeDamage函数
                         // qDebug() << "[DEBUG] Hero HP after fist attack:" << hero->getHP();
                         invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
                     } else {
@@ -459,6 +456,9 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                 // 开始攻击冷却计时
                 hero->startAttackCooldown();
                 
+                // 触发攻击特效
+                hero->triggerAttackEffect();
+                
                 if (hero->getWeapon() != nullptr) {
                     // qDebug() << "[DEBUG] Hero has weapon";
                     Weapon *weapon = hero->getWeapon();
@@ -482,8 +482,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         // 检查是否击中Character
                         if (character && character->isHitByPoint(knifePos)) {
                             // qDebug() << "[DEBUG] Knife hit Character! Dealing 10 damage";
-                            int newHP = std::max(0, character->getHP() - 10); // 确保HP不低于0
-                            character->setHP(newHP);
+                            character->takeDamage(10); // 使用takeDamage函数
                             // qDebug() << "[DEBUG] Character HP after knife attack:" << character->getHP();
                             invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
                         } else {
@@ -603,8 +602,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                     
                     // 检查是否击中Character
                     if (character && character->isHitByPoint(fistPos)) {
-                        int newHP = std::max(0, character->getHP() - 3); // 确保HP不低于0
-                        character->setHP(newHP);
+                        character->takeDamage(3); // 使用takeDamage函数
                         invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // 强制重绘前景层
                     }
                 }

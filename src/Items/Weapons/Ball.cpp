@@ -232,8 +232,7 @@ void Ball::checkCollisions() {
             }
             active = false;
             
-            int currentHP = character->getHP();
-            character->setHP(std::max(0, currentHP - 50));
+            character->takeDamage(50); // 使用takeDamage函数
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
@@ -267,8 +266,7 @@ void Ball::checkCollisions() {
             }
             active = false;
             
-            int currentHP = hero->getHP();
-            hero->setHP(std::max(0, currentHP - 50));
+            hero->takeDamage(50); // 使用takeDamage函数
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);

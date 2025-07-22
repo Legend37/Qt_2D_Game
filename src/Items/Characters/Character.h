@@ -73,6 +73,14 @@ public:
     
     // 冰块速度提升功能
     bool isOnIceBlock() const;
+    
+    // 受攻击效果
+    void takeDamage(int damage);
+    void updateDamageEffect();
+    
+    // 攻击特效
+    void triggerAttackEffect();
+    void updateAttackEffect();
 
 private:
     void updateWeaponPosition();
@@ -92,13 +100,24 @@ private:
     bool facingRight{true}; //record the facing direction of the character
     // If the character is facing right, the x coordinate of the pixmap will be negative
     double groundY{};
-    static constexpr double gravity = 0.02;
-    static constexpr double jumpSpeed = -3.0;
+    static constexpr double gravity = 0.008;
+    static constexpr double jumpSpeed = -2.0; // Adjusted for better jump height
     int hp = 100; // Default HP
     
     // 攻击冷却时间相关变量
     qint64 lastAttackTime = 0; // 上次攻击时间（毫秒）
     qint64 attackCooldown = 500; // 默认攻击冷却时间500毫秒
+    
+    // 受攻击红光效果相关变量
+    int damageEffectFrames = 0; // 剩余红光帧数
+    static constexpr int maxDamageEffectFrames = 10; // 红光持续10帧
+    QGraphicsEffect* originalEffect = nullptr; // 保存原始效果
+    
+    // 攻击特效相关变量
+    int attackEffectFrames = 0; // 剩余攻击特效帧数
+    static constexpr int maxAttackEffectFrames = 6; // 攻击特效持续6帧
+    QPointF originalPosition; // 保存原始位置
+    static constexpr qreal shakeIntensity = 3.0; // 震动强度（像素）
 };
 
 

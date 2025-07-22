@@ -5,6 +5,7 @@
 #include <QTransform>
 #include <QDateTime>
 #include <QGraphicsScene>
+#include <QGraphicsColorizeEffect>
 #include "Character.h"
 #include "../Medicines/Medicine.h"
 #include "../Maps/Battlefield.h"
@@ -276,6 +277,27 @@ void Character::applyGravity(double deltaTime) {
     // 应用移动（包括水平和垂直移动）
     QPointF newPos = pos() + QPointF(velocity.x() * deltaTime, velocity.y() * deltaTime);
 
+    // 屏幕边界检查 - 假设屏幕大小为1280x720
+    const qreal screenWidth = 1280;
+    const qreal screenHeight = 720;
+    const qreal characterWidth = 80;  // 角色碰撞箱宽度
+    const qreal characterHeight = 200; // 角色碰撞箱高度
+    
+    // 检查左右边界（角色中心点不能超出屏幕边界）
+    if (newPos.x() - characterWidth/2 < 0) {
+        newPos.setX(characterWidth/2);
+        velocity.setX(0); // 停止水平移动
+    } else if (newPos.x() + characterWidth/2 > screenWidth) {
+        newPos.setX(screenWidth - characterWidth/2);
+        velocity.setX(0); // 停止水平移动
+    }
+    
+    // 检查上边界（角色顶部不能超出屏幕）
+    if (newPos.y() - characterHeight < 0) {
+        newPos.setY(characterHeight);
+        velocity.setY(0); // 停止向上移动
+    }
+    
     // 检查是否撞击到地面（兜底机制）
     if (newPos.y() >= groundY) {
         newPos.setY(groundY);
@@ -283,6 +305,12 @@ void Character::applyGravity(double deltaTime) {
     }
 
     setPos(newPos);
+
+    // 更新受攻击红光效果
+    updateDamageEffect();
+    
+    // 更新攻击特效
+    updateAttackEffect();
 
     static int frameCounter = 0;
     frameCounter++;
@@ -492,6 +520,92 @@ void Character::updateVisibilityBasedOnGrass() {
         setVisible(true);
         if (weapon) {
             weapon->setVisible(true);
+        }
+    }
+}
+
+// 受到攻击，扣除生命值并触发红光效果
+void Character::takeDamage(int damage) {
+    hp = qMax(0, hp - damage); // 扣除生命值，不允许小于0
+    
+    // 触发红光效果
+    damageEffectFrames = maxDamageEffectFrames;
+    
+    // 创建红色效果
+    QGraphicsColorizeEffect* redEffect = new QGraphicsColorizeEffect();
+    redEffect->setColor(Qt::red);
+    redEffect->setStrength(0.8); // 80%的红色强度
+    
+    // 保存原始效果并应用红光效果
+    originalEffect = graphicsEffect();
+    setGraphicsEffect(redEffect);
+    
+    // 如果有武器，也应用红光效果
+    if (weapon) {
+        QGraphicsColorizeEffect* weaponRedEffect = new QGraphicsColorizeEffect();
+        weaponRedEffect->setColor(Qt::red);
+        weaponRedEffect->setStrength(0.8);
+        weapon->setGraphicsEffect(weaponRedEffect);
+    }
+    
+    qDebug() << "[DAMAGE] Character took" << damage << "damage, HP:" << hp << "Red effect frames:" << damageEffectFrames;
+}
+
+// 更新受攻击效果，需要在每帧调用
+void Character::updateDamageEffect() {
+    if (damageEffectFrames > 0) {
+        damageEffectFrames--;
+        
+        // 如果红光效果结束，恢复原始效果
+        if (damageEffectFrames <= 0) {
+            setGraphicsEffect(originalEffect);
+            originalEffect = nullptr;
+            
+            // 移除武器的红光效果
+            if (weapon) {
+                weapon->setGraphicsEffect(nullptr);
+            }
+            
+            qDebug() << "[DAMAGE] Red effect ended, HP:" << hp;
+        }
+    }
+}
+
+// 触发攻击特效
+void Character::triggerAttackEffect() {
+    attackEffectFrames = maxAttackEffectFrames;
+    originalPosition = pos(); // 保存当前位置
+    qDebug() << "[ATTACK EFFECT] Attack effect triggered, frames:" << attackEffectFrames;
+}
+
+// 更新攻击特效，需要在每帧调用
+void Character::updateAttackEffect() {
+    if (attackEffectFrames > 0) {
+        // 只在攻击特效激活时才应用震动，避免干扰正常移动
+        if (attackEffectFrames == maxAttackEffectFrames) {
+            // 第一帧，保存当前位置作为震动基准
+            originalPosition = pos();
+        }
+        
+        attackEffectFrames--;
+        
+        // 创建左右震动效果
+        qreal shakeOffset = 0;
+        if (attackEffectFrames % 2 == 0) {
+            shakeOffset = shakeIntensity; // 向右偏移
+        } else {
+            shakeOffset = -shakeIntensity; // 向左偏移
+        }
+        
+        // 应用震动偏移（基于当前的originalPosition）
+        QPointF shakePos = originalPosition;
+        shakePos.setX(originalPosition.x() + shakeOffset);
+        setPos(shakePos);
+        
+        // 如果攻击特效结束，恢复原始位置
+        if (attackEffectFrames <= 0) {
+            setPos(originalPosition);
+            qDebug() << "[ATTACK EFFECT] Attack effect ended, position restored";
         }
     }
 }
