@@ -8,6 +8,7 @@
 #include "Character.h"
 #include "../Medicines/Medicine.h"
 #include "../Maps/Battlefield.h"
+#include "../Platform.h"
 
 Character::Character(QGraphicsItem *parent) : Item(parent, "") {
 //    ellipseItem = new QGraphicsEllipseItem(-5, -5, 10, 10, this);
@@ -60,7 +61,7 @@ void Character::processInput() {
     auto newVelocity = QPointF(0, velocity.y()); // Reset horizontal velocity
     auto moveSpeed = 0.5;
     
-    // Èç¹ûÔÚ±ù¿éÉÏ£¬ÒÆ¶¯ËÙ¶ÈÔö¼Ó50%
+    // å¦‚æœåœ¨å†°å—ä¸Šï¼Œç§»åŠ¨é€Ÿåº¦å¢åŠ 50%
     if (isOnIceBlock()) {
         // moveSpeed *= 1.5;
         // qDebug() << "[DEBUG] Character on ice block, 
@@ -80,8 +81,8 @@ void Character::processInput() {
             transform.scale(1, 0.5).translate(0, 20);
         }
         setTransform(transform);
-        updateWeaponPosition(); // ÏÂ¶×Ê±Ò²¸üĞÂÎäÆ÷Î»ÖÃ
-        updateVisibilityBasedOnGrass(); // ¼ì²éÊÇ·ñÔÚ²İµØÉÏ²¢¸üĞÂ¿É¼ûĞÔ
+        updateWeaponPosition(); // ä¸‹è¹²æ—¶ä¹Ÿæ›´æ–°æ­¦å™¨ä½ç½®
+        updateVisibilityBasedOnGrass(); // æ£€æŸ¥æ˜¯å¦åœ¨è‰åœ°ä¸Šå¹¶æ›´æ–°å¯è§æ€§
     } else {
         if (isLeftDown()) {
             newVelocity.setX(newVelocity.x() - moveSpeed);
@@ -99,8 +100,8 @@ void Character::processInput() {
             transform.scale(1, 1);  
         }
         setTransform(transform);
-        updateWeaponPosition(); // ¸üĞÂÎäÆ÷Î»ÖÃ
-        updateVisibilityBasedOnGrass(); // »Ö¸´¿É¼ûĞÔ£¨Èç¹û²»ÔÚÏÂ¶××´Ì¬£©
+        updateWeaponPosition(); // æ›´æ–°æ­¦å™¨ä½ç½®
+        updateVisibilityBasedOnGrass(); // æ¢å¤å¯è§æ€§ï¼ˆå¦‚æœä¸åœ¨ä¸‹è¹²çŠ¶æ€ï¼‰
     }
     setVelocity(newVelocity);
 
@@ -125,20 +126,50 @@ void Character::jump() {
 void Character::applyGravity(double deltaTime) {
     bool onGround = false;
     
-    // ¼ì²éÊÇ·ñÔÚÈÎºÎÆ½Ì¨ÉÏ
+    // æ£€æŸ¥æ˜¯å¦åœ¨ä»»ä½•å¹³å°ä¸Š
     if (scene()) {
         auto items = scene()->items();
         for (auto item : items) {
             if (auto battlefield = dynamic_cast<class Battlefield*>(item)) {
-                // ¼ì²éÊÇ·ñÔÚµØÃæÆ½Ì¨ÉÏ
+                // æ£€æŸ¥æ˜¯å¦åœ¨åœ°é¢å¹³å°ä¸Š
                 if (battlefield->isCharacterOnGround(const_cast<Character*>(this))) {
                     onGround = true;
                     break;
                 }
-                // ¼ì²éÊÇ·ñÔÚ¿ÉÌøÔ¾Æ½Ì¨ÉÏ£¨½öÔÚÏÂ½µÊ±£©
+                // æ£€æŸ¥æ˜¯å¦åœ¨å¯è·³è·ƒå¹³å°ä¸Šï¼ˆä»…åœ¨ä¸‹é™æ—¶ï¼‰
                 if (velocity.y() > 0 && battlefield->isCharacterOnAnyPlatform(const_cast<Character*>(this), velocity.y())) {
                     onGround = true;
-                    velocity.setY(0); // Í£Ö¹ÏÂ½µ
+                    velocity.setY(0); // åœæ­¢ä¸‹é™
+                    break;
+                }
+            }
+        }
+        
+        // å¦‚æœè¿˜æ²¡æ‰¾åˆ°ï¼Œæ£€æŸ¥æ˜¯å¦åœ¨Platformå¯¹è±¡ä¸Š
+        if (!onGround) {
+            QList<Platform*> platforms;
+            for (auto item : scene()->items()) {
+                if (auto platform = dynamic_cast<Platform*>(item)) {
+                    platforms.append(platform);
+                }
+            }
+            
+            qreal characterBottom = pos().y();
+            for (Platform* platform : platforms) {
+                QRectF rect = platform->getPlatformRect();
+                // æ£€æŸ¥è§’è‰²æ˜¯å¦æ­£å¥½åœ¨å¹³å°ä¸Šï¼ˆå…è®¸1åƒç´ è¯¯å·®ï¼‰
+                if (rect.left() < pos().x() && rect.right() > pos().x() && 
+                    abs(characterBottom - rect.top()) <= 1.0) {
+                    onGround = true;
+                    // åªæœ‰åœ¨ä¸‹é™æ—¶æ‰è®¾ç½®é€Ÿåº¦ä¸º0ï¼Œè·³è·ƒæ—¶ä¿æŒå‘ä¸Šé€Ÿåº¦
+                    if (velocity.y() >= 0) {
+                        velocity.setY(0); // ç¡®ä¿é€Ÿåº¦ä¸º0
+                    }
+                    // å¾®è°ƒä½ç½®ç¡®ä¿å®Œå…¨è´´åˆå¹³å°
+                    QPointF newPos = pos();
+                    newPos.setY(rect.top());
+                    setPos(newPos);
+                    qDebug() << "[DEBUG] è§’è‰²å·²åœ¨å¹³å°ä¸Šï¼Œåœæ­¢ä¸‹é™";
                     break;
                 }
             }
@@ -147,20 +178,71 @@ void Character::applyGravity(double deltaTime) {
     
     if (!onGround) {
         velocity.setY(velocity.y() + gravity * deltaTime);
+
+        // è§’è‰²ä¸‹è½æ—¶æŸ¥æ‰¾æœ€è¿‘å¹³å°
+        if (velocity.y() > 0 && scene()) {
+            // æ”¶é›†æ‰€æœ‰ Platform
+            QList<Platform*> platforms;
+            for (auto item : scene()->items()) {
+                if (auto platform = dynamic_cast<Platform*>(item)) {
+                    platforms.append(platform);
+                }
+            }
+            // ä½¿ç”¨è§’è‰²ç»å¯¹åº•éƒ¨ä½ç½®è¿›è¡Œåˆ¤å®š
+            qreal characterBottom = pos().y();
+            qDebug() << "[DEBUG] è§’è‰²ä¸‹è½ä¸­ï¼Œè§’è‰²ä½ç½®:" << pos() << "è§’è‰²åº•éƒ¨:" << characterBottom << "é€Ÿåº¦:" << velocity.y();
+            
+            Platform* nearest = nullptr;
+            qreal minY = std::numeric_limits<qreal>::max();
+            for (Platform* platform : platforms) {
+                QRectF rect = platform->getPlatformRect();
+                qDebug() << "[DEBUG] æ£€æŸ¥å¹³å°:" << rect << "è§’è‰²x:" << pos().x() << "åœ¨å¹³å°xèŒƒå›´å†…:" 
+                         << (rect.left() < pos().x() && rect.right() > pos().x())
+                         << "å¹³å°åœ¨è§’è‰²ä¸‹æ–¹:" << (rect.top() > characterBottom);
+                if (rect.left() < pos().x() && rect.right() > pos().x() && rect.top() > characterBottom) {
+                    if (rect.top() < minY) {
+                        minY = rect.top();
+                        nearest = platform;
+                        qDebug() << "[DEBUG] æ‰¾åˆ°å€™é€‰å¹³å°ï¼Œå¹³å°top:" << rect.top();
+                    }
+                }
+            }
+            if (nearest) {
+                QRectF platRect = nearest->getPlatformRect();
+                qreal nextBottom = characterBottom + velocity.y() * deltaTime;
+                qDebug() << "[DEBUG] é€‰ä¸­å¹³å°:" << platRect << "å½“å‰è§’è‰²åº•éƒ¨:" << characterBottom 
+                         << "ä¸‹ä¸€å¸§è§’è‰²åº•éƒ¨:" << nextBottom << "ä¼šç©¿è¿‡å¹³å°:" << (nextBottom >= platRect.top());
+                
+                // å¦‚æœä¸‹ä¸€å¸§ä¼šç©¿è¿‡å¹³å°ï¼Œç«‹å³å°†è§’è‰²æ”¾ç½®åˆ°å¹³å°ä¸Šå¹¶åœæ­¢ä¸‹é™
+                if (nextBottom >= platRect.top()) {
+                    // è½åˆ°å¹³å°
+                    QPointF newPos = pos();
+                    newPos.setY(platRect.top());
+                    qDebug() << "[DEBUG] è§’è‰²è½åˆ°å¹³å°ï¼Œå¹³å°top:" << platRect.top()
+                             << "è§’è‰²æ–°y:" << newPos.y()
+                             << "è§’è‰²åº•éƒ¨(ç»å¯¹):" << characterBottom
+                             << "è§’è‰²å½“å‰ä½ç½®:" << pos().y();
+                    setPos(newPos);
+                    velocity.setY(0);
+                    return;
+                }
+            } else {
+                qDebug() << "[DEBUG] æ²¡æœ‰æ‰¾åˆ°åˆé€‚çš„å¹³å°";
+            }
+        }
     }
-    
-    // Ó¦ÓÃÒÆ¶¯
-    QPointF newPos = pos() + QPointF(0, velocity.y() * deltaTime);
-    
-    // ¼ì²éÊÇ·ñ×²»÷µ½µØÃæ£¨¶µµ×»úÖÆ£©
+
+    // åº”ç”¨ç§»åŠ¨ï¼ˆåŒ…æ‹¬æ°´å¹³å’Œå‚ç›´ç§»åŠ¨ï¼‰
+    QPointF newPos = pos() + QPointF(velocity.x() * deltaTime, velocity.y() * deltaTime);
+
+    // æ£€æŸ¥æ˜¯å¦æ’å‡»åˆ°åœ°é¢ï¼ˆå…œåº•æœºåˆ¶ï¼‰
     if (newPos.y() >= groundY) {
         newPos.setY(groundY);
         velocity.setY(0);
     }
-    
+
     setPos(newPos);
-    
-    // Ã¿ÃëÊä³öÒ»´Î(200,500)ÊÇ·ñÔÚÅö×²ÏäÄÚ£¨¼ÙÉè60fps£©
+
     static int frameCounter = 0;
     frameCounter++;
 }
@@ -170,23 +252,48 @@ void Character::setGroundY(double groundY) {
 }
 
 bool Character::isOnGround() const {
-    // ÏÈ¼ì²é»ù±¾µÄY×ø±êÅĞ¶¨£¨¶µµ×»úÖÆ£©
+    // å…ˆæ£€æŸ¥åŸºæœ¬çš„Yåæ ‡åˆ¤å®šï¼ˆå…œåº•æœºåˆ¶ï¼‰
     if (pos().y() < groundY) {
         return false;
     }
     
-    // ³¢ÊÔ»ñÈ¡BattleScene£¬Ê¹ÓÃÆ½Ì¨ÅĞ¶¨
+    // å°è¯•è·å–BattleSceneï¼Œä½¿ç”¨å¹³å°åˆ¤å®š
     if (scene()) {
-        // ¼ì²é³¡¾°ÖĞÊÇ·ñÓĞBattlefield
+        // æ£€æŸ¥åœºæ™¯ä¸­æ˜¯å¦æœ‰Battlefield
         auto items = scene()->items();
         for (auto item : items) {
             if (auto battlefield = dynamic_cast<class Battlefield*>(item)) {
-                return battlefield->isCharacterOnGround(const_cast<Character*>(this));
+                // æ£€æŸ¥æ˜¯å¦åœ¨åœ°é¢å¹³å°ä¸Š
+                if (battlefield->isCharacterOnGround(const_cast<Character*>(this))) {
+                    return true;
+                }
+                // æ£€æŸ¥æ˜¯å¦åœ¨ä»»ä½•è·³è·ƒå¹³å°ä¸Š
+                if (battlefield->isCharacterOnAnyPlatform(const_cast<Character*>(this), 0)) {
+                    return true;
+                }
+            }
+        }
+        
+        // å¦‚æœBattlefieldæ£€æµ‹æ²¡æœ‰æ‰¾åˆ°ï¼Œç›´æ¥æ£€æŸ¥Platformå¯¹è±¡
+        QList<Platform*> platforms;
+        for (auto item : scene()->items()) {
+            if (auto platform = dynamic_cast<Platform*>(item)) {
+                platforms.append(platform);
+            }
+        }
+        
+        qreal characterBottom = pos().y();
+        for (Platform* platform : platforms) {
+            QRectF rect = platform->getPlatformRect();
+            // æ£€æŸ¥è§’è‰²æ˜¯å¦æ­£å¥½åœ¨å¹³å°ä¸Šï¼ˆå…è®¸1åƒç´ è¯¯å·®ï¼‰
+            if (rect.left() < pos().x() && rect.right() > pos().x() && 
+                abs(characterBottom - rect.top()) <= 1.0) {
+                return true;
             }
         }
     }
     
-    // Èç¹ûÃ»ÓĞÕÒµ½Battlefield£¬Ê¹ÓÃ´«Í³µÄY×ø±êÅĞ¶¨
+    // å¦‚æœæ²¡æœ‰æ‰¾åˆ°Battlefieldï¼Œä½¿ç”¨ä¼ ç»Ÿçš„Yåæ ‡åˆ¤å®š
     return pos().y() >= groundY;
 }
 
@@ -221,7 +328,7 @@ Weapon *Character::pickupWeapon(Weapon *newWeapon) {
     }
     
     weapon = newWeapon;
-    updateWeaponPosition(); // È·±£ÎäÆ÷Î»ÖÃÕıÈ·
+    updateWeaponPosition(); // ç¡®ä¿æ­¦å™¨ä½ç½®æ­£ç¡®
     return oldWeapon;
 }
 
@@ -231,13 +338,13 @@ void Character::pickupMedicine(Medicine* medicine) {
     int oldHP = getHP();
     qDebug() << "[DEBUG] Character picked up medicine:" << medicine->getMedicineName() << "Current HP:" << oldHP << "Position:" << scenePos() << "HitBox:" << getHitBox();
     
-    // Á¢¼´Ê¹ÓÃÒ©Æ·
+    // ç«‹å³ä½¿ç”¨è¯å“
     medicine->applyEffect(this);
     
     int newHP = getHP();
     qDebug() << "[DEBUG] Medicine effect applied - HP changed from" << oldHP << "to" << newHP;
     
-    // Ç¿ÖÆ¸üĞÂ³¡¾°ÏÔÊ¾
+    // å¼ºåˆ¶æ›´æ–°åœºæ™¯æ˜¾ç¤º
     if (scene()) {
         scene()->update();
     }
@@ -245,93 +352,93 @@ void Character::pickupMedicine(Medicine* medicine) {
 
 void Character::updateWeaponPosition() {
     if (weapon != nullptr) {
-        // ÎäÆ÷Ê¼ÖÕÔÚ½ÇÉ«ÖĞĞÄÉÏ·½£¬²»ĞèÒª¸ù¾İ³¯Ïòµ÷ÕûÎ»ÖÃ
+        // æ­¦å™¨å§‹ç»ˆåœ¨è§’è‰²ä¸­å¿ƒä¸Šæ–¹ï¼Œä¸éœ€è¦æ ¹æ®æœå‘è°ƒæ•´ä½ç½®
         weapon->setPos(-60, -120);
         weapon->setRotation(0);
-        weapon->setZValue(2); // È·±£ÔÚ×îÉÏ²ã
+        weapon->setZValue(2); // ç¡®ä¿åœ¨æœ€ä¸Šå±‚
     }
 }
 
 QRectF Character::getHitBox() const {
     QPointF charPos = scenePos();
-    // Åö×²Ïä£º×óÉÏ½Ç(x-40, y-100)£¬ÓÒÏÂ½Ç(x+40, y)£¬¿í¶È80£¬¸ß¶È100
+    // ç¢°æ’ç®±ï¼šå·¦ä¸Šè§’(x-40, y-100)ï¼Œå³ä¸‹è§’(x+40, y)ï¼Œå®½åº¦80ï¼Œé«˜åº¦100
     return QRectF(charPos.x() - 40, charPos.y() - 200, 80, 200);
 }
 
-// ÅĞ¶Ï¸ø¶¨µÄ×ø±êÊÇ·ñÔÚÅö×²ÏäÖĞ
+// åˆ¤æ–­ç»™å®šçš„åæ ‡æ˜¯å¦åœ¨ç¢°æ’ç®±ä¸­
 bool Character::checkBulletCollision(const QPointF& bulletPos) const {
     QRectF hitBox = getHitBox();
     return hitBox.contains(bulletPos);
 }
 
-// ¼ì²é¸ø¶¨¾ø¶Ô×ø±êÊÇ·ñÅöµ½¸ÃÈËÎï
+// æ£€æŸ¥ç»™å®šç»å¯¹åæ ‡æ˜¯å¦ç¢°åˆ°è¯¥äººç‰©
 bool Character::isHitByPoint(const QPointF& absolutePos) const {
     QPointF charPos = scenePos();
-    // Åö×²Ïä£º×óÉÏ½Ç(x-40, y-100)£¬ÓÒÏÂ½Ç(x+40, y)£¬¿í¶È80£¬¸ß¶È100
+    // ç¢°æ’ç®±ï¼šå·¦ä¸Šè§’(x-40, y-100)ï¼Œå³ä¸‹è§’(x+40, y)ï¼Œå®½åº¦80ï¼Œé«˜åº¦100
     QRectF hitRect(charPos.x() - 40, charPos.y() - 200, 80, 200);
     return hitRect.contains(absolutePos);
 }
 
-// ¼ì²éÊÇ·ñ¿ÉÒÔ¹¥»÷£¨ÀäÈ´Ê±¼äÊÇ·ñ½áÊø£©
+// æ£€æŸ¥æ˜¯å¦å¯ä»¥æ”»å‡»ï¼ˆå†·å´æ—¶é—´æ˜¯å¦ç»“æŸï¼‰
 bool Character::canAttack() const {
     qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
     return (currentTime - lastAttackTime) >= attackCooldown;
 }
 
-// ¿ªÊ¼¹¥»÷ÀäÈ´¼ÆÊ±
+// å¼€å§‹æ”»å‡»å†·å´è®¡æ—¶
 void Character::startAttackCooldown() {
     lastAttackTime = QDateTime::currentMSecsSinceEpoch();
 }
 
-// »ñÈ¡¹¥»÷ÀäÈ´Ê±¼ä£¨ºÁÃë£©
+// è·å–æ”»å‡»å†·å´æ—¶é—´ï¼ˆæ¯«ç§’ï¼‰
 qint64 Character::getAttackCooldown() const {
     return attackCooldown;
 }
 
-// ÉèÖÃ¹¥»÷ÀäÈ´Ê±¼ä£¨ºÁÃë£©
+// è®¾ç½®æ”»å‡»å†·å´æ—¶é—´ï¼ˆæ¯«ç§’ï¼‰
 void Character::setAttackCooldown(qint64 cooldown) {
     attackCooldown = cooldown;
 }
 
-// ¼ì²é½ÇÉ«ÊÇ·ñÔÚ²İµØÇøÓò
+// æ£€æŸ¥è§’è‰²æ˜¯å¦åœ¨è‰åœ°åŒºåŸŸ
 bool Character::isOnGrassArea() const {
     QPointF charPos = scenePos();
     qreal x = charPos.x();
     
-    // ¼ì²éÊÇ·ñÔÚµØÃæÉÏ
+    // æ£€æŸ¥æ˜¯å¦åœ¨åœ°é¢ä¸Š
     if (!isOnGround()) {
         return false;
     }
     
-    // ¼ì²éÊÇ·ñÔÚ²İµØÇøÓò£º(300-450) »ò (900-1050)
+    // æ£€æŸ¥æ˜¯å¦åœ¨è‰åœ°åŒºåŸŸï¼š(300-450) æˆ– (900-1050)
     return (x >= 300 && x <= 450) || (x >= 900 && x <= 1050);
 }
 
-// ¼ì²é½ÇÉ«ÊÇ·ñÔÚ±ù¿éÇøÓò
+// æ£€æŸ¥è§’è‰²æ˜¯å¦åœ¨å†°å—åŒºåŸŸ
 bool Character::isOnIceBlock() const {
     QPointF charPos = scenePos();
     qreal x = charPos.x();
     
-    // ¼ì²éÊÇ·ñÔÚµØÃæÉÏ
+    // æ£€æŸ¥æ˜¯å¦åœ¨åœ°é¢ä¸Š
     if (!isOnGround()) {
         return false;
     }
     
-    // ¼ì²éÊÇ·ñÔÚ±ù¿éÇøÓò£º(576-710)
+    // æ£€æŸ¥æ˜¯å¦åœ¨å†°å—åŒºåŸŸï¼š(576-710)
     return (x >= 576 && x <= 710);
 }
 
-// ¸ù¾İÊÇ·ñÔÚ²İµØÉÏÒÔ¼°ÊÇ·ñÏÂ¶×À´¸üĞÂ¿É¼ûĞÔ
+// æ ¹æ®æ˜¯å¦åœ¨è‰åœ°ä¸Šä»¥åŠæ˜¯å¦ä¸‹è¹²æ¥æ›´æ–°å¯è§æ€§
 void Character::updateVisibilityBasedOnGrass() {
     if (isCrouchDown() && isOnGrassArea()) {
-        // ÔÚ²İµØÉÏÏÂ¶×Ê±Òş²Ø½ÇÉ«ºÍÎäÆ÷
+        // åœ¨è‰åœ°ä¸Šä¸‹è¹²æ—¶éšè—è§’è‰²å’Œæ­¦å™¨
         setVisible(false);
         if (weapon) {
             weapon->setVisible(false);
         }
         qDebug() << "[DEBUG] Character hidden in grass at position:" << scenePos() << "HitBox:" << getHitBox();
     } else {
-        // ÆäËûÇé¿öÏÂÏÔÊ¾½ÇÉ«ºÍÎäÆ÷
+        // å…¶ä»–æƒ…å†µä¸‹æ˜¾ç¤ºè§’è‰²å’Œæ­¦å™¨
         setVisible(true);
         if (weapon) {
             weapon->setVisible(true);

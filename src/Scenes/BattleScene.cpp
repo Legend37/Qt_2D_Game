@@ -698,11 +698,11 @@ void BattleScene::processMovement() {
     Scene::processMovement();
     if (character != nullptr) {
         character->applyGravity(deltaTime);
-        character->setPos(character->pos() + character->getVelocity() * (double) deltaTime);
+        // 位置更新已经在applyGravity内部处理，不需要额外更新
     }
     if (hero != nullptr) {
         hero->applyGravity(deltaTime);
-        hero->setPos(hero->pos() + hero->getVelocity() * (double) deltaTime);
+        // 位置更新已经在applyGravity内部处理，不需要额外更新
     }
 }
 

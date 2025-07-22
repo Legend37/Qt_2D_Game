@@ -12,11 +12,12 @@
 Battlefield::Battlefield(QGraphicsItem *parent) : Map(parent, ":/Items/Maps/Battlefield/background.jpg") {
     setupPlatform();
     setupJumpablePlatforms();
-    setupGrassElements();
-    setupIceBlock();
+    // 草地和冰块贴图已移除
 }
 
 void Battlefield::setupGrassElements() {
+    // 草地贴图显示已被删除
+    /*
     // 创建草地图像
     QPixmap grassPixmap(":/Items/Maps/Battlefield/grass.png");
     
@@ -36,9 +37,12 @@ void Battlefield::setupGrassElements() {
     grass2 = new QGraphicsPixmapItem(grassPixmap, this);
     grass2->setPos(mapRect.width() * 0.70, mapRect.height() * 0.625); // 大约在地图的70%和62.5%位置
     grass2->setZValue(1); // 确保草地在背景之上
+    */
 }
 
 void Battlefield::setupIceBlock() {
+    // 冰块贴图显示已被删除
+    /*
     QPixmap icePixmap(":/Items/Maps/Battlefield/Ice_block.png");
     if (icePixmap.isNull()) {
         return;
@@ -51,6 +55,7 @@ void Battlefield::setupIceBlock() {
     iceBlock = new QGraphicsPixmapItem(icePixmap, this);
     iceBlock->setPos(mapRect.width() * 0.45, mapRect.height() * 0.65); // 大约在地图的39%和69%位置 (中央偏下)
     iceBlock->setZValue(2); // 确保冰块在草地之上
+    */
 }
 
 
@@ -68,9 +73,13 @@ void Battlefield::setupPlatform() {
 }
 
 void Battlefield::setupJumpablePlatforms() {
-    // 添加第一个可跳跃平台：y=400, x=200到x=300
-    Platform* jumpPlatform1 = new Platform(200, 400, 100, 30, this);
+    // 添加第一个可跳跃平台：y=450, x=200到x=400
+    Platform* jumpPlatform1 = new Platform(200, 450, 200, 30, this);
     jumpablePlatforms.append(jumpPlatform1);
+    
+    // 添加第二个可跳跃平台：y=400, x=800到x=1000 (与第一个平台相同宽度)
+    Platform* jumpPlatform2 = new Platform(800, 400, 200, 30, this);
+    jumpablePlatforms.append(jumpPlatform2);
 }
 
 qreal Battlefield::getFloorHeight() {
@@ -94,18 +103,33 @@ bool Battlefield::isCharacterOnAnyPlatform(Character* character, qreal velocityY
     // 获取角色的碰撞箱
     QRectF characterRect = character->getHitBox();
     
-    // 只在下降时检查平台碰撞
-    if (velocityY <= 0) return false;
-    
-    // 检查地面平台
-    if (groundPlatform && groundPlatform->isCharacterOnTop(characterRect)) {
-        return true;
-    }
-    
-    // 检查所有可跳跃平台
-    for (Platform* platform : jumpablePlatforms) {
-        if (platform && platform->isCharacterOnTop(characterRect)) {
+    // 如果velocityY为0，表示用于跳跃检测，检查所有平台
+    // 如果velocityY > 0，表示下降时的碰撞检测
+    if (velocityY > 0) {
+        // 只在下降时检查平台碰撞
+        // 检查地面平台
+        if (groundPlatform && groundPlatform->isCharacterOnTop(characterRect)) {
             return true;
+        }
+        
+        // 检查所有可跳跃平台
+        for (Platform* platform : jumpablePlatforms) {
+            if (platform && platform->isCharacterOnTop(characterRect)) {
+                return true;
+            }
+        }
+    } else {
+        // velocityY <= 0，用于跳跃检测，检查所有平台
+        // 检查地面平台
+        if (groundPlatform && groundPlatform->isCharacterOnTop(characterRect)) {
+            return true;
+        }
+        
+        // 检查所有可跳跃平台
+        for (Platform* platform : jumpablePlatforms) {
+            if (platform && platform->isCharacterOnTop(characterRect)) {
+                return true;
+            }
         }
     }
     
