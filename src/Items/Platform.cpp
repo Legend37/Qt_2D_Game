@@ -11,24 +11,15 @@ Platform* Platform::findNearestPlatformBelow(const QRectF& characterRect, const 
     qreal characterBottom = characterRect.bottom();
     qreal characterLeft = characterRect.left();
     qreal characterRight = characterRect.right();
-    qDebug() << "[DEBUG] 查找角色下方平台，角色rect:" << characterRect;
     for (Platform* platform : platforms) {
         QRectF rect = platform->getPlatformRect();
-        qDebug() << "[DEBUG] 检查平台 rect:" << rect;
         // 水平重叠且平台在角色下方
         if (characterRight > rect.left() && characterLeft < rect.right() && rect.top() > characterBottom) {
-            qDebug() << "[DEBUG] 平台在角色下方且水平重叠，平台top:" << rect.top();
             if (rect.top() < minY) {
                 minY = rect.top();
                 nearest = platform;
-                qDebug() << "[DEBUG] 当前最近的平台top更新为:" << minY;
             }
         }
-    }
-    if (nearest) {
-        qDebug() << "[DEBUG] 选中的最近平台top:" << minY << "rect:" << nearest->getPlatformRect();
-    } else {
-        qDebug() << "[DEBUG] 没有找到下方平台";
     }
     return nearest;
 }
@@ -64,17 +55,17 @@ Platform::Platform(qreal x, qreal y, qreal width, qreal height, QGraphicsItem *p
     // 创建多个岩石图片项来拼接
     for (int i = 0; i < tilesNeeded; ++i) {
         QGraphicsPixmapItem* rockTile = new QGraphicsPixmapItem(rockPixmap, this);
-        qreal tileX = i * scaledRockWidth;
+        qreal tileX = i * scaledRockWidth - 40; // 向左偏移40像素
         
-        // 确保最后一个瓦片不会超出平台边界
-        if (tileX + scaledRockWidth > width) {
+        // 确保最后一个瓦片不会超出平台边界（基于原始宽度计算）
+        if ((i * scaledRockWidth) + scaledRockWidth > width) {
             // 对最后一个瓦片进行裁剪
-            qreal remainingWidth = width - tileX;
+            qreal remainingWidth = width - (i * scaledRockWidth);
             QPixmap clippedPixmap = rockPixmap.copy(0, 0, remainingWidth / scale, rockPixmap.height());
             rockTile->setPixmap(clippedPixmap);
         }
         
-        rockTile->setPos(tileX, 0);
+        rockTile->setPos(tileX, 0); // 使用偏移后的位置
         rockTile->setScale(scale);
         rockTile->setZValue(0);
     }
@@ -83,18 +74,19 @@ Platform::Platform(qreal x, qreal y, qreal width, qreal height, QGraphicsItem *p
 bool Platform::isCharacterOnTop(const QRectF& characterRect) const {
     QRectF platformRect = getPlatformRect();
     
-    // 检查水平重叠
-    bool horizontalOverlap = characterRect.right() > platformRect.left() && 
-                           characterRect.left() < platformRect.right();
+    // 从角色矩形获取角色的绝对位置（角色的中心点x坐标和底部y坐标）
+    qreal characterX = characterRect.center().x();  // 角色中心x坐标
+    qreal characterBottom = characterRect.bottom(); // 角色底部y坐标
     
-    // 检查角色底部是否在平台顶部附近
-    qreal characterBottom = characterRect.bottom();
+    // 检查角色x坐标是否在平台范围内
+    bool xInRange = characterX >= platformRect.left() && 
+                    characterX <= platformRect.right();
+    
+    // 检查角色底部是否在平台顶部附近（允许小误差）
     qreal platformTop = platformRect.top();
-    
-    bool onTop = characterBottom >= platformTop - 2 && 
-                characterBottom <= platformTop + 5;
+    bool onTop = abs(characterBottom - platformTop) <= 1.0;
                 
-    return horizontalOverlap && onTop;
+    return xInRange && onTop;
 }
 
 bool Platform::isCharacterHittingFromBelow(const QRectF& characterRect, qreal velocityY) const {

@@ -118,9 +118,59 @@ bool Character::isPicking() const {
 }
 
 void Character::jump() {
-    if (isOnGround()) {
-        velocity.setY(jumpSpeed);
+    // 跳跃时总是输出调试信息（因为是用户主动触发的动作）
+    
+    bool canJump = false;
+    
+    // 检查是否在任何平台上（包括地面和跳跃平台）
+    if (scene()) {
+        auto items = scene()->items();
+        for (auto item : items) {
+            if (auto battlefield = dynamic_cast<class Battlefield*>(item)) {
+                // 检查是否在地面平台上
+                if (battlefield->isCharacterOnGround(const_cast<Character*>(this))) {
+                    canJump = true;
+                    break;
+                }
+                // 检查是否在任何跳跃平台上
+                if (battlefield->isCharacterOnAnyPlatform(const_cast<Character*>(this), 0)) {
+                    canJump = true;
+                    break;
+                }
+            }
+        }
+        
+        // 如果Battlefield没找到平台，直接检查Platform对象
+        if (!canJump) {
+            QList<Platform*> platforms;
+            for (auto item : scene()->items()) {
+                if (auto platform = dynamic_cast<Platform*>(item)) {
+                    platforms.append(platform);
+                }
+            }
+            
+            qreal characterBottom = pos().y();
+            for (Platform* platform : platforms) {
+                QRectF rect = platform->getPlatformRect();
+                // 检查角色是否正好在平台上（允许1像素误差）
+                if (rect.left() < pos().x() && rect.right() > pos().x() && 
+                    abs(characterBottom - rect.top()) <= 1.0) {
+                    canJump = true;
+                    break;
+                }
+            }
+        }
     }
+    
+    // 如果还没找到平台，检查传统的地面判定
+    if (!canJump && pos().y() >= groundY) {
+        canJump = true;
+    }
+    
+    
+    if (canJump) {
+        velocity.setY(jumpSpeed);
+    } 
 }
 
 void Character::applyGravity(double deltaTime) {
@@ -161,15 +211,15 @@ void Character::applyGravity(double deltaTime) {
                 if (rect.left() < pos().x() && rect.right() > pos().x() && 
                     abs(characterBottom - rect.top()) <= 1.0) {
                     onGround = true;
-                    // 只有在下降时才设置速度为0，跳跃时保持向上速度
-                    if (velocity.y() >= 0) {
-                        velocity.setY(0); // 确保速度为0
+                    // 只有在下降时才设置速度为0，避免干扰跳跃
+                    // 并且只在刚接触平台时设置一次
+                    if (velocity.y() > 0) {
+                        velocity.setY(0); // 停止下降
+                        // 微调位置确保完全贴合平台
+                        QPointF newPos = pos();
+                        newPos.setY(rect.top());
+                        setPos(newPos);
                     }
-                    // 微调位置确保完全贴合平台
-                    QPointF newPos = pos();
-                    newPos.setY(rect.top());
-                    setPos(newPos);
-                    qDebug() << "[DEBUG] 角色已在平台上，停止下降";
                     break;
                 }
             }
@@ -190,44 +240,35 @@ void Character::applyGravity(double deltaTime) {
             }
             // 使用角色绝对底部位置进行判定
             qreal characterBottom = pos().y();
-            qDebug() << "[DEBUG] 角色下落中，角色位置:" << pos() << "角色底部:" << characterBottom << "速度:" << velocity.y();
+            
+            // 控制调试输出频率 - 每秒输出一次
+            static qint64 lastGravityDebugTime = 0;
+            qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
             
             Platform* nearest = nullptr;
             qreal minY = std::numeric_limits<qreal>::max();
             for (Platform* platform : platforms) {
                 QRectF rect = platform->getPlatformRect();
-                qDebug() << "[DEBUG] 检查平台:" << rect << "角色x:" << pos().x() << "在平台x范围内:" 
-                         << (rect.left() < pos().x() && rect.right() > pos().x())
-                         << "平台在角色下方:" << (rect.top() > characterBottom);
                 if (rect.left() < pos().x() && rect.right() > pos().x() && rect.top() > characterBottom) {
                     if (rect.top() < minY) {
                         minY = rect.top();
                         nearest = platform;
-                        qDebug() << "[DEBUG] 找到候选平台，平台top:" << rect.top();
                     }
                 }
             }
             if (nearest) {
                 QRectF platRect = nearest->getPlatformRect();
                 qreal nextBottom = characterBottom + velocity.y() * deltaTime;
-                qDebug() << "[DEBUG] 选中平台:" << platRect << "当前角色底部:" << characterBottom 
-                         << "下一帧角色底部:" << nextBottom << "会穿过平台:" << (nextBottom >= platRect.top());
                 
                 // 如果下一帧会穿过平台，立即将角色放置到平台上并停止下降
                 if (nextBottom >= platRect.top()) {
                     // 落到平台
                     QPointF newPos = pos();
                     newPos.setY(platRect.top());
-                    qDebug() << "[DEBUG] 角色落到平台，平台top:" << platRect.top()
-                             << "角色新y:" << newPos.y()
-                             << "角色底部(绝对):" << characterBottom
-                             << "角色当前位置:" << pos().y();
                     setPos(newPos);
                     velocity.setY(0);
                     return;
                 }
-            } else {
-                qDebug() << "[DEBUG] 没有找到合适的平台";
             }
         }
     }
@@ -252,6 +293,10 @@ void Character::setGroundY(double groundY) {
 }
 
 bool Character::isOnGround() const {
+    // 控制调试输出频率 - 每秒输出一次
+    static qint64 lastDebugTime = 0;
+    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+    
     // 先检查基本的Y坐标判定（兜底机制）
     if (pos().y() < groundY) {
         return false;
@@ -264,11 +309,15 @@ bool Character::isOnGround() const {
         for (auto item : items) {
             if (auto battlefield = dynamic_cast<class Battlefield*>(item)) {
                 // 检查是否在地面平台上
-                if (battlefield->isCharacterOnGround(const_cast<Character*>(this))) {
+                bool onGroundPlatform = battlefield->isCharacterOnGround(const_cast<Character*>(this));
+                
+                if (onGroundPlatform) {
                     return true;
                 }
                 // 检查是否在任何跳跃平台上
-                if (battlefield->isCharacterOnAnyPlatform(const_cast<Character*>(this), 0)) {
+                bool onAnyPlatform = battlefield->isCharacterOnAnyPlatform(const_cast<Character*>(this), 0);
+                
+                if (onAnyPlatform) {
                     return true;
                 }
             }
@@ -285,16 +334,19 @@ bool Character::isOnGround() const {
         qreal characterBottom = pos().y();
         for (Platform* platform : platforms) {
             QRectF rect = platform->getPlatformRect();
+            bool xInRange = (rect.left() < pos().x() && rect.right() > pos().x());
+            qreal yDiff = abs(characterBottom - rect.top());
+            bool yInRange = (yDiff <= 1.0);
             // 检查角色是否正好在平台上（允许1像素误差）
-            if (rect.left() < pos().x() && rect.right() > pos().x() && 
-                abs(characterBottom - rect.top()) <= 1.0) {
+            if (xInRange && yInRange) {
                 return true;
             }
         }
     }
     
     // 如果没有找到Battlefield，使用传统的Y坐标判定
-    return pos().y() >= groundY;
+    bool result = pos().y() >= groundY;
+    return result;
 }
 
 Armor *Character::pickupArmor(Armor *newArmor) {
@@ -336,8 +388,6 @@ void Character::pickupMedicine(Medicine* medicine) {
     if (!medicine) return;
     
     int oldHP = getHP();
-    qDebug() << "[DEBUG] Character picked up medicine:" << medicine->getMedicineName() << "Current HP:" << oldHP << "Position:" << scenePos() << "HitBox:" << getHitBox();
-    
     // 立即使用药品
     medicine->applyEffect(this);
     
