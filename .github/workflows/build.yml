@@ -1,4 +1,4 @@
-name: Build Qt 2D Game
+name: Build Qt Executable
 
 on:
   push:
