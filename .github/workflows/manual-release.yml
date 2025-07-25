@@ -1,0 +1,35 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger build workflow
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        event-type: manual-release
+        client-payload: |
+          {
+            "version": "${{ github.event.inputs.version }}",
+            "prerelease": "${{ github.event.inputs.prerelease }}"
+          }
+          
+    - name: Wait for builds
+      run: |
+        echo "Triggered build workflow for release ${{ github.event.inputs.version }}"
+        echo "Check the Actions tab for build progress"
