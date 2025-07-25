@@ -68,6 +68,11 @@ public:
     int getHP() const { return hp; }
     void setHP(int value) { hp = value; }
     
+    // 肾上腺素功能
+    void activateAdrenaline();
+    bool isAdrenalineActive() const { return adrenalineActive; }
+    void updateAdrenalineEffect();
+    
     // 获取当前护甲
     Armor* getArmor() const { return armor; }
 
@@ -135,6 +140,12 @@ private:
     static constexpr int maxAttackEffectFrames = 6; // 攻击特效持续6帧
     QPointF originalPosition; // 保存原始位置
     static constexpr qreal shakeIntensity = 3.0; // 震动强度（像素）
+    
+    // 肾上腺素相关变量
+    bool adrenalineActive = false; // 肾上腺素是否激活
+    qint64 adrenalineEndTime = 0; // 肾上腺素效果结束时间（毫秒）
+    static constexpr qint64 adrenalineDuration = 5000; // 肾上腺素持续时间5秒
+    static constexpr double adrenalineSpeedMultiplier = 1.5; // 速度提升50%
 };
 
 

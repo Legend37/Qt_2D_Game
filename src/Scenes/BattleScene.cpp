@@ -720,50 +720,50 @@ void BattleScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     Scene::mousePressEvent(event);
 }
 void BattleScene::debugHitBoxCorners() {
-    qDebug() << "[DEBUG] === HitBox Debug Info ===";
+    // qDebug() << "[DEBUG] === HitBox Debug Info ===";
     if (character) {
         QRectF charHitBox = character->getHitBox();
-        qDebug() << "[DEBUG] Character HitBox:";
-        qDebug() << "  TopLeft:" << charHitBox.topLeft();
-        qDebug() << "  TopRight:" << charHitBox.topRight();
-        qDebug() << "  BottomLeft:" << charHitBox.bottomLeft();
-        qDebug() << "  BottomRight:" << charHitBox.bottomRight();
-        qDebug() << "  Center:" << charHitBox.center();
-        qDebug() << "  Size:" << charHitBox.size();
-        qDebug() << " Character Position: " << character->pos() ;
+        // qDebug() << "[DEBUG] Character HitBox:";
+        // qDebug() << "  TopLeft:" << charHitBox.topLeft();
+        // qDebug() << "  TopRight:" << charHitBox.topRight();
+        // qDebug() << "  BottomLeft:" << charHitBox.bottomLeft();
+        // qDebug() << "  BottomRight:" << charHitBox.bottomRight();
+        // qDebug() << "  Center:" << charHitBox.center();
+        // qDebug() << "  Size:" << charHitBox.size();
+        // qDebug() << " Character Position: " << character->pos() ;
     }
     if (hero) {
-        QRectF heroHitBox = hero->getHitBox();
-        qDebug() << "[DEBUG] Hero HitBox:";
-        qDebug() << "  TopLeft:" << heroHitBox.topLeft();
-        qDebug() << "  TopRight:" << heroHitBox.topRight();
-        qDebug() << "  BottomLeft:" << heroHitBox.bottomLeft();
-        qDebug() << "  BottomRight:" << heroHitBox.bottomRight();
-        qDebug() << "  Center:" << heroHitBox.center();
-        qDebug() << "  Size:" << heroHitBox.size();
+        // QRectF heroHitBox = hero->getHitBox();
+        // qDebug() << "[DEBUG] Hero HitBox:";
+        // qDebug() << "  TopLeft:" << heroHitBox.topLeft();
+        // qDebug() << "  TopRight:" << heroHitBox.topRight();
+        // qDebug() << "  BottomLeft:" << heroHitBox.bottomLeft();
+        // qDebug() << "  BottomRight:" << heroHitBox.bottomRight();
+        // qDebug() << "  Center:" << heroHitBox.center();
+        // qDebug() << "  Size:" << heroHitBox.size();
     }
-    qDebug() << "[DEBUG] === End HitBox Debug ===";
+    // qDebug() << "[DEBUG] === End HitBox Debug ===";
 }
 void BattleScene::removeFallingWeapon(Weapon* weapon) {
-    qDebug() << "[DEBUG] removeFallingWeapon: Starting to remove weapon" << weapon;
-    qDebug() << "[DEBUG] removeFallingWeapon: fallingWeapons.size() =" << fallingWeapons.size();
+    // qDebug() << "[DEBUG] removeFallingWeapon: Starting to remove weapon" << weapon;
+    // qDebug() << "[DEBUG] removeFallingWeapon: fallingWeapons.size() =" << fallingWeapons.size();
     bool found = false;
     for (int i = 0; i < fallingWeapons.size(); ++i) {
         if (fallingWeapons[i].first == weapon) {
-            qDebug() << "[DEBUG] removeFallingWeapon: Found weapon at index" << i;
+            // qDebug() << "[DEBUG] removeFallingWeapon: Found weapon at index" << i;
             fallingWeapons.removeAt(i);
             found = true;
-            qDebug() << "[DEBUG] removeFallingWeapon: Weapon removed, new size =" << fallingWeapons.size();
+            // qDebug() << "[DEBUG] removeFallingWeapon: Weapon removed, new size =" << fallingWeapons.size();
             break;
         }
     }
     if (!found) {
-        qDebug() << "[DEBUG] removeFallingWeapon: WARNING - Weapon not found in fallingWeapons list";
+        // qDebug() << "[DEBUG] removeFallingWeapon: WARNING - Weapon not found in fallingWeapons list";
         for (int i = 0; i < fallingWeapons.size(); ++i) {
-            qDebug() << "[DEBUG] removeFallingWeapon: fallingWeapons[" << i << "] =" << fallingWeapons[i].first;
+            // qDebug() << "[DEBUG] removeFallingWeapon: fallingWeapons[" << i << "] =" << fallingWeapons[i].first;
         }
     }
-    qDebug() << "[DEBUG] removeFallingWeapon: Completed";
+    // qDebug() << "[DEBUG] removeFallingWeapon: Completed";
 }
 void BattleScene::onCharacterDied(Character* character) {
     QString winnerMessage;

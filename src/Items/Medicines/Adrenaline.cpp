@@ -11,7 +11,10 @@ Adrenaline::Adrenaline(QGraphicsItem *parent)
 void Adrenaline::applyEffect(Character* character) {
     if (!character) return;
     
-    qDebug() << "[DEBUG] Adrenaline used - starting healing over time";
+    // qDebug() << "[DEBUG] Adrenaline used - starting healing over time and speed boost";
+    
+    // 激活肾上腺素速度提升效果（5秒）
+    character->activateAdrenaline();
     
     // 创建一个定时器来处理持续回血效果
     QTimer* healingTimer = new QTimer();
@@ -25,10 +28,10 @@ void Adrenaline::applyEffect(Character* character) {
             character->setHP(newHP);
             
             (*ticksRemaining)--;
-            qDebug() << "[DEBUG] Adrenaline tick - HP:" << currentHP << "->" << newHP << ", ticks remaining:" << *ticksRemaining;
+            // qDebug() << "[DEBUG] Adrenaline tick - HP:" << currentHP << "->" << newHP << ", ticks remaining:" << *ticksRemaining;
             
             if (*ticksRemaining <= 0) {
-                qDebug() << "[DEBUG] Adrenaline effect completed";
+                // qDebug() << "[DEBUG] Adrenaline effect completed";
                 healingTimer->stop();
                 healingTimer->deleteLater();
                 delete ticksRemaining;

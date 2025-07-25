@@ -64,6 +64,14 @@ void Character::processInput() {
     auto newVelocity = QPointF(0, velocity.y()); // Reset horizontal velocity
     auto moveSpeed = 0.5;
     
+    // 更新肾上腺素效果
+    updateAdrenalineEffect();
+    
+    // 如果肾上腺素激活，移动速度增加50%
+    if (isAdrenalineActive()) {
+        moveSpeed *= adrenalineSpeedMultiplier;
+    }
+    
     // 如果在冰块上，移动速度增加100%（翻倍）
     if (isOnIceBlock()) {
         moveSpeed *= 2.0;
@@ -580,61 +588,61 @@ void Character::takeDamage(int damage, DamageType damageType) {
         // 对于有耐久度的护甲（如BodyArmor），被护甲吸收的伤害会消耗耐久度
         if (armor->getDurability() > 0) {
             int absorbedDamage = originalDamage - actualDamage;
-            qDebug() << "[ARMOR DEBUG] Checking durability damage - Absorbed damage:" << absorbedDamage << "Current durability:" << armor->getDurability();
+            // qDebug() << "[ARMOR DEBUG] Checking durability damage - Absorbed damage:" << absorbedDamage << "Current durability:" << armor->getDurability();
             
             if (absorbedDamage > 0) {
-                qDebug() << "[ARMOR DEBUG] About to call takeDurabilityDamage with:" << absorbedDamage;
+                // qDebug() << "[ARMOR DEBUG] About to call takeDurabilityDamage with:" << absorbedDamage;
                 armor->takeDurabilityDamage(absorbedDamage);
-                qDebug() << "[ARMOR DEBUG] After takeDurabilityDamage, durability is:" << armor->getDurability();
+                // qDebug() << "[ARMOR DEBUG] After takeDurabilityDamage, durability is:" << armor->getDurability();
                 
                 // 如果耐久度归零，标记需要替换护甲
                 if (armor->getDurability() <= 0) {
-                    qDebug() << "[ARMOR DEBUG] Durability exhausted, starting replacement process";
-                    qDebug() << "[ARMOR DEBUG] Current armor pointer:" << armor << "Type:" << (armor ? typeid(*armor).name() : "null");
+                    // qDebug() << "[ARMOR DEBUG] Durability exhausted, starting replacement process";
+                    // qDebug() << "[ARMOR DEBUG] Current armor pointer:" << armor << "Type:" << (armor ? typeid(*armor).name() : "null");
                     
                     // 保存当前护甲指针用于安全删除
                     Armor* oldArmorToDelete = armor;
-                    qDebug() << "[ARMOR DEBUG] Saved old armor pointer:" << oldArmorToDelete;
+                    // qDebug() << "[ARMOR DEBUG] Saved old armor pointer:" << oldArmorToDelete;
                     
                     // 立即创建并安装新的OldShirt
-                    qDebug() << "[ARMOR DEBUG] Creating new OldShirt...";
+                    // qDebug() << "[ARMOR DEBUG] Creating new OldShirt...";
                     try {
                         armor = new OldShirt(this);
-                        qDebug() << "[ARMOR DEBUG] New OldShirt created:" << armor;
+                        // qDebug() << "[ARMOR DEBUG] New OldShirt created:" << armor;
                         
-                        qDebug() << "[ARMOR DEBUG] Calling mountToParent...";
+                        // qDebug() << "[ARMOR DEBUG] Calling mountToParent...";
                         armor->mountToParent();
-                        qDebug() << "[ARMOR DEBUG] mountToParent completed";
+                        // qDebug() << "[ARMOR DEBUG] mountToParent completed";
                         
-                        qDebug() << "[ARMOR DEBUG] Setting visibility...";
+                        // qDebug() << "[ARMOR DEBUG] Setting visibility...";
                         armor->setVisible(true);
-                        qDebug() << "[ARMOR DEBUG] Visibility set";
+                        // qDebug() << "[ARMOR DEBUG] Visibility set";
                         
                         // 使用定时器安全删除旧护甲
-                        qDebug() << "[ARMOR DEBUG] Scheduling old armor deletion with timer...";
+                        // qDebug() << "[ARMOR DEBUG] Scheduling old armor deletion with timer...";
                         QTimer::singleShot(0, [this, oldArmorToDelete]() {
-                            qDebug() << "[ARMOR DEBUG] Timer callback started - deleting old armor:" << oldArmorToDelete;
+                            // qDebug() << "[ARMOR DEBUG] Timer callback started - deleting old armor:" << oldArmorToDelete;
                             try {
                                 if (scene() && oldArmorToDelete) {
-                                    qDebug() << "[ARMOR DEBUG] Removing old armor from scene...";
+                                    // qDebug() << "[ARMOR DEBUG] Removing old armor from scene...";
                                     scene()->removeItem(oldArmorToDelete);
-                                    qDebug() << "[ARMOR DEBUG] Old armor removed from scene";
+                                    // qDebug() << "[ARMOR DEBUG] Old armor removed from scene";
                                 }
-                                qDebug() << "[ARMOR DEBUG] About to delete old armor object...";
+                                // qDebug() << "[ARMOR DEBUG] About to delete old armor object...";
                                 delete oldArmorToDelete;
-                                qDebug() << "[ARMOR DEBUG] Old armor deleted successfully";
+                                // qDebug() << "[ARMOR DEBUG] Old armor deleted successfully";
                             } catch (const std::exception& e) {
-                                qDebug() << "[ARMOR DEBUG] Exception during old armor deletion:" << e.what();
+                                // qDebug() << "[ARMOR DEBUG] Exception during old armor deletion:" << e.what();
                             } catch (...) {
-                                qDebug() << "[ARMOR DEBUG] Unknown exception during old armor deletion";
+                                // qDebug() << "[ARMOR DEBUG] Unknown exception during old armor deletion";
                             }
                         });
-                        qDebug() << "[ARMOR DEBUG] Old armor deletion timer scheduled";
+                        // qDebug() << "[ARMOR DEBUG] Old armor deletion timer scheduled";
                         
                     } catch (const std::exception& e) {
-                        qDebug() << "[ARMOR DEBUG] Exception during armor replacement:" << e.what();
+                        // qDebug() << "[ARMOR DEBUG] Exception during armor replacement:" << e.what();
                     } catch (...) {
-                        qDebug() << "[ARMOR DEBUG] Unknown exception during armor replacement";
+                        // qDebug() << "[ARMOR DEBUG] Unknown exception during armor replacement";
                     }
                 }
             }
@@ -747,7 +755,7 @@ void Character::updateDamageEffect() {
 void Character::triggerAttackEffect() {
     attackEffectFrames = maxAttackEffectFrames;
     originalPosition = pos(); // 保存当前位置
-    qDebug() << "[ATTACK EFFECT] Attack effect triggered, frames:" << attackEffectFrames;
+    // qDebug() << "[ATTACK EFFECT] Attack effect triggered, frames:" << attackEffectFrames;
 }
 
 // 更新攻击特效，需要在每帧调用
@@ -777,7 +785,24 @@ void Character::updateAttackEffect() {
         // 如果攻击特效结束，恢复原始位置
         if (attackEffectFrames <= 0) {
             setPos(originalPosition);
-            qDebug() << "[ATTACK EFFECT] Attack effect ended, position restored";
+            // qDebug() << "[ATTACK EFFECT] Attack effect ended, position restored";
+        }
+    }
+}
+
+// 肾上腺素功能实现
+void Character::activateAdrenaline() {
+    adrenalineActive = true;
+    adrenalineEndTime = QDateTime::currentMSecsSinceEpoch() + adrenalineDuration;
+    // qDebug() << "[ADRENALINE] Adrenaline activated for" << adrenalineDuration << "ms";
+}
+
+void Character::updateAdrenalineEffect() {
+    if (adrenalineActive) {
+        qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+        if (currentTime >= adrenalineEndTime) {
+            adrenalineActive = false;
+            // qDebug() << "[ADRENALINE] Adrenaline effect ended";
         }
     }
 }
