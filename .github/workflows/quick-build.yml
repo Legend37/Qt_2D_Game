@@ -1,0 +1,62 @@
+name: Quick Windows Build
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  quick-build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v3
+      with:
+        path: ../Qt
+        key: ${{ runner.os }}-QtCache
+        
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.7.0'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        cached: ${{ steps.cache-qt.outputs.cache-hit }}
+        
+    - name: Set up MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      
+    - name: Configure and Build
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release --parallel
+        
+    - name: Test executable exists
+      run: |
+        if (Test-Path "build/Release/qt_2025_game.exe") {
+          Write-Host "? Executable built successfully!"
+          Get-Item "build/Release/qt_2025_game.exe" | Select-Object Name, Length, LastWriteTime
+        } elseif (Test-Path "build/qt_2025_game.exe") {
+          Write-Host "? Executable built successfully!"
+          Get-Item "build/qt_2025_game.exe" | Select-Object Name, Length, LastWriteTime
+        } else {
+          Write-Host "? Executable not found!"
+          exit 1
+        }
+        
+    - name: Upload executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: qt-2d-game-executable
+        path: |
+          build/**/*.exe
+        if-no-files-found: error

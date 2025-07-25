@@ -18,7 +18,7 @@ Ball::Ball(QGraphicsItem *parent)
     // 设置边界矩形
     setTransformOriginPoint(boundingRect().center());
     
-    velocity = QPointF(0, 0);
+    ballVelocity = QPointF(0, 0);
     
     // 确保铅球初始状态是未挂载的，可以正常掉落
     unmount();
@@ -31,6 +31,31 @@ void Ball::mountToParent() {
     setPos(33, -85); // 与其他武器位置一致
     setRotation(0);
     setZValue(2);
+    
+    // 标记Ball已被拾取
+    hasBeenPickedUp = true;
+}
+
+void Ball::unmount() {
+    // 调用基类的unmount方法
+    Mountable::unmount();
+    
+    // 清除射手，让它视为自然掉落
+    shooter = nullptr;
+    
+    // 根据是否被拾取过来设置不同的生存时间
+    if (hasBeenPickedUp) {
+        // Ball被放下后设置0.5秒生存时间
+        groundTimer = QDateTime::currentMSecsSinceEpoch() - 9500; // 设置为9.5秒前，剩余0.5秒
+    } else {
+        // 自然掉落的Ball，重置groundTimer让它有完整的10秒生存时间
+        groundTimer = 0;
+    }
+    
+    // 重置Ball的状态
+    ballVelocity = QPointF(0, 0); // 重置速度为0
+    isThrown = false; // 设置为非投掷模式
+    active = true; // 确保Ball是活跃的，这样可以被删除逻辑处理
 }
 
 void Ball::advance(int phase) {
@@ -77,25 +102,26 @@ void Ball::advance(int phase) {
     }
     
     // 应用重力 - 根据是否为投掷模式使用不同的重力值
-    qreal currentGravity = isThrown ? thrownGravity : gravity;
-    velocity.setY(velocity.y() + currentGravity);
+    // 注意：掉落模式使用与Character一致的重力值0.008
+    qreal currentGravity = isThrown ? thrownGravity : 0.008; // 使用与Character一致的重力
+    ballVelocity.setY(ballVelocity.y() + currentGravity);
     
     // 调试输出重力应用情况
     static int gravityDebugCounter = 0;
     if (gravityDebugCounter % 15 == 0) {
-        // qDebug() << "[DEBUG] Ball gravity applied: vy =" << velocity.y() << "gravity =" << currentGravity << "isThrown =" << isThrown;
+        // qDebug() << "[DEBUG] Ball gravity applied: vy =" << ballVelocity.y() << "gravity =" << currentGravity << "isThrown =" << isThrown;
     }
     gravityDebugCounter++;
     
     // 更新位置
     QPointF oldPos = scenePos();
-    moveBy(velocity.x(), velocity.y());
+    moveBy(ballVelocity.x(), ballVelocity.y());
     QPointF newPos = scenePos();
     
     // 调试输出
     static int debugCounter = 0;
     if (debugCounter % 30 == 0) {
-        // qDebug() << "[DEBUG] Ball pos:" << newPos << "velocity:" << velocity;
+        // qDebug() << "[DEBUG] Ball pos:" << newPos << "velocity:" << ballVelocity;
     }
     debugCounter++;
     
@@ -108,7 +134,7 @@ void Ball::advance(int phase) {
             if (newPos.y() >= groundY) {
                 // 球落地，停止运动
                 setPos(scenePos().x(), groundY);
-                velocity = QPointF(0, 0);
+                ballVelocity = QPointF(0, 0);
                 
                 // 检查是否是投掷的Ball（有shooter）
                 if (shooter) {
@@ -294,7 +320,11 @@ QPointF Ball::getSceneCenter() const {
 }
 
 void Ball::setVelocity(qreal vx, qreal vy) {
-    velocity = QPointF(vx, vy);
+    ballVelocity = QPointF(vx, vy);
+    // 只有当有非零速度时才设置为投掷模式
+    if (vx != 0 || vy != 0) {
+        isThrown = true;
+    }
 }
 
 void Ball::setThrownMode(bool thrown) {

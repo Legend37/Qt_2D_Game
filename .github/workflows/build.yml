@@ -1,0 +1,142 @@
+name: Build Qt 2D Game
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_req    - name: Install Qt6
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.3'
+        host: 'mac'
+        target: 'desktop'
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.3'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        modules: 'qtcharts qtwebengine'
+        
+    - name: Set up MSVC
+      uses: microsoft/setup-msbuild@v1.3
+      
+    - name: Set up CMake
+      uses: lukka/get-cmake@latest
+      
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$env:Qt6_DIR
+        
+    - name: Build project
+      run: |
+        cmake --build build --config Release
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: qt-2d-game-windows
+        path: |
+          build/Release/qt_2025_game.exe
+          build/qt_2025_game.exe
+        retention-days: 30
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+        
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.3'
+        host: 'linux'
+        target: 'desktop'
+        
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+        
+    - name: Build project
+      run: |
+        cmake --build build --config Release -j$(nproc)
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: qt-2d-game-linux
+        path: |
+          build/qt_2025_game
+        retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.7.0'
+        host: 'mac'
+        target: 'desktop'
+        
+    - name: Set up CMake
+      uses: lukka/get-cmake@latest
+      
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+        
+    - name: Build project
+      run: |
+        cmake --build build --config Release -j$(sysctl -n hw.ncpu)
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: qt-2d-game-macos
+        path: |
+          build/qt_2025_game
+        retention-days: 30
+
+  release:
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          qt-2d-game-windows/*
+          qt-2d-game-linux/*
+          qt-2d-game-macos/*
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

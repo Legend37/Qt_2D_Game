@@ -25,6 +25,9 @@ public:
     // 设置为投掷模式（使用更快的重力）
     void setThrownMode(bool thrown = true);
     
+    // 重写unmount方法，重置Ball的状态
+    void unmount() override;
+    
     // 射手
     QGraphicsItem* shooter = nullptr;
     
@@ -33,14 +36,14 @@ public:
     // 安全删除函数
     void deleteLater();
 private:
-    QPointF velocity;
-    static constexpr qreal gravity = 0.02; // 默认重力加速度（掉落武器）
-    static constexpr qreal thrownGravity = 1.6; // 投掷武器的重力加速度
+    QPointF ballVelocity; // 重命名为ballVelocity避免与基类的velocity冲突
+    static constexpr qreal thrownGravity = 1.6; // 投掷武器的重力加速度（保留用于投掷模式）
     qint64 creationTime; // 创建时间
     qint64 groundTimer = 0; // 球落地时间戳，用于10秒消失计时
     static constexpr qint64 maxLifetime = 60000; // 最大生存时间60秒（防止球卡在空中）
     bool active = true; // 标记铅球是否仍在运动
     bool isThrown = false; // 是否为投掷模式
+    bool hasBeenPickedUp = false; // 标记是否被拾取过
 };
 
 #endif

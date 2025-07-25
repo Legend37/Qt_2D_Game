@@ -146,6 +146,14 @@ void Battlefield::setupJumpablePlatforms() {
     // 添加第三个可跳跃平台：y=300, x=500到x=700
     Platform* jumpPlatform3 = new Platform(500, 300, 200, 30, this);
     jumpablePlatforms.append(jumpPlatform3);
+    
+    // 添加第四个可跳跃平台：y=230, x=72处，宽度150像素
+    Platform* jumpPlatform4 = new Platform(72, 230, 150, 30, this);
+    jumpablePlatforms.append(jumpPlatform4);
+    
+    // 添加第五个可跳跃平台：y=200, x=930处，宽度150像素
+    Platform* jumpPlatform5 = new Platform(930, 200, 150, 30, this);
+    jumpablePlatforms.append(jumpPlatform5);
 }
 
 qreal Battlefield::getFloorHeight() {

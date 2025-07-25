@@ -16,6 +16,16 @@ MyGame::MyGame(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->graphicsView->setFocusPolicy(Qt::StrongFocus);
     ui->graphicsView->setFocus();
 
+    // 设置窗口大小与场景大小相同（1280x720）
+    // 考虑到窗口边框和标题栏，需要调整窗口大小
+    setFixedSize(1280, 720 + 40); // 添加额外高度给标题栏和边框
+    
+    // 禁用最大化按钮
+    setWindowFlags(windowFlags() & ~Qt::WindowMaximizeButtonHint);
+    
+    // 可选：设置窗口标题
+    setWindowTitle("Qt 2D Game");
+
     // 如果你没有用UI里的graphicsView控件，保留原有view逻辑
     // setCentralWidget(view);
     // setFixedSize(view->sizeHint());
