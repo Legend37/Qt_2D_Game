@@ -13,6 +13,7 @@ Battlefield::Battlefield(QGraphicsItem *parent) : Map(parent, ":/Items/Maps/Batt
     setupPlatform();
     setupJumpablePlatforms();
     setupGrassElements(); // 重新启用草地显示
+    setupIceBlock(); // 启用冰块显示
 }
 
 void Battlefield::setupGrassElements() {
@@ -73,21 +74,50 @@ void Battlefield::setupGrassElements() {
 }
 
 void Battlefield::setupIceBlock() {
-    // 冰块贴图显示已被删除
-    /*
+    // 创建冰块贴图，位置在450到750之间，厚度与地面平台一致
     QPixmap icePixmap(":/Items/Maps/Battlefield/Ice_block.png");
     if (icePixmap.isNull()) {
+        qDebug() << "[ERROR] Failed to load Ice_block.png";
         return;
     }
     
-    // 获取地图的边界矩形
-    QRectF mapRect = boundingRect();
+    // 冰块位置：x从450到750（宽度300像素），厚度与地面平台一致（40像素）
+    qreal iceX = 450;
+    qreal iceY = 600; // 与地面平台重合
+    qreal iceWidth = 300; // 750 - 450
+    qreal iceThickness = 40; // 与地面平台相同的厚度
     
-    // 创建冰块元素，使用相对坐标
-    iceBlock = new QGraphicsPixmapItem(icePixmap, this);
-    iceBlock->setPos(mapRect.width() * 0.45, mapRect.height() * 0.65); // 大约在地图的39%和69%位置 (中央偏下)
-    iceBlock->setZValue(2); // 确保冰块在草地之上
-    */
+    // 计算需要的冰块瓦片数量
+    qreal originalWidth = icePixmap.width();
+    qreal originalHeight = icePixmap.height();
+    int tilesNeeded = static_cast<int>(std::ceil(iceWidth / originalWidth));
+    
+    for (int i = 0; i < tilesNeeded; ++i) {
+        QGraphicsPixmapItem* iceTile = new QGraphicsPixmapItem(this);
+        qreal tileX = iceX + i * originalWidth;
+        
+        QPixmap processedPixmap;
+        
+        // 首先处理水平裁剪（如果最后一个瓦片超出区域边界）
+        if (tileX + originalWidth > iceX + iceWidth) {
+            qreal remainingWidth = (iceX + iceWidth) - tileX;
+            processedPixmap = icePixmap.copy(0, 0, remainingWidth, originalHeight);
+        } else {
+            processedPixmap = icePixmap;
+        }
+        
+        // 然后处理垂直裁剪（限制厚度为40像素）
+        if (processedPixmap.height() > iceThickness) {
+            processedPixmap = processedPixmap.copy(0, 0, processedPixmap.width(), iceThickness);
+        }
+        
+        iceTile->setPixmap(processedPixmap);
+        iceTile->setPos(tileX, iceY);
+        iceTile->setZValue(2); // 确保冰块在草地之上
+    }
+    
+    qDebug() << "[DEBUG] Ice block created from x=" << iceX << "to x=" << (iceX + iceWidth) 
+             << "at y=" << iceY << "with thickness=" << iceThickness << "and" << tilesNeeded << "tiles";
 }
 
 

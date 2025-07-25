@@ -4,14 +4,16 @@
 
 #include <QTransform>
 #include <QDateTime>
+#include <QTimer>
 #include <QGraphicsScene>
 #include <QGraphicsColorizeEffect>
 #include "Character.h"
 #include "../Medicines/Medicine.h"
 #include "../Maps/Battlefield.h"
 #include "../Platform.h"
+#include "../Armors/OldShirt.h"
 
-Character::Character(QGraphicsItem *parent) : Item(parent, "") {
+Character::Character(QGraphicsItem *parent) : QObject(), Item(parent, "") {
 //    ellipseItem = new QGraphicsEllipseItem(-5, -5, 10, 10, this);
 //    // Optionally, set some properties of the ellipse
 //    ellipseItem->setBrush(Qt::green);          // Fill color
@@ -62,11 +64,10 @@ void Character::processInput() {
     auto newVelocity = QPointF(0, velocity.y()); // Reset horizontal velocity
     auto moveSpeed = 0.5;
     
-    // 如果在冰块上，移动速度增加50%
+    // 如果在冰块上，移动速度增加100%（翻倍）
     if (isOnIceBlock()) {
-        // moveSpeed *= 1.5;
-        // qDebug() << "[DEBUG] Character on ice block, 
-        // speed boosted to:" << moveSpeed << "Position:" << scenePos() << "HitBox:" << getHitBox();
+        moveSpeed *= 2.0;
+        qDebug() << "[DEBUG] Character on ice block, speed boosted to:" << moveSpeed << "Position:" << scenePos();
     }
     
     if (isCrouchDown()) {
@@ -292,11 +293,12 @@ void Character::applyGravity(double deltaTime) {
         velocity.setX(0); // 停止水平移动
     }
     
-    // 检查上边界（角色顶部不能超出屏幕）
-    if (newPos.y() - characterHeight < 0) {
-        newPos.setY(characterHeight);
-        velocity.setY(0); // 停止向上移动
-    }
+    // 上边界允许超出 - 移除上边界限制检查，角色可以跳出屏幕上方
+    // 注释掉原有的上边界检查代码，允许角色在窗口上方自由移动
+    // if (newPos.y() - characterHeight < 0) {
+    //     newPos.setY(characterHeight);
+    //     velocity.setY(0); // 停止向上移动
+    // }
     
     // 检查是否撞击到地面（兜底机制）
     if (newPos.y() >= groundY) {
@@ -307,10 +309,22 @@ void Character::applyGravity(double deltaTime) {
     setPos(newPos);
 
     // 更新受攻击红光效果
-    updateDamageEffect();
+    try {
+        updateDamageEffect();
+    } catch (const std::exception& e) {
+        qDebug() << "[GRAVITY DEBUG] Exception in updateDamageEffect:" << e.what();
+    } catch (...) {
+        qDebug() << "[GRAVITY DEBUG] Unknown exception in updateDamageEffect";
+    }
     
     // 更新攻击特效
-    updateAttackEffect();
+    try {
+        updateAttackEffect();
+    } catch (const std::exception& e) {
+        qDebug() << "[GRAVITY DEBUG] Exception in updateAttackEffect:" << e.what();
+    } catch (...) {
+        qDebug() << "[GRAVITY DEBUG] Unknown exception in updateAttackEffect";
+    }
 
     static int frameCounter = 0;
     frameCounter++;
@@ -381,13 +395,16 @@ Armor *Character::pickupArmor(Armor *newArmor) {
     auto oldArmor = armor;
     if (oldArmor != nullptr) {
         oldArmor->unmount();
-        oldArmor->setPos(newArmor->pos());
         oldArmor->setParentItem(parentItem());
+        // 让旧盔甲掉落到新盔甲的位置
+        if (newArmor != nullptr) {
+            oldArmor->setPos(newArmor->pos());
+        }
     }
     newArmor->setParentItem(this);
     newArmor->mountToParent();
     armor = newArmor;
-    return oldArmor;
+    return oldArmor; // 返回旧盔甲，让BattleScene处理删除
 }
 
 Weapon *Character::pickupWeapon(Weapon *newWeapon) {
@@ -439,8 +456,19 @@ void Character::updateWeaponPosition() {
 
 QRectF Character::getHitBox() const {
     QPointF charPos = scenePos();
-    // 碰撞箱：左上角(x-40, y-100)，右下角(x+40, y)，宽度80，高度100
-    return QRectF(charPos.x() - 40, charPos.y() - 200, 80, 200);
+    
+    // 根据蹲下状态调整碰撞箱高度
+    qreal height = 200; // 默认高度
+    qreal yOffset = -200; // 默认Y偏移
+    
+    if (isCrouchDown()) {
+        // 蹲下时高度变为原来的1/3
+        height = 200.0 / 3.0; // 约67像素
+        yOffset = -height; // Y偏移调整为新高度
+    }
+    
+    // 碰撞箱：左上角(x-40, y+yOffset)，宽度80，高度height
+    return QRectF(charPos.x() - 40, charPos.y() + yOffset, 80, height);
 }
 
 // 判断给定的坐标是否在碰撞箱中
@@ -451,9 +479,8 @@ bool Character::checkBulletCollision(const QPointF& bulletPos) const {
 
 // 检查给定绝对坐标是否碰到该人物
 bool Character::isHitByPoint(const QPointF& absolutePos) const {
-    QPointF charPos = scenePos();
-    // 碰撞箱：左上角(x-40, y-100)，右下角(x+40, y)，宽度80，高度100
-    QRectF hitRect(charPos.x() - 40, charPos.y() - 200, 80, 200);
+    // 使用统一的碰撞箱逻辑
+    QRectF hitRect = getHitBox();
     return hitRect.contains(absolutePos);
 }
 
@@ -502,8 +529,8 @@ bool Character::isOnIceBlock() const {
         return false;
     }
     
-    // 检查是否在冰块区域：(576-710)
-    return (x >= 576 && x <= 710);
+    // 检查是否在冰块区域：(450-750)
+    return (x >= 450 && x <= 750);
 }
 
 // 根据是否在草地上以及是否下蹲来更新可见性
@@ -525,48 +552,202 @@ void Character::updateVisibilityBasedOnGrass() {
 }
 
 // 受到攻击，扣除生命值并触发红光效果
-void Character::takeDamage(int damage) {
-    hp = qMax(0, hp - damage); // 扣除生命值，不允许小于0
+void Character::takeDamage(int damage, DamageType damageType) {
+    qDebug() << "[DAMAGE DEBUG] takeDamage START - damage:" << damage << "type:" << static_cast<int>(damageType) << "armor:" << armor;
     
-    // 触发红光效果
-    damageEffectFrames = maxDamageEffectFrames;
+    int originalDamage = damage;
+    int actualDamage = damage;
     
-    // 创建红色效果
-    QGraphicsColorizeEffect* redEffect = new QGraphicsColorizeEffect();
-    redEffect->setColor(Qt::red);
-    redEffect->setStrength(0.8); // 80%的红色强度
-    
-    // 保存原始效果并应用红光效果
-    originalEffect = graphicsEffect();
-    setGraphicsEffect(redEffect);
-    
-    // 如果有武器，也应用红光效果
-    if (weapon) {
-        QGraphicsColorizeEffect* weaponRedEffect = new QGraphicsColorizeEffect();
-        weaponRedEffect->setColor(Qt::red);
-        weaponRedEffect->setStrength(0.8);
-        weapon->setGraphicsEffect(weaponRedEffect);
+    // 检查是否有护甲并计算伤害减免
+    if (armor) {
+        qDebug() << "[DAMAGE DEBUG] Has armor, calculating damage reduction...";
+        float damageReduction = 0.0f;
+        
+        // 根据伤害类型获取护甲的伤害减免
+        switch (damageType) {
+            case DamageType::Fist:
+                damageReduction = armor->getFistDamageReduction();
+                break;
+            case DamageType::Knife:
+                damageReduction = armor->getKnifeDamageReduction();
+                break;
+            case DamageType::Bullet:
+                damageReduction = armor->getBulletDamageReduction();
+                break;
+        }
+        
+        // 计算减免后的伤害
+        float reducedDamage = damage * (1.0f - damageReduction);
+        actualDamage = static_cast<int>(reducedDamage);
+        
+        // 对于有耐久度的护甲（如BodyArmor），被护甲吸收的伤害会消耗耐久度
+        if (armor->getDurability() > 0) {
+            int absorbedDamage = originalDamage - actualDamage;
+            qDebug() << "[ARMOR DEBUG] Checking durability damage - Absorbed damage:" << absorbedDamage << "Current durability:" << armor->getDurability();
+            
+            if (absorbedDamage > 0) {
+                qDebug() << "[ARMOR DEBUG] About to call takeDurabilityDamage with:" << absorbedDamage;
+                armor->takeDurabilityDamage(absorbedDamage);
+                qDebug() << "[ARMOR DEBUG] After takeDurabilityDamage, durability is:" << armor->getDurability();
+                
+                // 如果耐久度归零，标记需要替换护甲
+                if (armor->getDurability() <= 0) {
+                    qDebug() << "[ARMOR DEBUG] Durability exhausted, starting replacement process";
+                    qDebug() << "[ARMOR DEBUG] Current armor pointer:" << armor << "Type:" << (armor ? typeid(*armor).name() : "null");
+                    
+                    // 保存当前护甲指针用于安全删除
+                    Armor* oldArmorToDelete = armor;
+                    qDebug() << "[ARMOR DEBUG] Saved old armor pointer:" << oldArmorToDelete;
+                    
+                    // 立即创建并安装新的OldShirt
+                    qDebug() << "[ARMOR DEBUG] Creating new OldShirt...";
+                    try {
+                        armor = new OldShirt(this);
+                        qDebug() << "[ARMOR DEBUG] New OldShirt created:" << armor;
+                        
+                        qDebug() << "[ARMOR DEBUG] Calling mountToParent...";
+                        armor->mountToParent();
+                        qDebug() << "[ARMOR DEBUG] mountToParent completed";
+                        
+                        qDebug() << "[ARMOR DEBUG] Setting visibility...";
+                        armor->setVisible(true);
+                        qDebug() << "[ARMOR DEBUG] Visibility set";
+                        
+                        // 使用定时器安全删除旧护甲
+                        qDebug() << "[ARMOR DEBUG] Scheduling old armor deletion with timer...";
+                        QTimer::singleShot(0, [this, oldArmorToDelete]() {
+                            qDebug() << "[ARMOR DEBUG] Timer callback started - deleting old armor:" << oldArmorToDelete;
+                            try {
+                                if (scene() && oldArmorToDelete) {
+                                    qDebug() << "[ARMOR DEBUG] Removing old armor from scene...";
+                                    scene()->removeItem(oldArmorToDelete);
+                                    qDebug() << "[ARMOR DEBUG] Old armor removed from scene";
+                                }
+                                qDebug() << "[ARMOR DEBUG] About to delete old armor object...";
+                                delete oldArmorToDelete;
+                                qDebug() << "[ARMOR DEBUG] Old armor deleted successfully";
+                            } catch (const std::exception& e) {
+                                qDebug() << "[ARMOR DEBUG] Exception during old armor deletion:" << e.what();
+                            } catch (...) {
+                                qDebug() << "[ARMOR DEBUG] Unknown exception during old armor deletion";
+                            }
+                        });
+                        qDebug() << "[ARMOR DEBUG] Old armor deletion timer scheduled";
+                        
+                    } catch (const std::exception& e) {
+                        qDebug() << "[ARMOR DEBUG] Exception during armor replacement:" << e.what();
+                    } catch (...) {
+                        qDebug() << "[ARMOR DEBUG] Unknown exception during armor replacement";
+                    }
+                }
+            }
+        }
+        
+        qDebug() << "[DAMAGE] Original damage:" << originalDamage 
+                 << "Damage type:" << static_cast<int>(damageType)
+                 << "Reduction:" << (damageReduction * 100) << "%"
+                 << "Actual damage:" << actualDamage
+                 << "Armor durability:" << (armor ? armor->getDurability() : 0);
     }
     
-    qDebug() << "[DAMAGE] Character took" << damage << "damage, HP:" << hp << "Red effect frames:" << damageEffectFrames;
+    // 扣除生命值
+    qDebug() << "[DAMAGE DEBUG] About to set HP - current HP:" << hp << "actualDamage:" << actualDamage;
+    hp = qMax(0, hp - actualDamage);
+    qDebug() << "[DAMAGE DEBUG] HP set to:" << hp;
+    
+    // 触发红光效果
+    qDebug() << "[DAMAGE DEBUG] About to set damageEffectFrames";
+    
+    // 检查是否已经有红光效果在进行中
+    bool wasAlreadyDamaged = (damageEffectFrames > 0);
+    damageEffectFrames = maxDamageEffectFrames;
+    qDebug() << "[DAMAGE DEBUG] damageEffectFrames set to:" << damageEffectFrames << "wasAlreadyDamaged:" << wasAlreadyDamaged;
+    
+    // 只有在没有红光效果时才创建新的红光效果
+    if (!wasAlreadyDamaged) {
+        qDebug() << "[DAMAGE DEBUG] Creating new red effect (first damage)";
+        QGraphicsColorizeEffect* redEffect = new QGraphicsColorizeEffect();
+        redEffect->setColor(Qt::red);
+        redEffect->setStrength(0.8); // 80%的红色强度
+        qDebug() << "[DAMAGE DEBUG] Red effect created";
+        
+        // 保存原始效果并应用红光效果（只在第一次受伤时保存）
+        qDebug() << "[DAMAGE DEBUG] About to save original effect and apply red effect";
+        originalEffect = graphicsEffect();
+        qDebug() << "[DAMAGE DEBUG] Original effect saved:" << originalEffect;
+        setGraphicsEffect(redEffect);
+        qDebug() << "[DAMAGE DEBUG] Red effect applied to character";
+        
+        // 如果有武器，也应用红光效果
+        if (weapon) {
+            qDebug() << "[DAMAGE DEBUG] About to apply red effect to weapon";
+            QGraphicsColorizeEffect* weaponRedEffect = new QGraphicsColorizeEffect();
+            weaponRedEffect->setColor(Qt::red);
+            weaponRedEffect->setStrength(0.8);
+            weapon->setGraphicsEffect(weaponRedEffect);
+            qDebug() << "[DAMAGE DEBUG] Red effect applied to weapon";
+        } else {
+            qDebug() << "[DAMAGE DEBUG] No weapon to apply red effect to";
+        }
+    } else {
+        qDebug() << "[DAMAGE DEBUG] Red effect already active, just resetting frames";
+    }
+    
+    qDebug() << "[DAMAGE] Character took" << actualDamage << "damage, HP:" << hp << "Red effect frames:" << damageEffectFrames;
+    qDebug() << "[DAMAGE DEBUG] takeDamage END - armor after damage:" << armor << "HP:" << hp;
+    
+    // 检查角色是否死亡
+    if (hp <= 0) {
+        qDebug() << "[DEATH] Character died, emitting characterDied signal";
+        emit characterDied(this);
+    }
+}
+
+// 向后兼容的takeDamage函数
+void Character::takeDamage(int damage) {
+    takeDamage(damage, DamageType::Fist); // 默认为拳头伤害
 }
 
 // 更新受攻击效果，需要在每帧调用
 void Character::updateDamageEffect() {
     if (damageEffectFrames > 0) {
+        qDebug() << "[DAMAGE EFFECT DEBUG] Updating damage effect, frames remaining:" << damageEffectFrames;
         damageEffectFrames--;
         
         // 如果红光效果结束，恢复原始效果
         if (damageEffectFrames <= 0) {
-            setGraphicsEffect(originalEffect);
-            originalEffect = nullptr;
-            
-            // 移除武器的红光效果
-            if (weapon) {
-                weapon->setGraphicsEffect(nullptr);
+            qDebug() << "[DAMAGE EFFECT DEBUG] Damage effect ending, restoring original effect";
+            try {
+                // 安全地恢复原始效果
+                qDebug() << "[DAMAGE EFFECT DEBUG] Current originalEffect pointer:" << originalEffect;
+                
+                // 首先移除当前的红光效果
+                setGraphicsEffect(nullptr);
+                qDebug() << "[DAMAGE EFFECT DEBUG] Current effect cleared";
+                
+                // 然后设置原始效果（如果存在的话）
+                if (originalEffect != nullptr) {
+                    setGraphicsEffect(originalEffect);
+                    qDebug() << "[DAMAGE EFFECT DEBUG] Original effect restored";
+                } else {
+                    qDebug() << "[DAMAGE EFFECT DEBUG] No original effect to restore";
+                }
+                originalEffect = nullptr;
+                qDebug() << "[DAMAGE EFFECT DEBUG] Character effect restoration completed";
+                
+                // 移除武器的红光效果
+                if (weapon) {
+                    qDebug() << "[DAMAGE EFFECT DEBUG] Removing weapon red effect";
+                    weapon->setGraphicsEffect(nullptr);
+                    qDebug() << "[DAMAGE EFFECT DEBUG] Weapon effect removed";
+                }
+                
+                qDebug() << "[DAMAGE] Red effect ended, HP:" << hp;
+            } catch (const std::exception& e) {
+                qDebug() << "[DAMAGE EFFECT DEBUG] Exception during effect restoration:" << e.what();
+            } catch (...) {
+                qDebug() << "[DAMAGE EFFECT DEBUG] Unknown exception during effect restoration";
             }
-            
-            qDebug() << "[DAMAGE] Red effect ended, HP:" << hp;
         }
     }
 }

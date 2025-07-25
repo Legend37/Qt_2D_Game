@@ -68,7 +68,7 @@ void Bullet::checkCollisions() {
         // qDebug() << "[DEBUG] Character collision result:" << collision;
         if (collision) {
             // 发生碰撞，角色损失动态伤害值
-            character->takeDamage(damage); // 使用takeDamage函数
+            character->takeDamage(damage, DamageType::Bullet); // 子弹伤害类型
             // qDebug() << "[DEBUG] Bullet hit character! Damage:" << damage << "HP:" << character->getHP();
             
             // 重新绘制血条
@@ -91,7 +91,7 @@ void Bullet::checkCollisions() {
         // qDebug() << "[DEBUG] Hero collision result:" << collision;
         if (collision) {
             // 发生碰撞，Hero损失动态伤害值
-            hero->takeDamage(damage); // 使用takeDamage函数
+            hero->takeDamage(damage, DamageType::Bullet); // 子弹伤害类型
             // qDebug() << "[DEBUG] Bullet hit hero! Damage:" << damage << "HP:" << hero->getHP();
             
             // 重新绘制血条

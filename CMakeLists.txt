@@ -50,6 +50,8 @@ add_executable(qt_2025_game src/main.cpp
         src/Items/Mountable.h
         src/Items/Armors/FlamebreakerArmor.cpp
         src/Items/Armors/FlamebreakerArmor.h
+        src/Items/Armors/BodyArmor.cpp
+        src/Items/Armors/BodyArmor.h
         src/Items/Weapons/Weapon.cpp
         src/Items/Weapons/Weapon.h
         src/Items/Weapons/Pistol.cpp

@@ -232,7 +232,7 @@ void Ball::checkCollisions() {
             }
             active = false;
             
-            character->takeDamage(50); // 使用takeDamage函数
+            character->takeDamage(50, DamageType::Bullet); // 球被视为投射物伤害（类似子弹）
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
@@ -266,7 +266,7 @@ void Ball::checkCollisions() {
             }
             active = false;
             
-            hero->takeDamage(50); // 使用takeDamage函数
+            hero->takeDamage(50, DamageType::Bullet); // 球被视为投射物伤害（类似子弹）
             
             // 重新绘制血条
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);

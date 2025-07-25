@@ -1,6 +1,8 @@
 #include "BattleScene.h"
 #include <QDateTime>
 #include <QTimer>
+#include <QMessageBox>
+#include <QApplication>
 #include "../Items/Weapons/Bullet.h"
 #include <QPainter>
 void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
@@ -10,7 +12,9 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
     int barHeight = 24;
     int margin = 16;
     int hpMax = 100;
-    // Character HP
+    int durabilityBarHeight = 16; // è€ä¹…åº¦æ¡é«˜åº¦
+    
+    // Character HP and Durability
     if (character) {
         int hp = character->getHP();
         QRect bgRect(margin, margin, barWidth, barHeight);
@@ -21,9 +25,31 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
         painter->setBrush(QColor(220, 40, 40, 220));
         painter->drawRect(fgRect);
         painter->setPen(Qt::white);
-        painter->drawText(bgRect, Qt::AlignCenter, QString("Character HP: %1").arg(hp));
+        painter->drawText(bgRect, Qt::AlignCenter, QString("Player 1 HP: %1").arg(hp));
+        
+        // ç»˜åˆ¶è€ä¹…åº¦æ¡ï¼ˆå¦‚æœæœ‰æŠ¤ç”²ä¸”æœ‰è€ä¹…åº¦ï¼‰
+        auto armor = character->getArmor();
+        if (armor && armor->getDurability() > 0) {
+            int durability = armor->getDurability();
+            int maxDurability = armor->getMaxDurability();
+            
+            QRect durabilityBgRect(margin, margin + barHeight + 4, barWidth, durabilityBarHeight);
+            QRect durabilityFgRect(margin, margin + barHeight + 4, 
+                                   barWidth * std::max(0, std::min(durability, maxDurability)) / maxDurability, 
+                                   durabilityBarHeight);
+            
+            painter->setBrush(QColor(60, 60, 60, 200));
+            painter->drawRect(durabilityBgRect);
+            painter->setBrush(QColor(100, 180, 255, 220)); // è“è‰²è€ä¹…åº¦æ¡
+            painter->drawRect(durabilityFgRect);
+            painter->setPen(Qt::white);
+            painter->setFont(QFont("Arial", 10));
+            painter->drawText(durabilityBgRect, Qt::AlignCenter, QString("Armor: %1/%2").arg(durability).arg(maxDurability));
+            painter->setFont(QFont()); // æ¢å¤é»˜è®¤å­—ä½“
+        }
     }
-    // Hero HP
+    
+    // Hero HP and Durability  
     if (hero) {
         int hp = hero->getHP();
         QRect bgRect(sceneRect().width() - barWidth - margin, margin, barWidth, barHeight);
@@ -31,10 +57,31 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
         painter->setPen(Qt::NoPen);
         painter->setBrush(QColor(60, 60, 60, 200));
         painter->drawRect(bgRect);
-        painter->setBrush(QColor(40, 120, 220, 220));
+        painter->setBrush(QColor(220, 40, 40, 220)); // çº¢è‰²è¡€é‡æ¡
         painter->drawRect(fgRect);
         painter->setPen(Qt::white);
-        painter->drawText(bgRect, Qt::AlignCenter, QString("Hero HP: %1").arg(hp));
+        painter->drawText(bgRect, Qt::AlignCenter, QString("Player 2 HP: %1").arg(hp));
+        
+        // ç»˜åˆ¶è€ä¹…åº¦æ¡ï¼ˆå¦‚æœæœ‰æŠ¤ç”²ä¸”æœ‰è€ä¹…åº¦ï¼‰
+        auto armor = hero->getArmor();
+        if (armor && armor->getDurability() > 0) {
+            int durability = armor->getDurability();
+            int maxDurability = armor->getMaxDurability();
+            
+            QRect durabilityBgRect(sceneRect().width() - barWidth - margin, margin + barHeight + 4, barWidth, durabilityBarHeight);
+            QRect durabilityFgRect(sceneRect().width() - barWidth - margin, margin + barHeight + 4,
+                                   barWidth * std::max(0, std::min(durability, maxDurability)) / maxDurability,
+                                   durabilityBarHeight);
+            
+            painter->setBrush(QColor(40, 40, 40, 200));
+            painter->drawRect(durabilityBgRect);
+            painter->setBrush(QColor(100, 180, 255, 220)); // è“è‰²è€ä¹…åº¦æ¡
+            painter->drawRect(durabilityFgRect);
+            painter->setPen(Qt::white);
+            painter->setFont(QFont("Arial", 10));
+            painter->drawText(durabilityBgRect, Qt::AlignCenter, QString("Armor: %1/%2").arg(durability).arg(maxDurability));
+            painter->setFont(QFont()); // æ¢å¤é»˜è®¤å­—ä½“
+        }
     }
 }
 
@@ -46,6 +93,8 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
 #include "../Items/Characters/Hero.h"
 #include "../Items/Maps/Battlefield.h"
 #include "../Items/Armors/FlamebreakerArmor.h"
+#include "../Items/Armors/BodyArmor.h"
+#include "../Items/Armors/OldShirt.h"
 #include "../Items/Weapons/Pistol.h"
 #include "../Items/Weapons/Shotgun.h"
 #include "../Items/Weapons/Submachine.h"
@@ -60,14 +109,18 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     addItem(map);
     addItem(character);
     map->scaleToFitScene(this);
-    character->setPos(QPointF(100, map->getFloorHeight() - 100)); // ¹Ì¶¨ÔÚx=100Î»ÖÃ
+    character->setPos(QPointF(100, map->getFloorHeight() - 100)); // å›ºå®šåœ¨x=100ä½ç½®
     character->setGroundY(map->getFloorHeight());
     
     // Create second character Hero
     hero = new Hero();
     addItem(hero);
-    hero->setPos(QPointF(1100, map->getFloorHeight() - 100)); // ¹Ì¶¨ÔÚx=1100Î»ÖÃ
+    hero->setPos(QPointF(1100, map->getFloorHeight() - 100)); // å›ºå®šåœ¨x=1100ä½ç½®
     hero->setGroundY(map->getFloorHeight());
+    
+    // è¿æ¥è§’è‰²æ­»äº¡ä¿¡å·
+    connect(character, &Character::characterDied, this, &BattleScene::onCharacterDied);
+    connect(hero, &Character::characterDied, this, &BattleScene::onCharacterDied);
     
 
     // every 10 seconds, spawn a random weapon
@@ -75,17 +128,22 @@ BattleScene::BattleScene(QObject *parent) : Scene(parent) {
     connect(weaponDropTimer, &QTimer::timeout, this, &BattleScene::spawnRandomWeapon);
     weaponDropTimer->start(10000);
 
-    // Ã¿8ÃëµôÂäÒ»¸öËæ»úÒ©Æ·
+    // æ¯8ç§’æ‰è½ä¸€ä¸ªéšæœºè¯å“
     medicineDropTimer = new QTimer(this);
     connect(medicineDropTimer, &QTimer::timeout, this, &BattleScene::spawnRandomMedicine);
     medicineDropTimer->start(8000);
+    
+    // æ¯20ç§’æ‰è½ä¸€ä¸ªéšæœºç›”ç”²
+    armorDropTimer = new QTimer(this);
+    connect(armorDropTimer, &QTimer::timeout, this, &BattleScene::spawnRandomArmor);
+    armorDropTimer->start(20000);
 
-    // Ã¿ÃëÊä³öÒ»´ÎËùÓĞ×Óµ¯µÄ¾ø¶ÔÎ»ÖÃ
+    // æ¯ç§’è¾“å‡ºä¸€æ¬¡æ‰€æœ‰å­å¼¹çš„ç»å¯¹ä½ç½®
     bulletDebugTimer = new QTimer(this);
     connect(bulletDebugTimer, &QTimer::timeout, this, &BattleScene::debugAllBulletPositions);
     bulletDebugTimer->start(1000);
 
-    // Ã¿5ÃëÊä³öÒ»´ÎÅö×²Ïä¾ØĞÎ¶¥µã
+    // æ¯5ç§’è¾“å‡ºä¸€æ¬¡ç¢°æ’ç®±çŸ©å½¢é¡¶ç‚¹
     hitBoxDebugTimer = new QTimer(this);
     connect(hitBoxDebugTimer, &QTimer::timeout, this, &BattleScene::debugHitBoxCorners);
     hitBoxDebugTimer->start(5000);
@@ -133,6 +191,21 @@ void BattleScene::spawnRandomMedicine() {
     // qDebug() << "[DEBUG] Spawned medicine:" << medicine->getMedicineName() << "at position:" << medicine->pos();
 }
 
+void BattleScene::spawnRandomArmor() {
+    int type = QRandomGenerator::global()->bounded(2);
+    Armor *armor = nullptr;
+    if (type == 0) armor = new FlamebreakerArmor(nullptr);
+    else armor = new BodyArmor(nullptr);
+    
+    armor->unmount();
+    qreal randomX = sceneRect().left() + 100 + QRandomGenerator::global()->bounded((int)sceneRect().width() - 200);
+    armor->setPos(randomX, sceneRect().top());
+    addItem(armor);
+    fallingArmors.append(qMakePair(armor, QDateTime::currentMSecsSinceEpoch()));
+    
+    // qDebug() << "[DEBUG] Spawned armor at position:" << armor->pos();
+}
+
 // Update gravity
 void BattleScene::updateFallingWeapons() {
     const qreal gravity = 0.5; // gravity
@@ -147,7 +220,7 @@ void BattleScene::updateFallingWeapons() {
             continue;
         }
         qint64 born = fallingWeapons[i].second;
-        // 20sec duration£¬if unmounted, remove
+        // 20sec durationï¼Œif unmounted, remove
         if (now - born > 20000 && !weapon->isMounted()) {
             removeItem(weapon);
             toDelete.append(weapon);
@@ -169,9 +242,9 @@ void BattleScene::updateFallingWeapons() {
     }
 }
 
-// ¸üĞÂµôÂäµÄÒ©Æ·
+// æ›´æ–°æ‰è½çš„è¯å“
 void BattleScene::updateFallingMedicines() {
-    const qreal gravity = 0.5; // ÖØÁ¦¼ÓËÙ¶È
+    const qreal gravity = 0.5; // é‡åŠ›åŠ é€Ÿåº¦
     const qreal maxY = map->getFloorHeight();
     qint64 now = QDateTime::currentMSecsSinceEpoch();
     QList<int> toRemove;
@@ -181,7 +254,7 @@ void BattleScene::updateFallingMedicines() {
         Medicine *medicine = fallingMedicines[i].first;
         qint64 born = fallingMedicines[i].second;
         
-        // 10ÃëÉú´æÊ±¼ä£¬Èç¹ûÎ´±»×°ÔØÔòÉ¾³ı
+        // 10ç§’ç”Ÿå­˜æ—¶é—´ï¼Œå¦‚æœæœªè¢«è£…è½½åˆ™åˆ é™¤
         if (now - born > 10000 && !medicine->isMounted()) {
             removeItem(medicine);
             toDelete.append(medicine);
@@ -190,19 +263,55 @@ void BattleScene::updateFallingMedicines() {
             continue;
         }
         
-        // µôÂäÎïÀí
+        // æ‰è½ç‰©ç†
         QPointF pos = medicine->pos();
         if (pos.y() < maxY) {
             medicine->setPos(pos.x(), std::min(maxY, pos.y() + gravity * 16));
         }
     }
     
-    // ÇåÀíÒÑÒÆ³ıµÄÏîÄ¿
+    // æ¸…ç†å·²ç§»é™¤çš„é¡¹ç›®
     for (int i = toRemove.size() - 1; i >= 0; --i) {
         fallingMedicines.removeAt(toRemove[i]);
     }
     for (Medicine* m : toDelete) {
         delete m;
+    }
+}
+
+void BattleScene::updateFallingArmors() {
+    const qreal gravity = 0.5; // é‡åŠ›åŠ é€Ÿåº¦
+    const qreal maxY = map->getFloorHeight();
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    QList<int> toRemove;
+    QList<Armor*> toDelete;
+    
+    for (int i = 0; i < fallingArmors.size(); ++i) {
+        Armor *armor = fallingArmors[i].first;
+        qint64 born = fallingArmors[i].second;
+        
+        // 15ç§’ç”Ÿå­˜æ—¶é—´ï¼Œå¦‚æœæœªè¢«è£…è½½åˆ™åˆ é™¤
+        if (now - born > 15000 && !armor->isMounted()) {
+            removeItem(armor);
+            toDelete.append(armor);
+            toRemove.append(i);
+            // qDebug() << "[DEBUG] Armor expired after 15 seconds";
+            continue;
+        }
+        
+        // æ‰è½ç‰©ç†
+        QPointF pos = armor->pos();
+        if (pos.y() < maxY) {
+            armor->setPos(pos.x(), std::min(maxY, pos.y() + gravity * 16));
+        }
+    }
+    
+    // æ¸…ç†å·²ç§»é™¤çš„é¡¹ç›®
+    for (int i = toRemove.size() - 1; i >= 0; --i) {
+        fallingArmors.removeAt(toRemove[i]);
+    }
+    for (Armor* a : toDelete) {
+        delete a;
     }
 }
 
@@ -216,11 +325,11 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
     switch (event->key()) {
         case Qt::Key_G:
             // qDebug() << "[DEBUG] G key pressed";
-            // character¹¥»÷
+            // characteræ”»å‡»
             if (character != nullptr) {
                 // qDebug() << "[DEBUG] Character exists";
                 
-                // ¼ì²é¹¥»÷ÀäÈ´Ê±¼ä
+                // æ£€æŸ¥æ”»å‡»å†·å´æ—¶é—´
                 if (!character->canAttack()) {
                     // qDebug() << "[DEBUG] Character attack on cooldown, ignoring";
                     break;
@@ -230,7 +339,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                     // qDebug() << "[DEBUG] Character has weapon";
                     Weapon *weapon = character->getWeapon();
                     
-                    // ¸ù¾İÎäÆ÷ÀàĞÍÉèÖÃ¹¥»÷ÀäÈ´Ê±¼ä
+                    // æ ¹æ®æ­¦å™¨ç±»å‹è®¾ç½®æ”»å‡»å†·å´æ—¶é—´
                     if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
                         character->setAttackCooldown(pistol->getFireRate());
                         // qDebug() << "[DEBUG] Set pistol fire rate:" << pistol->getFireRate() << "ms";
@@ -241,35 +350,35 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         character->setAttackCooldown(submachine->getFireRate());
                         // qDebug() << "[DEBUG] Set submachine fire rate:" << submachine->getFireRate() << "ms";
                     } else {
-                        // ÆäËûÎäÆ÷Ê¹ÓÃÄ¬ÈÏÀäÈ´Ê±¼ä
+                        // å…¶ä»–æ­¦å™¨ä½¿ç”¨é»˜è®¤å†·å´æ—¶é—´
                         character->setAttackCooldown(500);
                         // qDebug() << "[DEBUG] Set default fire rate: 500ms";
                     }
                 } else {
-                    // È­Í·¹¥»÷Ê¹ÓÃÄ¬ÈÏÀäÈ´Ê±¼ä
+                    // æ‹³å¤´æ”»å‡»ä½¿ç”¨é»˜è®¤å†·å´æ—¶é—´
                     character->setAttackCooldown(500);
                     // qDebug() << "[DEBUG] Set fist attack fire rate: 500ms";
                 }
                 
-                // ¿ªÊ¼¹¥»÷ÀäÈ´¼ÆÊ±
+                // å¼€å§‹æ”»å‡»å†·å´è®¡æ—¶
                 character->startAttackCooldown();
                 
-                // ´¥·¢¹¥»÷ÌØĞ§
+                // è§¦å‘æ”»å‡»ç‰¹æ•ˆ
                 character->triggerAttackEffect();
                 
                 if (character->getWeapon() != nullptr) {
                     // qDebug() << "[DEBUG] Character has weapon";
                     Weapon *weapon = character->getWeapon();
                     
-                    // ¼ì²éÊÇ·ñÎªĞ¡µ¶
+                    // æ£€æŸ¥æ˜¯å¦ä¸ºå°åˆ€
                     if (weapon->getWeaponName() == "Knife") {
                         // qDebug() << "[DEBUG] Character using knife attack";
-                        // Ğ¡µ¶¹¥»÷Âß¼­£º¼ì²éĞ¡µ¶Î»ÖÃÊÇ·ñÔÚ¶Ô·½Åö×²ÏäÄÚ
+                        // å°åˆ€æ”»å‡»é€»è¾‘ï¼šæ£€æŸ¥å°åˆ€ä½ç½®æ˜¯å¦åœ¨å¯¹æ–¹ç¢°æ’ç®±å†…
                         QPointF charPos = character->scenePos();
                         QPointF knifePos;
                         
-                        // Ğ¡µ¶¹¥»÷Î»ÖÃÓ¦¸ÃÓëÈ­Í·Î»ÖÃÒ»ÖÂ
-                        // ¸ù¾İ½ÇÉ«³¯ÏòÈ·¶¨Ğ¡µ¶Î»ÖÃ
+                        // å°åˆ€æ”»å‡»ä½ç½®åº”è¯¥ä¸æ‹³å¤´ä½ç½®ä¸€è‡´
+                        // æ ¹æ®è§’è‰²æœå‘ç¡®å®šå°åˆ€ä½ç½®
                         if (character->isFacingRight()) {
                             knifePos = QPointF(charPos.x() + 33, charPos.y() - 85);
                         } else {
@@ -277,46 +386,46 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         }
                         // qDebug() << "[DEBUG] Knife position:" << knifePos;
                         
-                        // ¼ì²éÊÇ·ñ»÷ÖĞHero
+                        // æ£€æŸ¥æ˜¯å¦å‡»ä¸­Hero
                         if (hero && hero->isHitByPoint(knifePos)) {
                             // qDebug() << "[DEBUG] Knife hit Hero! Dealing 10 damage";
-                            hero->takeDamage(10); // Ê¹ÓÃtakeDamageº¯Êı
+                            hero->takeDamage(10, DamageType::Knife); // å°åˆ€ä¼¤å®³ç±»å‹
                             // qDebug() << "[DEBUG] Hero HP after knife attack:" << hero->getHP();
-                            invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // Ç¿ÖÆÖØ»æÇ°¾°²ã
+                            invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // å¼ºåˆ¶é‡ç»˜å‰æ™¯å±‚
                         } else {
                             // qDebug() << "[DEBUG] Knife attack missed";
                         }
                     }
                     else if (weapon->getWeaponName() == "Ball") {
                         // qDebug() << "[DEBUG] Character using ball attack";
-                        // Ç¦Çò¹¥»÷Âß¼­£ºÍ¶ÖÀÒ»¸öĞÂµÄBall¶ÔÏó
+                        // é“…çƒæ”»å‡»é€»è¾‘ï¼šæŠ•æ·ä¸€ä¸ªæ–°çš„Ballå¯¹è±¡
                         if (weapon->getAmmo() > 0) {
                             // qDebug() << "[DEBUG] Ball used, creating thrown ball";
                             
-                            // ´´½¨Ò»¸öĞÂµÄBall¶ÔÏóÓÃÓÚÍ¶ÖÀ
+                            // åˆ›å»ºä¸€ä¸ªæ–°çš„Ballå¯¹è±¡ç”¨äºæŠ•æ·
                             Ball* thrownBall = new Ball(nullptr);
-                            thrownBall->unmount(); // È·±£²»ÊÇ¹ÒÔØ×´Ì¬
+                            thrownBall->unmount(); // ç¡®ä¿ä¸æ˜¯æŒ‚è½½çŠ¶æ€
                             
-                            // ÉèÖÃÍ¶ÖÀBallµÄ³õÊ¼Î»ÖÃ£¨½ÇÉ«Î»ÖÃ£©
+                            // è®¾ç½®æŠ•æ·Ballçš„åˆå§‹ä½ç½®ï¼ˆè§’è‰²ä½ç½®ï¼‰
                             QPointF charPos = character->scenePos();
-                            thrownBall->setPos(charPos.x(), charPos.y() - 100); // ´Ó½ÇÉ«ÉÏ·½Í¶ÖÀ
+                            thrownBall->setPos(charPos.x(), charPos.y() - 100); // ä»è§’è‰²ä¸Šæ–¹æŠ•æ·
                             
-                            // ÉèÖÃÍ¶ÖÀBallµÄ³õÊ¼ËÙ¶È
-                            qreal vx = character->isFacingRight() ? 15 : -15; // xÖáËÙ¶È¸ù¾İ³¯Ïò
-                            qreal vy = -25; // yÖáËÙ¶ÈÏòÉÏ£¬³õÊ¼ËÙ¶È¸ü´ó
+                            // è®¾ç½®æŠ•æ·Ballçš„åˆå§‹é€Ÿåº¦
+                            qreal vx = character->isFacingRight() ? 15 : -15; // xè½´é€Ÿåº¦æ ¹æ®æœå‘
+                            qreal vy = -25; // yè½´é€Ÿåº¦å‘ä¸Šï¼Œåˆå§‹é€Ÿåº¦æ›´å¤§
                             thrownBall->setVelocity(vx, vy);
-                            thrownBall->setThrownMode(true); // ÉèÖÃÎªÍ¶ÖÀÄ£Ê½£¬Ê¹ÓÃ¸ü¿ìµÄÖØÁ¦
-                            thrownBall->shooter = character; // ÉèÖÃÉäÊÖ
+                            thrownBall->setThrownMode(true); // è®¾ç½®ä¸ºæŠ•æ·æ¨¡å¼ï¼Œä½¿ç”¨æ›´å¿«çš„é‡åŠ›
+                            thrownBall->shooter = character; // è®¾ç½®å°„æ‰‹
                             
-                            // Ìí¼Óµ½³¡¾°ÖĞ
+                            // æ·»åŠ åˆ°åœºæ™¯ä¸­
                             addItem(thrownBall);
                             // qDebug() << "[DEBUG] Thrown ball created at pos:" << thrownBall->pos() << "with velocity:" << vx << "," << vy;
                             
-                            // Ô­ÓĞÎäÆ÷´¦ÀíÂß¼­
+                            // åŸæœ‰æ­¦å™¨å¤„ç†é€»è¾‘
                             // qDebug() << "[DEBUG] Step 1: About to call removeFallingWeapon";
                             
-                            // ÎäÆ÷ÓÃÍêºóÏûÊ§
-                            // ÏÈ´Ó fallingWeapons ÁĞ±íÖĞÒÆ³ı£¬ÔÙ°²È«É¾³ı
+                            // æ­¦å™¨ç”¨å®Œåæ¶ˆå¤±
+                            // å…ˆä» fallingWeapons åˆ—è¡¨ä¸­ç§»é™¤ï¼Œå†å®‰å…¨åˆ é™¤
                             removeFallingWeapon(weapon);
                             // qDebug() << "[DEBUG] Step 2: removeFallingWeapon completed";
                             
@@ -328,7 +437,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             character->pickupWeapon(nullptr);
                             // qDebug() << "[DEBUG] Step 4: pickupWeapon(nullptr) completed";
                             
-                            // Ê¹ÓÃ¶¨Ê±Æ÷ÑÓ³ÙÉ¾³ı£¬±ÜÃâÁ¢¼´É¾³ıµ¼ÖÂµÄÎÊÌâ
+                            // ä½¿ç”¨å®šæ—¶å™¨å»¶è¿Ÿåˆ é™¤ï¼Œé¿å…ç«‹å³åˆ é™¤å¯¼è‡´çš„é—®é¢˜
                             // qDebug() << "[DEBUG] Step 5: About to schedule weapon deletion";
                             QTimer::singleShot(0, [weapon]() {
                                 // qDebug() << "[DEBUG] Lambda: About to delete weapon";
@@ -342,7 +451,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             // qDebug() << "[DEBUG] Ball has no ammo left";
                         }
                     } else {
-                        // Ô¶³ÌÎäÆ÷¹¥»÷Âß¼­
+                        // è¿œç¨‹æ­¦å™¨æ”»å‡»é€»è¾‘
                         // qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
                         if (weapon->getAmmo() > 0) {
                             weapon->decAmmo();
@@ -352,9 +461,9 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             // qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
                             // qDebug() << "[DEBUG] Character facing right:" << character->isFacingRight();
                             
-                            // ¸ù¾İÎäÆ÷ÀàĞÍ»ñÈ¡²»Í¬µÄÊôĞÔ
-                            qreal bulletSpeed = 22.5; // Ä¬ÈÏËÙ¶È
-                            int bulletDamage = 20;     // Ä¬ÈÏÉËº¦
+                            // æ ¹æ®æ­¦å™¨ç±»å‹è·å–ä¸åŒçš„å±æ€§
+                            qreal bulletSpeed = 22.5; // é»˜è®¤é€Ÿåº¦
+                            int bulletDamage = 20;     // é»˜è®¤ä¼¤å®³
                             
                             if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
                                 bulletSpeed = pistol->getBulletSpeed();
@@ -388,12 +497,12 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                     }
                 } else {
                     // qDebug() << "[DEBUG] Character has no weapon - using fist attack";
-                    // È­Í·¹¥»÷Âß¼­£º¼ì²é½ÇÉ«ÎäÆ÷Î»ÖÃÊÇ·ñÓĞµĞÈË
+                    // æ‹³å¤´æ”»å‡»é€»è¾‘ï¼šæ£€æŸ¥è§’è‰²æ­¦å™¨ä½ç½®æ˜¯å¦æœ‰æ•Œäºº
                     QPointF charPos = character->scenePos();
                     QPointF fistPos;
                     
-                    // È­Í·¹¥»÷Î»ÖÃÓ¦¸ÃÓëÎäÆ÷Î»ÖÃÒ»ÖÂ
-                    // ¸ù¾İ½ÇÉ«³¯ÏòÈ·¶¨È­Í·Î»ÖÃ
+                    // æ‹³å¤´æ”»å‡»ä½ç½®åº”è¯¥ä¸æ­¦å™¨ä½ç½®ä¸€è‡´
+                    // æ ¹æ®è§’è‰²æœå‘ç¡®å®šæ‹³å¤´ä½ç½®
                     if (character->isFacingRight()) {
                         fistPos = QPointF(charPos.x() + 33, charPos.y() - 85);
                     } else {
@@ -402,12 +511,12 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                     
                     qDebug() << "[DEBUG] Fist attack position:" << fistPos;
                     
-                    // ¼ì²éÊÇ·ñ»÷ÖĞHero
+                    // æ£€æŸ¥æ˜¯å¦å‡»ä¸­Hero
                     if (hero && hero->isHitByPoint(fistPos)) {
                         qDebug() << "[DEBUG] Fist hit Hero! Dealing 3 damage";
-                        hero->takeDamage(3); // Ê¹ÓÃtakeDamageº¯Êı
+                        hero->takeDamage(3, DamageType::Fist); // æ‹³å¤´ä¼¤å®³ç±»å‹
                         // qDebug() << "[DEBUG] Hero HP after fist attack:" << hero->getHP();
-                        invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // Ç¿ÖÆÖØ»æÇ°¾°²ã
+                        invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // å¼ºåˆ¶é‡ç»˜å‰æ™¯å±‚
                     } else {
                         qDebug() << "[DEBUG] Fist attack missed";
                     }
@@ -418,11 +527,11 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
             break;
         case Qt::Key_K:
             // qDebug() << "[DEBUG] K key pressed";
-            // hero¹¥»÷
+            // heroæ”»å‡»
             if (hero != nullptr) {
                 // qDebug() << "[DEBUG] Hero exists";
                 
-                // ¼ì²é¹¥»÷ÀäÈ´Ê±¼ä
+                // æ£€æŸ¥æ”»å‡»å†·å´æ—¶é—´
                 if (!hero->canAttack()) {
                     // qDebug() << "[DEBUG] Hero attack on cooldown, ignoring";
                     break;
@@ -432,7 +541,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                     // qDebug() << "[DEBUG] Hero has weapon";
                     Weapon *weapon = hero->getWeapon();
                     
-                    // ¸ù¾İÎäÆ÷ÀàĞÍÉèÖÃ¹¥»÷ÀäÈ´Ê±¼ä
+                    // æ ¹æ®æ­¦å™¨ç±»å‹è®¾ç½®æ”»å‡»å†·å´æ—¶é—´
                     if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
                         hero->setAttackCooldown(pistol->getFireRate());
                         // qDebug() << "[DEBUG] Set hero pistol fire rate:" << pistol->getFireRate() << "ms";
@@ -443,35 +552,35 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         hero->setAttackCooldown(submachine->getFireRate());
                         // qDebug() << "[DEBUG] Set hero submachine fire rate:" << submachine->getFireRate() << "ms";
                     } else {
-                        // ÆäËûÎäÆ÷Ê¹ÓÃÄ¬ÈÏÀäÈ´Ê±¼ä
+                        // å…¶ä»–æ­¦å™¨ä½¿ç”¨é»˜è®¤å†·å´æ—¶é—´
                         hero->setAttackCooldown(500);
                         // qDebug() << "[DEBUG] Set hero default fire rate: 500ms";
                     }
                 } else {
-                    // È­Í·¹¥»÷Ê¹ÓÃÄ¬ÈÏÀäÈ´Ê±¼ä
+                    // æ‹³å¤´æ”»å‡»ä½¿ç”¨é»˜è®¤å†·å´æ—¶é—´
                     hero->setAttackCooldown(500);
                     // qDebug() << "[DEBUG] Set hero fist attack fire rate: 500ms";
                 }
                 
-                // ¿ªÊ¼¹¥»÷ÀäÈ´¼ÆÊ±
+                // å¼€å§‹æ”»å‡»å†·å´è®¡æ—¶
                 hero->startAttackCooldown();
                 
-                // ´¥·¢¹¥»÷ÌØĞ§
+                // è§¦å‘æ”»å‡»ç‰¹æ•ˆ
                 hero->triggerAttackEffect();
                 
                 if (hero->getWeapon() != nullptr) {
                     // qDebug() << "[DEBUG] Hero has weapon";
                     Weapon *weapon = hero->getWeapon();
                     
-                    // ¼ì²éÊÇ·ñÎªĞ¡µ¶
+                    // æ£€æŸ¥æ˜¯å¦ä¸ºå°åˆ€
                     if (weapon->getWeaponName() == "Knife") {
                         // qDebug() << "[DEBUG] Hero using knife attack";
-                        // Ğ¡µ¶¹¥»÷Âß¼­£º¼ì²éĞ¡µ¶Î»ÖÃÊÇ·ñÔÚ¶Ô·½Åö×²ÏäÄÚ
+                        // å°åˆ€æ”»å‡»é€»è¾‘ï¼šæ£€æŸ¥å°åˆ€ä½ç½®æ˜¯å¦åœ¨å¯¹æ–¹ç¢°æ’ç®±å†…
                         QPointF heroPos = hero->scenePos();
                         QPointF knifePos;
                         
-                        // Ğ¡µ¶¹¥»÷Î»ÖÃÓ¦¸ÃÓëÈ­Í·Î»ÖÃÒ»ÖÂ
-                        // ¸ù¾İÓ¢ĞÛ³¯ÏòÈ·¶¨Ğ¡µ¶Î»ÖÃ
+                        // å°åˆ€æ”»å‡»ä½ç½®åº”è¯¥ä¸æ‹³å¤´ä½ç½®ä¸€è‡´
+                        // æ ¹æ®è‹±é›„æœå‘ç¡®å®šå°åˆ€ä½ç½®
                         if (hero->isFacingRight()) {
                             knifePos = QPointF(heroPos.x() + 33, heroPos.y() - 85);
                         } else {
@@ -479,45 +588,45 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         }
                         // qDebug() << "[DEBUG] Knife position:" << knifePos;
                         
-                        // ¼ì²éÊÇ·ñ»÷ÖĞCharacter
+                        // æ£€æŸ¥æ˜¯å¦å‡»ä¸­Character
                         if (character && character->isHitByPoint(knifePos)) {
                             // qDebug() << "[DEBUG] Knife hit Character! Dealing 10 damage";
-                            character->takeDamage(10); // Ê¹ÓÃtakeDamageº¯Êı
+                            character->takeDamage(10, DamageType::Knife); // å°åˆ€ä¼¤å®³ç±»å‹
                             // qDebug() << "[DEBUG] Character HP after knife attack:" << character->getHP();
-                            invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // Ç¿ÖÆÖØ»æÇ°¾°²ã
+                            invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // å¼ºåˆ¶é‡ç»˜å‰æ™¯å±‚
                         } else {
                             // qDebug() << "[DEBUG] Knife attack missed";
                         }
                     } else if (weapon->getWeaponName() == "Ball") {
                         // qDebug() << "[DEBUG] Hero using ball attack";
-                        // Ç¦Çò¹¥»÷Âß¼­£ºÍ¶ÖÀÒ»¸öĞÂµÄBall¶ÔÏó
+                        // é“…çƒæ”»å‡»é€»è¾‘ï¼šæŠ•æ·ä¸€ä¸ªæ–°çš„Ballå¯¹è±¡
                         if (weapon->getAmmo() > 0) {
                             // qDebug() << "[DEBUG] Ball used, creating thrown ball";
                             
-                            // ´´½¨Ò»¸öĞÂµÄBall¶ÔÏóÓÃÓÚÍ¶ÖÀ
+                            // åˆ›å»ºä¸€ä¸ªæ–°çš„Ballå¯¹è±¡ç”¨äºæŠ•æ·
                             Ball* thrownBall = new Ball(nullptr);
-                            thrownBall->unmount(); // È·±£²»ÊÇ¹ÒÔØ×´Ì¬
+                            thrownBall->unmount(); // ç¡®ä¿ä¸æ˜¯æŒ‚è½½çŠ¶æ€
                             
-                            // ÉèÖÃÍ¶ÖÀBallµÄ³õÊ¼Î»ÖÃ£¨Ó¢ĞÛÎ»ÖÃ£©
+                            // è®¾ç½®æŠ•æ·Ballçš„åˆå§‹ä½ç½®ï¼ˆè‹±é›„ä½ç½®ï¼‰
                             QPointF heroPos = hero->scenePos();
-                            thrownBall->setPos(heroPos.x(), heroPos.y() - 100); // ´ÓÓ¢ĞÛÉÏ·½Í¶ÖÀ
+                            thrownBall->setPos(heroPos.x(), heroPos.y() - 100); // ä»è‹±é›„ä¸Šæ–¹æŠ•æ·
                             
-                            // ÉèÖÃÍ¶ÖÀBallµÄ³õÊ¼ËÙ¶È
-                            qreal vx = hero->isFacingRight() ? 15 : -15; // xÖáËÙ¶È¸ù¾İ³¯Ïò
-                            qreal vy = -25; // yÖáËÙ¶ÈÏòÉÏ£¬³õÊ¼ËÙ¶È¸ü´ó
+                            // è®¾ç½®æŠ•æ·Ballçš„åˆå§‹é€Ÿåº¦
+                            qreal vx = hero->isFacingRight() ? 15 : -15; // xè½´é€Ÿåº¦æ ¹æ®æœå‘
+                            qreal vy = -25; // yè½´é€Ÿåº¦å‘ä¸Šï¼Œåˆå§‹é€Ÿåº¦æ›´å¤§
                             thrownBall->setVelocity(vx, vy);
-                            thrownBall->setThrownMode(true); // ÉèÖÃÎªÍ¶ÖÀÄ£Ê½£¬Ê¹ÓÃ¸ü¿ìµÄÖØÁ¦
-                            thrownBall->shooter = hero; // ÉèÖÃÉäÊÖ
+                            thrownBall->setThrownMode(true); // è®¾ç½®ä¸ºæŠ•æ·æ¨¡å¼ï¼Œä½¿ç”¨æ›´å¿«çš„é‡åŠ›
+                            thrownBall->shooter = hero; // è®¾ç½®å°„æ‰‹
                             
-                            // Ìí¼Óµ½³¡¾°ÖĞ
+                            // æ·»åŠ åˆ°åœºæ™¯ä¸­
                             addItem(thrownBall);
                             // qDebug() << "[DEBUG] Thrown ball created at pos:" << thrownBall->pos() << "with velocity:" << vx << "," << vy;
                             
-                            // Ô­ÓĞÎäÆ÷´¦ÀíÂß¼­
+                            // åŸæœ‰æ­¦å™¨å¤„ç†é€»è¾‘
                             // qDebug() << "[DEBUG] Step 1: About to call removeFallingWeapon";
                             
-                            // ÎäÆ÷ÓÃÍêºóÏûÊ§
-                            // ÏÈ´Ó fallingWeapons ÁĞ±íÖĞÒÆ³ı£¬ÔÙ°²È«É¾³ı
+                            // æ­¦å™¨ç”¨å®Œåæ¶ˆå¤±
+                            // å…ˆä» fallingWeapons åˆ—è¡¨ä¸­ç§»é™¤ï¼Œå†å®‰å…¨åˆ é™¤
                             removeFallingWeapon(weapon);
                             // qDebug() << "[DEBUG] Step 2: removeFallingWeapon completed";
                             
@@ -529,7 +638,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             hero->pickupWeapon(nullptr);
                             // qDebug() << "[DEBUG] Step 4: pickupWeapon(nullptr) completed";
                             
-                            // Ê¹ÓÃ¶¨Ê±Æ÷ÑÓ³ÙÉ¾³ı£¬±ÜÃâÁ¢¼´É¾³ıµ¼ÖÂµÄÎÊÌâ
+                            // ä½¿ç”¨å®šæ—¶å™¨å»¶è¿Ÿåˆ é™¤ï¼Œé¿å…ç«‹å³åˆ é™¤å¯¼è‡´çš„é—®é¢˜
                             // qDebug() << "[DEBUG] Step 5: About to schedule weapon deletion";
                             QTimer::singleShot(0, [weapon]() {
                                 // qDebug() << "[DEBUG] Lambda: About to delete weapon";
@@ -543,7 +652,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             // qDebug() << "[DEBUG] Ball has no ammo left";
                         }
                     } else {
-                        // Ô¶³ÌÎäÆ÷¹¥»÷Âß¼­
+                        // è¿œç¨‹æ­¦å™¨æ”»å‡»é€»è¾‘
                         // qDebug() << "[DEBUG] Weapon ammo:" << weapon->getAmmo();
                         if (weapon->getAmmo() > 0) {
                             weapon->decAmmo();
@@ -553,9 +662,9 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                             // qDebug() << "[DEBUG] Weapon scene pos:" << gunPos;
                             // qDebug() << "[DEBUG] Hero facing right:" << hero->isFacingRight();
 
-                            // ¸ù¾İÎäÆ÷ÀàĞÍ»ñÈ¡²»Í¬µÄÊôĞÔ
-                            qreal bulletSpeed = 22.5; // Ä¬ÈÏËÙ¶È
-                            int bulletDamage = 20;     // Ä¬ÈÏÉËº¦
+                            // æ ¹æ®æ­¦å™¨ç±»å‹è·å–ä¸åŒçš„å±æ€§
+                            qreal bulletSpeed = 22.5; // é»˜è®¤é€Ÿåº¦
+                            int bulletDamage = 20;     // é»˜è®¤ä¼¤å®³
                             
                             if (auto pistol = dynamic_cast<Pistol*>(weapon)) {
                                 bulletSpeed = pistol->getBulletSpeed();
@@ -588,22 +697,22 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
                         }
                     }
                 } else {
-                    // È­Í·¹¥»÷Âß¼­£º¼ì²éÓ¢ĞÛÎäÆ÷Î»ÖÃÊÇ·ñÓĞµĞÈË
+                    // æ‹³å¤´æ”»å‡»é€»è¾‘ï¼šæ£€æŸ¥è‹±é›„æ­¦å™¨ä½ç½®æ˜¯å¦æœ‰æ•Œäºº
                     QPointF heroPos = hero->scenePos();
                     QPointF fistPos;
                     
-                    // È­Í·¹¥»÷Î»ÖÃÓ¦¸ÃÓëÎäÆ÷Î»ÖÃÒ»ÖÂ
-                    // ¸ù¾İÓ¢ĞÛ³¯ÏòÈ·¶¨È­Í·Î»ÖÃ
+                    // æ‹³å¤´æ”»å‡»ä½ç½®åº”è¯¥ä¸æ­¦å™¨ä½ç½®ä¸€è‡´
+                    // æ ¹æ®è‹±é›„æœå‘ç¡®å®šæ‹³å¤´ä½ç½®
                     if (hero->isFacingRight()) {
                         fistPos = QPointF(heroPos.x() + 33, heroPos.y() - 85);
                     } else {
                         fistPos = QPointF(heroPos.x() - 33, heroPos.y() - 85);
                     }
                     
-                    // ¼ì²éÊÇ·ñ»÷ÖĞCharacter
+                    // æ£€æŸ¥æ˜¯å¦å‡»ä¸­Character
                     if (character && character->isHitByPoint(fistPos)) {
-                        character->takeDamage(3); // Ê¹ÓÃtakeDamageº¯Êı
-                        invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // Ç¿ÖÆÖØ»æÇ°¾°²ã
+                        character->takeDamage(3, DamageType::Fist); // æ‹³å¤´ä¼¤å®³ç±»å‹
+                        invalidate(sceneRect(), QGraphicsScene::ForegroundLayer); // å¼ºåˆ¶é‡ç»˜å‰æ™¯å±‚
                     }
                 }
             } else {
@@ -680,12 +789,13 @@ void BattleScene::update() {
     Scene::update();
     updateFallingWeapons();
     updateFallingMedicines();
+    updateFallingArmors();
     
-    // Ã¿10Ö¡ÖØĞÂ»æÖÆÑªÁ¿Ìõ
+    // æ¯10å¸§é‡æ–°ç»˜åˆ¶è¡€é‡æ¡
     frameCounter++;
     if (frameCounter >= 10) {
         frameCounter = 0;
-        // Ç¿ÖÆÖØ»æÇ°¾°£¨ÑªÁ¿ÌõÔÚdrawForegroundÖĞ»æÖÆ£©
+        // å¼ºåˆ¶é‡ç»˜å‰æ™¯ï¼ˆè¡€é‡æ¡åœ¨drawForegroundä¸­ç»˜åˆ¶ï¼‰
         invalidate(sceneRect(), QGraphicsScene::ForegroundLayer);
     }
     
@@ -696,11 +806,11 @@ void BattleScene::processMovement() {
     Scene::processMovement();
     if (character != nullptr) {
         character->applyGravity(deltaTime);
-        // Î»ÖÃ¸üĞÂÒÑ¾­ÔÚapplyGravityÄÚ²¿´¦Àí£¬²»ĞèÒª¶îÍâ¸üĞÂ
+        // ä½ç½®æ›´æ–°å·²ç»åœ¨applyGravityå†…éƒ¨å¤„ç†ï¼Œä¸éœ€è¦é¢å¤–æ›´æ–°
     }
     if (hero != nullptr) {
         hero->applyGravity(deltaTime);
-        // Î»ÖÃ¸üĞÂÒÑ¾­ÔÚapplyGravityÄÚ²¿´¦Àí£¬²»ĞèÒª¶îÍâ¸üĞÂ
+        // ä½ç½®æ›´æ–°å·²ç»åœ¨applyGravityå†…éƒ¨å¤„ç†ï¼Œä¸éœ€è¦é¢å¤–æ›´æ–°
     }
 }
 
@@ -711,15 +821,16 @@ void BattleScene::processPicking() {
         if (mountable != nullptr) {
             auto oldItem = pickupMountable(character, mountable);
             if (auto oldArmor = dynamic_cast<Armor *>(oldItem)) {
-                spareArmor = oldArmor;
+                // æ—§ç›”ç”²è„±ä¸‹åä¼šè‡ªåŠ¨æ¶ˆå¤±ï¼Œä¸å†ä¿å­˜ä¸ºspareArmor
+                // å› ä¸ºç°åœ¨ç›”ç”²é€šè¿‡éšæœºæ‰è½ç³»ç»Ÿæä¾›
             }
         }
         
-        // ¼ì²é¸½½üµÄÒ©Æ·
+        // æ£€æŸ¥é™„è¿‘çš„è¯å“
         auto medicine = findNearestMedicine(character->pos(), 100.);
         if (medicine != nullptr) {
             character->pickupMedicine(medicine);
-            // ´ÓµôÂäÒ©Æ·ÁĞ±íÖĞÒÆ³ı
+            // ä»æ‰è½è¯å“åˆ—è¡¨ä¸­ç§»é™¤
             for (int i = 0; i < fallingMedicines.size(); ++i) {
                 if (fallingMedicines[i].first == medicine) {
                     fallingMedicines.removeAt(i);
@@ -736,11 +847,11 @@ void BattleScene::processPicking() {
             pickupMountable(hero, mountable);
         }
         
-        // HeroÒ²¿ÉÒÔÊ°È¡Ò©Æ·
+        // Heroä¹Ÿå¯ä»¥æ‹¾å–è¯å“
         auto medicine = findNearestMedicine(hero->pos(), 100.);
         if (medicine != nullptr) {
             hero->pickupMedicine(medicine);
-            // ´ÓµôÂäÒ©Æ·ÁĞ±íÖĞÒÆ³ı
+            // ä»æ‰è½è¯å“åˆ—è¡¨ä¸­ç§»é™¤
             for (int i = 0; i < fallingMedicines.size(); ++i) {
                 if (fallingMedicines[i].first == medicine) {
                     fallingMedicines.removeAt(i);
@@ -794,16 +905,46 @@ Medicine *BattleScene::findNearestMedicine(const QPointF &pos, qreal distance_th
 Mountable *BattleScene::pickupMountable(Character *character, Mountable *mountable) {
     // Support for armor and weapons
     if (auto armor = dynamic_cast<Armor *>(mountable)) {
-        return character->pickupArmor(armor);
+        // ä»æ‰è½ç›”ç”²åˆ—è¡¨ä¸­ç§»é™¤è¢«æ‹¾å–çš„ç›”ç”²
+        for (int i = 0; i < fallingArmors.size(); ++i) {
+            if (fallingArmors[i].first == armor) {
+                fallingArmors.removeAt(i);
+                // qDebug() << "[DEBUG] Removed picked up armor from fallingArmors list";
+                break;
+            }
+        }
+        
+        auto oldArmor = character->pickupArmor(armor);
+        
+        // å¦‚æœæœ‰æ—§ç›”ç”²è¢«æ›¿æ¢ï¼Œç›´æ¥åˆ é™¤å®ƒï¼Œä¸è®©å®ƒæ‰è½
+        if (oldArmor) {
+            // ä½¿ç”¨å®šæ—¶å™¨å»¶è¿Ÿåˆ é™¤ï¼Œé¿å…ç«‹å³åˆ é™¤å¯¼è‡´çš„é—®é¢˜
+            QTimer::singleShot(50, [this, oldArmor]() {
+                removeItem(oldArmor);
+                delete oldArmor;
+                // qDebug() << "[DEBUG] Old armor deleted safely";
+            });
+        }
+        
+        return nullptr; // æ—§ç›”ç”²ä¸ä¼šæ‰è½ï¼Œæ‰€ä»¥è¿”å›nullptr
     } else if (auto weapon = dynamic_cast<Weapon *>(mountable)) {
+        // ä»æ‰è½æ­¦å™¨åˆ—è¡¨ä¸­ç§»é™¤è¢«æ‹¾å–çš„æ­¦å™¨
+        for (int i = 0; i < fallingWeapons.size(); ++i) {
+            if (fallingWeapons[i].first == weapon) {
+                fallingWeapons.removeAt(i);
+                // qDebug() << "[DEBUG] Removed picked up weapon from fallingWeapons list";
+                break;
+            }
+        }
+        
         auto oldWeapon = character->pickupWeapon(weapon);
         
-        // Èç¹ûÓĞ¾ÉÎäÆ÷±»Ìæ»»µôÂä£¬ÉèÖÃÆäÊ£ÓàÊ±¼äÎª0.5Ãë
+        // å¦‚æœæœ‰æ—§æ­¦å™¨è¢«æ›¿æ¢æ‰è½ï¼Œè®¾ç½®å…¶å‰©ä½™æ—¶é—´ä¸º0.5ç§’
         if (oldWeapon) {
             qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
-            qint64 shortLifeTime = currentTime - 19500; // 20000 - 500 = 19500, Ê£Óà0.5Ãë
+            qint64 shortLifeTime = currentTime - 19500; // 20000 - 500 = 19500, å‰©ä½™0.5ç§’
             
-            // ¸üĞÂ fallingWeapons ÁĞ±íÖĞ¸ÃÎäÆ÷µÄÊ±¼ä´Á
+            // æ›´æ–° fallingWeapons åˆ—è¡¨ä¸­è¯¥æ­¦å™¨çš„æ—¶é—´æˆ³
             for (int i = 0; i < fallingWeapons.size(); ++i) {
                 if (fallingWeapons[i].first == oldWeapon) {
                     fallingWeapons[i].second = shortLifeTime;
@@ -812,7 +953,7 @@ Mountable *BattleScene::pickupMountable(Character *character, Mountable *mountab
                 }
             }
             
-            // Èç¹û¾ÉÎäÆ÷²»ÔÚ fallingWeapons ÁĞ±íÖĞ£¬Ìí¼ÓËü£¨ÉèÖÃÎª¶ÌÉúÃüÖÜÆÚ£©
+            // å¦‚æœæ—§æ­¦å™¨ä¸åœ¨ fallingWeapons åˆ—è¡¨ä¸­ï¼Œæ·»åŠ å®ƒï¼ˆè®¾ç½®ä¸ºçŸ­ç”Ÿå‘½å‘¨æœŸï¼‰
             bool found = false;
             for (const auto& pair : fallingWeapons) {
                 if (pair.first == oldWeapon) {
@@ -863,14 +1004,14 @@ void BattleScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     QPointF clickPos = event->scenePos();
     qDebug() << "[DEBUG] Mouse clicked at absolute position:" << clickPos;
     
-    // µ÷ÓÃ¸¸ÀàµÄÊó±êµã»÷ÊÂ¼ş´¦Àí
+    // è°ƒç”¨çˆ¶ç±»çš„é¼ æ ‡ç‚¹å‡»äº‹ä»¶å¤„ç†
     Scene::mousePressEvent(event);
 }
 
 void BattleScene::debugHitBoxCorners() {
     qDebug() << "[DEBUG] === HitBox Debug Info ===";
     
-    // Êä³öCharacterµÄÅö×²Ïä¶¥µã
+    // è¾“å‡ºCharacterçš„ç¢°æ’ç®±é¡¶ç‚¹
     if (character) {
         QRectF charHitBox = character->getHitBox();
         qDebug() << "[DEBUG] Character HitBox:";
@@ -883,7 +1024,7 @@ void BattleScene::debugHitBoxCorners() {
         qDebug() << " Character Position: " << character->pos() ;
     }
     
-    // Êä³öHeroµÄÅö×²Ïä¶¥µã
+    // è¾“å‡ºHeroçš„ç¢°æ’ç®±é¡¶ç‚¹
     if (hero) {
         QRectF heroHitBox = hero->getHitBox();
         qDebug() << "[DEBUG] Hero HitBox:";
@@ -915,11 +1056,37 @@ void BattleScene::removeFallingWeapon(Weapon* weapon) {
     
     if (!found) {
         qDebug() << "[DEBUG] removeFallingWeapon: WARNING - Weapon not found in fallingWeapons list";
-        // ´òÓ¡ËùÓĞÎäÆ÷Ö¸Õë½øĞĞµ÷ÊÔ
+        // æ‰“å°æ‰€æœ‰æ­¦å™¨æŒ‡é’ˆè¿›è¡Œè°ƒè¯•
         for (int i = 0; i < fallingWeapons.size(); ++i) {
             qDebug() << "[DEBUG] removeFallingWeapon: fallingWeapons[" << i << "] =" << fallingWeapons[i].first;
         }
     }
     
     qDebug() << "[DEBUG] removeFallingWeapon: Completed";
+}
+
+void BattleScene::onCharacterDied(Character* character) {
+    // ç¡®å®šå“ªä¸ªè§’è‰²æ­»äº†ï¼Œå¹¶æ˜¾ç¤ºå¯¹åº”çš„èƒœåˆ©æ¶ˆæ¯
+    QString winnerMessage;
+    
+    if (character == hero) {
+        // Heroæ­»äº†ï¼ŒCharacterèƒœåˆ©
+        winnerMessage = "Player 1 Wins!";
+        qDebug() << "[GAME] Hero died, Character wins!";
+    } else if (character == this->character) {
+        // Characteræ­»äº†ï¼ŒHeroèƒœåˆ©
+        winnerMessage = "Player 2 Wins!";
+        qDebug() << "[GAME] Character died, Hero wins!";
+    } else {
+        // æœªçŸ¥è§’è‰²æ­»äº†ï¼ˆç†è®ºä¸Šä¸åº”è¯¥å‘ç”Ÿï¼‰
+        winnerMessage = "æ¸¸æˆç»“æŸ";
+        qDebug() << "[GAME] Unknown character died!";
+    }
+    
+    // æ˜¾ç¤ºèƒœåˆ©å¯¹è¯æ¡†
+    QMessageBox::information(nullptr, "æ¸¸æˆç»“æŸ", winnerMessage);
+    
+    // é€€å‡ºç¨‹åº
+    qDebug() << "[GAME] Exiting application...";
+    QApplication::quit();
 }

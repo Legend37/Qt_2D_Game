@@ -15,6 +15,25 @@ public:
     void mountToParent() override;
 
     void unmount() override;
+
+    // 护甲功能
+    virtual int getDurability() const { return durability; }
+    virtual int getMaxDurability() const { return maxDurability; }
+    virtual void setDurability(int value) { durability = qMax(0, qMin(value, maxDurability)); }
+    virtual void takeDurabilityDamage(int damage) { setDurability(durability - damage); }
+    virtual bool hasDurability() const { return maxDurability > 0; }
+    
+    // 防护效果
+    virtual float getFistDamageReduction() const { return 0.0f; } // 拳头伤害减免比例
+    virtual float getKnifeDamageReduction() const { return 0.0f; } // 小刀伤害减免比例
+    virtual float getBulletDamageReduction() const { return 0.0f; } // 子弹伤害减免比例
+    
+    // 护甲类型标识
+    virtual QString getArmorType() const { return "BasicArmor"; }
+
+protected:
+    int durability = 0;
+    int maxDurability = 0;
 };
 
 

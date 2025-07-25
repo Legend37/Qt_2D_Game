@@ -2,13 +2,26 @@
 #define QT_PROGRAMMING_2024_CHARACTER_H
 
 #include <QGraphicsEllipseItem>
+#include <QObject>
 #include <QtGlobal>
 #include "../HeadEquipments/HeadEquipment.h"
 #include "../Armors/Armor.h"
 #include "../LegEquipments/LegEquipment.h"
 #include "../Weapons/Weapon.h"
 
-class Character : public Item {
+// 伤害类型枚举
+enum class DamageType {
+    Fist,    // 拳头伤害
+    Knife,   // 小刀伤害
+    Bullet   // 子弹伤害
+};
+
+class Character : public QObject, public Item {
+Q_OBJECT
+
+signals:
+    void characterDied(Character* character);
+
 public:
     Weapon* getWeapon() const { return weapon; }
     bool isFacingRight() const { return facingRight; }
@@ -54,6 +67,9 @@ public:
 
     int getHP() const { return hp; }
     void setHP(int value) { hp = value; }
+    
+    // 获取当前护甲
+    Armor* getArmor() const { return armor; }
 
     // 碰撞箱相关函数
     QRectF getHitBox() const;
@@ -75,7 +91,8 @@ public:
     bool isOnIceBlock() const;
     
     // 受攻击效果
-    void takeDamage(int damage);
+    void takeDamage(int damage, DamageType damageType = DamageType::Fist);
+    void takeDamage(int damage); // 保持向后兼容性
     void updateDamageEffect();
     
     // 攻击特效
