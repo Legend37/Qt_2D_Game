@@ -11,10 +11,8 @@
 class FlamebreakerArmor : public Armor {
 public:
     explicit FlamebreakerArmor(QGraphicsItem *parent = nullptr);
-    
-    // ∑¿ª§–ßπ˚÷ÿ–¥
-    float getFistDamageReduction() const override { return 1.0f; } // 100%»≠Õ∑…À∫¶ºı√‚
-    float getKnifeDamageReduction() const override { return 0.5f; } // 50%–°µ∂…À∫¶ºı√‚
+    float getFistDamageReduction() const override { return 1.0f; }
+    float getKnifeDamageReduction() const override { return 0.5f; }
     
     QString getArmorType() const override { return "FlamebreakerArmor"; }
 };

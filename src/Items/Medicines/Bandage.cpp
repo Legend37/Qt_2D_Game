@@ -11,7 +11,7 @@ void Bandage::applyEffect(Character* character) {
     if (!character) return;
     
     int currentHP = character->getHP();
-    int newHP = std::min(100, currentHP + 20); // »Ö¸´20ÑªÁ¿£¬µ«²»³¬¹ý100
+    int newHP = std::min(100, currentHP + 20); // æ¢å¤20è¡€é‡ï¼Œä½†ä¸è¶…è¿‡100
     character->setHP(newHP);
     
     qDebug() << "[DEBUG] Bandage used - HP restored from" << currentHP << "to" << newHP;

@@ -4,24 +4,24 @@
 
 Medicine::Medicine(QGraphicsItem *parent, const QString &pixmapPath, const QString &medicineName)
     : Mountable(parent, pixmapPath), medicineName(medicineName) {
-    // ÉèÖÃËõ·Å£¬ÈÃÒ©Æ·ºÍÎäÆ÷´óÐ¡ÀàËÆ
+    // è®¾ç½®ç¼©æ”¾ï¼Œè®©è¯å“å’Œæ­¦å™¨å¤§å°ç±»ä¼¼
     setScale(1.5);
 }
 
 void Medicine::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    // µ÷ÓÃ»ùÀàµÄpaint·½·¨
+    // è°ƒç”¨åŸºç±»çš„paintæ–¹æ³•
     Item::paint(painter, option, widget);
     
-    // Ö»ÓÐÔÚÒ©Æ·Ã»ÓÐ±»Ê°È¡Ê±²Å»æÖÆºìÉ«±ß¿ò
+    // åªæœ‰åœ¨è¯å“æ²¡æœ‰è¢«æ‹¾å–æ—¶æ‰ç»˜åˆ¶çº¢è‰²è¾¹æ¡†
     if (pixmapItem && !isMounted()) {
         QRectF medicineRect = pixmapItem->boundingRect();
         
-        // ÉèÖÃºìÉ«»­±Ê£¬Ïß¿íÎª2ÏñËØ
+        // è®¾ç½®çº¢è‰²ç”»ç¬”ï¼Œçº¿å®½ä¸º2åƒç´ 
         QPen redPen(Qt::red, 2, Qt::SolidLine);
         painter->setPen(redPen);
-        painter->setBrush(Qt::NoBrush); // ²»Ìî³ä£¬Ö»»æÖÆ±ß¿ò
+        painter->setBrush(Qt::NoBrush); // ä¸å¡«å……ï¼Œåªç»˜åˆ¶è¾¹æ¡†
         
-        // »æÖÆºìÉ«±ß¿ò
+        // ç»˜åˆ¶çº¢è‰²è¾¹æ¡†
         painter->drawRect(medicineRect);
     }
 }

@@ -13,26 +13,26 @@ QString Weapon::getWeaponName() const {
 
 void Weapon::mountToParent() {
     Mountable::mountToParent();
-    // ÉèÖÃÎäÆ÷ÔÚ½ÇÉ«Ç°·½Î»ÖÃ
-    // ¸ù¾Ýµ÷ÊÔÐÅÏ¢£¬ÎäÆ÷Ó¦¸ÃÔÚÏà¶Ô½ÇÉ«Î»ÖÃ(33, -85)
-    setPos(33, -85); // ÔÚ½ÇÉ«ÓÒÇ°·½
-    setZValue(2); // È·±£ÎäÆ÷ÏÔÊ¾ÔÚ×îÉÏ²ã
+    // è®¾ç½®æ­¦å™¨åœ¨è§’è‰²å‰æ–¹ä½ç½®
+    // æ ¹æ®è°ƒè¯•ä¿¡æ¯ï¼Œæ­¦å™¨åº”è¯¥åœ¨ç›¸å¯¹è§’è‰²ä½ç½®(33, -85)
+    setPos(33, -85); // åœ¨è§’è‰²å³å‰æ–¹
+    setZValue(2); // ç¡®ä¿æ­¦å™¨æ˜¾ç¤ºåœ¨æœ€ä¸Šå±‚
 }
 
 void Weapon::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    // µ÷ÓÃ»ùÀàµÄpaint·½·¨£¨ËäÈ»»ùÀàµÄpaintÊÇ¿ÕµÄ£©
+    // è°ƒç”¨åŸºç±»çš„paintæ–¹æ³•ï¼ˆè™½ç„¶åŸºç±»çš„paintæ˜¯ç©ºçš„ï¼‰
     Item::paint(painter, option, widget);
     
-    // Ö»ÓÐÔÚÎäÆ÷Ã»ÓÐ±»Ê°È¡Ê±²Å»æÖÆ°×É«±ß¿ò
+    // åªæœ‰åœ¨æ­¦å™¨æ²¡æœ‰è¢«æ‹¾å–æ—¶æ‰ç»˜åˆ¶ç™½è‰²è¾¹æ¡†
     if (pixmapItem && !isMounted()) {
         QRectF weaponRect = pixmapItem->boundingRect();
         
-        // ÉèÖÃ°×É«»­±Ê£¬Ïß¿íÎª2ÏñËØ
+        // è®¾ç½®ç™½è‰²ç”»ç¬”ï¼Œçº¿å®½ä¸º2åƒç´ 
         QPen whitePen(Qt::white, 2, Qt::SolidLine);
         painter->setPen(whitePen);
-        painter->setBrush(Qt::NoBrush); // ²»Ìî³ä£¬Ö»»æÖÆ±ß¿ò
+        painter->setBrush(Qt::NoBrush); // ä¸å¡«å……ï¼Œåªç»˜åˆ¶è¾¹æ¡†
         
-        // »æÖÆ°×É«±ß¿ò
+        // ç»˜åˆ¶ç™½è‰²è¾¹æ¡†
         painter->drawRect(weaponRect);
     }
 }

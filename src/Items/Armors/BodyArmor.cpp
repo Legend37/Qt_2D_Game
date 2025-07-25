@@ -7,7 +7,7 @@
 BodyArmor::BodyArmor(QGraphicsItem *parent)
     : Item(parent, ":/Items/Armors/bodyarmor.png", false),
       Armor(parent, ":/Items/Armors/bodyarmor.png") {
-    // BodyArmorÌØÊâ³õÊ¼»¯£ºÉèÖÃÄÍ¾Ã¶È
+    // BodyArmorç‰¹æ®Šåˆå§‹åŒ–ï¼šè®¾ç½®è€ä¹…åº¦
     maxDurability = 100;
     durability = 100;
 }

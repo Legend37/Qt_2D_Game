@@ -11,7 +11,7 @@ void Medkit::applyEffect(Character* character) {
     if (!character) return;
     
     int currentHP = character->getHP();
-    character->setHP(100); // ??????
+    character->setHP(100); 
     
     qDebug() << "[DEBUG] Medkit used - HP restored from" << currentHP << "to 100 (full health)";
 }

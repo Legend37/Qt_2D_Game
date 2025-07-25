@@ -15,16 +15,16 @@ Item::Item(QGraphicsItem *parent, const QString &pixmapPath, bool mirrorPixmap) 
 }
 
 void Item::advance(int step) {
-    if (step == 0) return; // Ö»ÔÚstep=1Ê±¸üĞÂÎïÀí×´Ì¬
+    if (step == 0) return; // åªåœ¨step=1æ—¶æ›´æ–°ç‰©ç†çŠ¶æ€
     
     if (!gravityEnabled) return;
     
-    // ¼ÆËãÊ±¼ä²î
+    // è®¡ç®—æ—¶é—´å·®
     qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
     double deltaTime = currentTime - lastUpdateTime;
     lastUpdateTime = currentTime;
     
-    // Ó¦ÓÃÖØÁ¦
+    // åº”ç”¨é‡åŠ›
     applyGravity(deltaTime);
 }
 
@@ -34,19 +34,19 @@ void Item::applyGravity(double deltaTime) {
     bool onGround = isOnGround();
     
     if (!onGround) {
-        // Ó¦ÓÃÖØÁ¦¼ÓËÙ¶È
+        // åº”ç”¨é‡åŠ›åŠ é€Ÿåº¦
         velocity.setY(velocity.y() + gravity * deltaTime);
         
-        // ¸üĞÂÎ»ÖÃ
+        // æ›´æ–°ä½ç½®
         QPointF newPos = pos() + velocity;
         setPos(newPos);
         
-        // ÖØĞÂ¼ì²éÊÇ·ñÂäµØ
+        // é‡æ–°æ£€æŸ¥æ˜¯å¦è½åœ°
         if (isOnGround()) {
-            // Èç¹ûÂäµØ£¬Í£Ö¹´¹Ö±ÔË¶¯
+            // å¦‚æœè½åœ°ï¼Œåœæ­¢å‚ç›´è¿åŠ¨
             velocity.setY(0);
             
-            // µ÷ÕûÎ»ÖÃµ½µØÃæ
+            // è°ƒæ•´ä½ç½®åˆ°åœ°é¢
             if (scene()) {
                 auto items = scene()->items();
                 for (auto item : items) {
@@ -66,20 +66,20 @@ void Item::applyGravity(double deltaTime) {
 bool Item::isOnGround() const {
     if (!scene()) return false;
     
-    // ¼ì²éÊÇ·ñÔÚµØÃæ»òÆ½Ì¨ÉÏ
+    // æ£€æŸ¥æ˜¯å¦åœ¨åœ°é¢æˆ–å¹³å°ä¸Š
     auto items = scene()->items();
     for (auto item : items) {
         if (auto battlefield = dynamic_cast<Battlefield*>(item)) {
             qreal groundHeight = battlefield->getFloorHeight();
             QRectF itemRect = sceneBoundingRect();
             
-            // ¼ì²éÎïÆ·µ×²¿ÊÇ·ñ½Ó´¥»òµÍÓÚµØÃæ
+            // æ£€æŸ¥ç‰©å“åº•éƒ¨æ˜¯å¦æ¥è§¦æˆ–ä½äºåœ°é¢
             if (itemRect.bottom() >= groundHeight) {
                 return true;
             }
             
-            // »¹¿ÉÒÔ¼ì²éÊÇ·ñÔÚÌøÔ¾Æ½Ì¨ÉÏ
-            // ÕâÀï¼ò»¯ÎªÖ»¼ì²éµØÃæ£¬Èç¹ûĞèÒª¿ÉÒÔÀ©Õ¹
+            // è¿˜å¯ä»¥æ£€æŸ¥æ˜¯å¦åœ¨è·³è·ƒå¹³å°ä¸Š
+            // è¿™é‡Œç®€åŒ–ä¸ºåªæ£€æŸ¥åœ°é¢ï¼Œå¦‚æœéœ€è¦å¯ä»¥æ‰©å±•
         }
     }
     

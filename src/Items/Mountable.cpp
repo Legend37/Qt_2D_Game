@@ -6,7 +6,7 @@
 
 void Mountable::unmount() {
     mounted = false;
-    // 当物品被丢弃时，启用重力让它掉落
+    // 褰撶墿鍝佽涓㈠純鏃讹紝鍚敤閲嶅姏璁╁畠鎺夎惤
     setGravityEnabled(true);
 }
 
@@ -16,6 +16,6 @@ bool Mountable::isMounted() const {
 
 void Mountable::mountToParent() {
     mounted = true;
-    // 当物品被拾取时，禁用重力
+    // 褰撶墿鍝佽鎷惧彇鏃讹紝绂佺敤閲嶅姏
     setGravityEnabled(false);
 }

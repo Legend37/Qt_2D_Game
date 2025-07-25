@@ -4,7 +4,7 @@
 #include <QRectF>
 #include "Scene.h"
 
-// 允许子类重载的空实现
+// 鍏佽瀛愮被閲嶈浇鐨勭┖瀹炵幇
 void Scene::drawForeground(QPainter *painter, const QRectF &rect) {
     QGraphicsScene::drawForeground(painter, rect);
 }

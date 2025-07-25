@@ -69,19 +69,19 @@ private:
     void updateFallingMedicines();
     void updateFallingArmors();
     QTimer *weaponDropTimer = nullptr;
-    QTimer *medicineDropTimer = nullptr; // Ò©Æ·µôÂä¶¨Ê±Æ÷
-    QTimer *armorDropTimer = nullptr; // ¿ø¼×µôÂä¶¨Ê±Æ÷
-    QTimer *bulletDebugTimer = nullptr; // ×Óµ¯µ÷ÊÔ¶¨Ê±Æ÷
-    QTimer *hitBoxDebugTimer = nullptr; // Åö×²Ïäµ÷ÊÔ¶¨Ê±Æ÷
-    QList<QPair<Weapon*, qint64>> fallingWeapons; // ÎäÆ÷ºÍÉú³ÉÊ±¼ä
-    QList<QPair<Medicine*, qint64>> fallingMedicines; // Ò©Æ·ºÍÉú³ÉÊ±¼ä
-    QList<QPair<Armor*, qint64>> fallingArmors; // ¿ø¼×ºÍÉú³ÉÊ±¼ä
+    QTimer *medicineDropTimer = nullptr; // è¯å“æ‰è½å®šæ—¶å™¨
+    QTimer *armorDropTimer = nullptr; // ç›”ç”²æ‰è½å®šæ—¶å™¨
+    QTimer *bulletDebugTimer = nullptr; // å­å¼¹è°ƒè¯•å®šæ—¶å™¨
+    QTimer *hitBoxDebugTimer = nullptr; // ç¢°æ’ç®±è°ƒè¯•å®šæ—¶å™¨
+    QList<QPair<Weapon*, qint64>> fallingWeapons; // æ­¦å™¨å’Œç”Ÿæˆæ—¶é—´
+    QList<QPair<Medicine*, qint64>> fallingMedicines; // è¯å“å’Œç”Ÿæˆæ—¶é—´
+    QList<QPair<Armor*, qint64>> fallingArmors; // ç›”ç”²å’Œç”Ÿæˆæ—¶é—´
 
     Map *map;
     Character *character;
     Hero *hero;
     
-    int frameCounter = 0; // Ö¡¼ÆÊıÆ÷£¬ÓÃÓÚ¿ØÖÆÑªÁ¿ÌõÖØ»æÆµÂÊ
+    int frameCounter = 0; // å¸§è®¡æ•°å™¨ï¼Œç”¨äºæ§åˆ¶è¡€é‡æ¡é‡ç»˜é¢‘ç‡
 
 private slots:
     void debugAllBulletPositions();

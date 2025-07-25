@@ -15,7 +15,7 @@ public:
     void setAmmo(int n) { ammo = n; }
     void decAmmo() { if (ammo > 0) --ammo; }
 
-    // ÖØĞ´»æÖÆ·½·¨£¬Ìí¼Ó°×É«±ß¿ò
+    // é‡å†™ç»˜åˆ¶æ–¹æ³•ï¼Œæ·»åŠ ç™½è‰²è¾¹æ¡†
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
 protected:

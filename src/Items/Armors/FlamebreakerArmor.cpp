@@ -7,5 +7,5 @@
 FlamebreakerArmor::FlamebreakerArmor(QGraphicsItem *parent)
     : Item(parent, ":/Items/Armors/FlamebreakerArmor/BotW_Flamebreaker_Armor_Icon.png", false),
       Armor(parent, ":/Items/Armors/FlamebreakerArmor/BotW_Flamebreaker_Armor_Icon.png") {
-    // ...Ô­ÓĞ´úÂë¿ÉÔÚ´Ë²¹³ä...
+    // ...åŸæœ‰ä»£ç å¯åœ¨æ­¤è¡¥å……...
 }

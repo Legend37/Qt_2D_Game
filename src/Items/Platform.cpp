@@ -1,10 +1,10 @@
-// 头文件必须在最顶部，否则 Platform 类型无法识别
+// Header file must be at the top, otherwise Platform type cannot be recognized
 #include "Platform.h"
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
 #include <QDebug>
 
-// 静态方法：查找角色下方最近的平台
+// Static method: Find the nearest platform below the character
 Platform* Platform::findNearestPlatformBelow(const QRectF& characterRect, const QList<Platform*>& platforms) {
     Platform* nearest = nullptr;
     qreal minY = std::numeric_limits<qreal>::max();
@@ -13,7 +13,7 @@ Platform* Platform::findNearestPlatformBelow(const QRectF& characterRect, const 
     qreal characterRight = characterRect.right();
     for (Platform* platform : platforms) {
         QRectF rect = platform->getPlatformRect();
-        // 水平重叠且平台在角色下方
+        // Horizontally overlapped and platform is below the character
         if (characterRight > rect.left() && characterLeft < rect.right() && rect.top() > characterBottom) {
             if (rect.top() < minY) {
                 minY = rect.top();
@@ -31,21 +31,21 @@ Platform::Platform(qreal x, qreal y, qreal width, qreal height, QGraphicsItem *p
     : Item(parent, ""), 
       platformWidth(width), platformHeight(height) {
     
-    // 设置平台位置
+    // Set platform position
     setPos(x, y);
     
-// 加载岩石纹理
+// Load rock texture
     QPixmap rockPixmap(":/Items/Maps/Battlefield/rock.png");
     if (rockPixmap.isNull()) {
         qDebug() << "[ERROR] Failed to load rock texture!";
         return;
     }
     
-    // 计算需要多少个岩石图片来填满宽度
+    // Calculate how many rock images are needed to fill the width
     qreal rockWidth = rockPixmap.width();
     qreal rockHeight = rockPixmap.height();
     
-    // 计算统一缩放比例以匹配平台高度
+    // Calculate uniform scale ratio to match platform height
     qreal scale = height / rockHeight;
     qreal scaledRockWidth = rockWidth * scale;
     

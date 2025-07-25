@@ -13,15 +13,15 @@ void Adrenaline::applyEffect(Character* character) {
     
     qDebug() << "[DEBUG] Adrenaline used - starting healing over time";
     
-    // ´´½¨Ò»¸ö¶¨Ê±Æ÷À´´¦Àí³ÖÐø»ØÑªÐ§¹û
+    // åˆ›å»ºä¸€ä¸ªå®šæ—¶å™¨æ¥å¤„ç†æŒç»­å›žè¡€æ•ˆæžœ
     QTimer* healingTimer = new QTimer();
-    int* ticksRemaining = new int(5); // 5Ãë£¬Ã¿Ãë»Ø¸´Ò»´Î
+    int* ticksRemaining = new int(5); // 5ç§’ï¼Œæ¯ç§’å›žå¤ä¸€æ¬¡
     
-    // Á¬½Ó¶¨Ê±Æ÷ÐÅºÅµ½lambdaº¯Êý
+    // è¿žæŽ¥å®šæ—¶å™¨ä¿¡å·åˆ°lambdaå‡½æ•°
     QObject::connect(healingTimer, &QTimer::timeout, [character, healingTimer, ticksRemaining]() {
         if (*ticksRemaining > 0 && character) {
             int currentHP = character->getHP();
-            int newHP = std::min(100, currentHP + 5); // Ã¿´Î»Ø¸´5ÑªÁ¿£¬µ«²»³¬¹ý100
+            int newHP = std::min(100, currentHP + 5); // æ¯æ¬¡å›žå¤5è¡€é‡ï¼Œä½†ä¸è¶…è¿‡100
             character->setHP(newHP);
             
             (*ticksRemaining)--;
@@ -34,13 +34,13 @@ void Adrenaline::applyEffect(Character* character) {
                 delete ticksRemaining;
             }
         } else {
-            // ½ÇÉ«²»´æÔÚ»ò³ö´í£¬Í£Ö¹¶¨Ê±Æ÷
+            // è§’è‰²ä¸å­˜åœ¨æˆ–å‡ºé”™ï¼Œåœæ­¢å®šæ—¶å™¨
             healingTimer->stop();
             healingTimer->deleteLater();
             delete ticksRemaining;
         }
     });
     
-    // Ã¿Ãë´¥·¢Ò»´Î
+    // æ¯ç§’è§¦å‘ä¸€æ¬¡
     healingTimer->start(1000);
 }

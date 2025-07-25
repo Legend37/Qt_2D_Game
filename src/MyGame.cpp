@@ -7,7 +7,7 @@
 MyGame::MyGame(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
-    // Èç¹ûÄãÔÚUIÀï·ÅÁËQGraphicsView¿Ø¼þ£¨ÈçobjectNameÎªgraphicsView£©£¬¿ÉÖ±½ÓÓÃ£º
+    // å¦‚æžœä½ åœ¨UIé‡Œæ”¾äº†QGraphicsViewæŽ§ä»¶ï¼ˆå¦‚objectNameä¸ºgraphicsViewï¼‰ï¼Œå¯ç›´æŽ¥ç”¨ï¼š
     battleScene = new BattleScene(this);
     ui->graphicsView->setScene(battleScene);
     ui->graphicsView->setFixedSize((int) battleScene->width(), (int) battleScene->height());
@@ -16,17 +16,17 @@ MyGame::MyGame(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->graphicsView->setFocusPolicy(Qt::StrongFocus);
     ui->graphicsView->setFocus();
 
-    // ÉèÖÃ´°¿Ú´óÐ¡Óë³¡¾°´óÐ¡ÏàÍ¬£¨1280x720£©
-    // ¿¼ÂÇµ½´°¿Ú±ß¿òºÍ±êÌâÀ¸£¬ÐèÒªµ÷Õû´°¿Ú´óÐ¡
-    setFixedSize(1280, 720 + 40); // Ìí¼Ó¶îÍâ¸ß¶È¸ø±êÌâÀ¸ºÍ±ß¿ò
+    // è®¾ç½®çª—å£å¤§å°ä¸Žåœºæ™¯å¤§å°ç›¸åŒï¼ˆ1280x720ï¼‰
+    // è€ƒè™‘åˆ°çª—å£è¾¹æ¡†å’Œæ ‡é¢˜æ ï¼Œéœ€è¦è°ƒæ•´çª—å£å¤§å°
+    setFixedSize(1280, 720 + 40); // æ·»åŠ é¢å¤–é«˜åº¦ç»™æ ‡é¢˜æ å’Œè¾¹æ¡†
     
-    // ½ûÓÃ×î´ó»¯°´Å¥
+    // ç¦ç”¨æœ€å¤§åŒ–æŒ‰é’®
     setWindowFlags(windowFlags() & ~Qt::WindowMaximizeButtonHint);
     
-    // ¿ÉÑ¡£ºÉèÖÃ´°¿Ú±êÌâ
+    // å¯é€‰ï¼šè®¾ç½®çª—å£æ ‡é¢˜
     setWindowTitle("Qt 2D Game");
 
-    // Èç¹ûÄãÃ»ÓÐÓÃUIÀïµÄgraphicsView¿Ø¼þ£¬±£ÁôÔ­ÓÐviewÂß¼­
+    // å¦‚æžœä½ æ²¡æœ‰ç”¨UIé‡Œçš„graphicsViewæŽ§ä»¶ï¼Œä¿ç•™åŽŸæœ‰viewé€»è¾‘
     // setCentralWidget(view);
     // setFixedSize(view->sizeHint());
 

@@ -12,7 +12,7 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
     int barHeight = 24;
     int margin = 16;
     int hpMax = 100;
-    int durabilityBarHeight = 16; // 耐久度条高度
+    int durabilityBarHeight = 16; // Durability bar height
     
     // Character HP and Durability
     if (character) {
@@ -27,7 +27,7 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
         painter->setPen(Qt::white);
         painter->drawText(bgRect, Qt::AlignCenter, QString("Player 1 HP: %1").arg(hp));
         
-        // 绘制耐久度条（如果有护甲且有耐久度）
+        // Draw durability bar (if armor exists and has durability)
         auto armor = character->getArmor();
         if (armor && armor->getDurability() > 0) {
             int durability = armor->getDurability();
@@ -40,16 +40,16 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
             
             painter->setBrush(QColor(60, 60, 60, 200));
             painter->drawRect(durabilityBgRect);
-            painter->setBrush(QColor(100, 180, 255, 220)); // 蓝色耐久度条
+            painter->setBrush(QColor(100, 180, 255, 220)); // Blue durability bar
             painter->drawRect(durabilityFgRect);
             painter->setPen(Qt::white);
             painter->setFont(QFont("Arial", 10));
             painter->drawText(durabilityBgRect, Qt::AlignCenter, QString("Armor: %1/%2").arg(durability).arg(maxDurability));
-            painter->setFont(QFont()); // 恢复默认字体
+            painter->setFont(QFont()); // Restore default font
         }
     }
     
-    // Hero HP and Durability  
+    // Hero HP and Durability
     if (hero) {
         int hp = hero->getHP();
         QRect bgRect(sceneRect().width() - barWidth - margin, margin, barWidth, barHeight);
@@ -62,7 +62,7 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
         painter->setPen(Qt::white);
         painter->drawText(bgRect, Qt::AlignCenter, QString("Player 2 HP: %1").arg(hp));
         
-        // 绘制耐久度条（如果有护甲且有耐久度）
+        // Draw durability bar (if armor exists and has durability)
         auto armor = hero->getArmor();
         if (armor && armor->getDurability() > 0) {
             int durability = armor->getDurability();
@@ -75,12 +75,12 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
             
             painter->setBrush(QColor(40, 40, 40, 200));
             painter->drawRect(durabilityBgRect);
-            painter->setBrush(QColor(100, 180, 255, 220)); // 蓝色耐久度条
+            painter->setBrush(QColor(100, 180, 255, 220)); // Blue durability bar
             painter->drawRect(durabilityFgRect);
             painter->setPen(Qt::white);
             painter->setFont(QFont("Arial", 10));
             painter->drawText(durabilityBgRect, Qt::AlignCenter, QString("Armor: %1/%2").arg(durability).arg(maxDurability));
-            painter->setFont(QFont()); // 恢复默认字体
+            painter->setFont(QFont()); // Restore default font
         }
     }
 }
@@ -88,6 +88,7 @@ void BattleScene::drawForeground(QPainter *painter, const QRectF &rect) {
 #include <QDebug>
 #include <QRandomGenerator>
 #include <algorithm>
+#include <random>
 #include "BattleScene.h"
 #include "../Items/Characters/Link.h"
 #include "../Items/Characters/Hero.h"
@@ -983,8 +984,10 @@ void BattleScene::generateRandomWeapons() {
     weapons.append(new Knife(nullptr));
     weapons.append(new Ball(nullptr));
     
-    // Shuffle weapon order
-    std::random_shuffle(weapons.begin(), weapons.end());
+    // Shuffle weapon order (C++17 compatible)
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(weapons.begin(), weapons.end(), g);
     
     // Place weapons at random positions on the ground
     for (int i = 0; i < weapons.size(); ++i) {

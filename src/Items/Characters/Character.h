@@ -9,11 +9,11 @@
 #include "../LegEquipments/LegEquipment.h"
 #include "../Weapons/Weapon.h"
 
-// ÉËº¦ÀàĞÍÃ¶¾Ù
+// ä¼¤å®³ç±»å‹æšä¸¾
 enum class DamageType {
-    Fist,    // È­Í·ÉËº¦
-    Knife,   // Ğ¡µ¶ÉËº¦
-    Bullet   // ×Óµ¯ÉËº¦
+    Fist,    // æ‹³å¤´ä¼¤å®³
+    Knife,   // å°åˆ€ä¼¤å®³
+    Bullet   // å­å¼¹ä¼¤å®³
 };
 
 class Character : public QObject, public Item {
@@ -62,40 +62,40 @@ public:
 
     Weapon* pickupWeapon(Weapon* newWeapon);
     
-    // Ê°È¡Ò©Æ·
+    // æ‹¾å–è¯å“
     void pickupMedicine(class Medicine* medicine);
 
     int getHP() const { return hp; }
     void setHP(int value) { hp = value; }
     
-    // »ñÈ¡µ±Ç°»¤¼×
+    // è·å–å½“å‰æŠ¤ç”²
     Armor* getArmor() const { return armor; }
 
-    // Åö×²ÏäÏà¹Øº¯Êı
+    // ç¢°æ’ç®±ç›¸å…³å‡½æ•°
     QRectF getHitBox() const;
     bool checkBulletCollision(const QPointF& bulletPos) const;
     
-    // ¼ì²é¸ø¶¨¾ø¶Ô×ø±êÊÇ·ñÅöµ½¸ÃÈËÎï
+    // æ£€æŸ¥ç»™å®šç»å¯¹åæ ‡æ˜¯å¦ç¢°åˆ°è¯¥äººç‰©
     bool isHitByPoint(const QPointF& absolutePos) const;
     
-    // ¹¥»÷ÀäÈ´Ê±¼äÏà¹Ø·½·¨
+    // æ”»å‡»å†·å´æ—¶é—´ç›¸å…³æ–¹æ³•
     bool canAttack() const;
     void startAttackCooldown();
     qint64 getAttackCooldown() const;
     void setAttackCooldown(qint64 cooldown);
     
-    // ²İµØÒş²Ø¹¦ÄÜ
+    // è‰åœ°éšè—åŠŸèƒ½
     bool isOnGrassArea() const;
     
-    // ±ù¿éËÙ¶ÈÌáÉı¹¦ÄÜ
+    // å†°å—é€Ÿåº¦æå‡åŠŸèƒ½
     bool isOnIceBlock() const;
     
-    // ÊÜ¹¥»÷Ğ§¹û
+    // å—æ”»å‡»æ•ˆæœ
     void takeDamage(int damage, DamageType damageType = DamageType::Fist);
-    void takeDamage(int damage); // ±£³ÖÏòºó¼æÈİĞÔ
+    void takeDamage(int damage); // ä¿æŒå‘åå…¼å®¹æ€§
     void updateDamageEffect();
     
-    // ¹¥»÷ÌØĞ§
+    // æ”»å‡»ç‰¹æ•ˆ
     void triggerAttackEffect();
     void updateAttackEffect();
 
@@ -121,20 +121,20 @@ private:
     static constexpr double jumpSpeed = -2.0; // Adjusted for better jump height
     int hp = 100; // Default HP
     
-    // ¹¥»÷ÀäÈ´Ê±¼äÏà¹Ø±äÁ¿
-    qint64 lastAttackTime = 0; // ÉÏ´Î¹¥»÷Ê±¼ä£¨ºÁÃë£©
-    qint64 attackCooldown = 500; // Ä¬ÈÏ¹¥»÷ÀäÈ´Ê±¼ä500ºÁÃë
+    // æ”»å‡»å†·å´æ—¶é—´ç›¸å…³å˜é‡
+    qint64 lastAttackTime = 0; // ä¸Šæ¬¡æ”»å‡»æ—¶é—´ï¼ˆæ¯«ç§’ï¼‰
+    qint64 attackCooldown = 500; // é»˜è®¤æ”»å‡»å†·å´æ—¶é—´500æ¯«ç§’
     
-    // ÊÜ¹¥»÷ºì¹âĞ§¹ûÏà¹Ø±äÁ¿
-    int damageEffectFrames = 0; // Ê£Óàºì¹âÖ¡Êı
-    static constexpr int maxDamageEffectFrames = 10; // ºì¹â³ÖĞø10Ö¡
-    QGraphicsEffect* originalEffect = nullptr; // ±£´æÔ­Ê¼Ğ§¹û
+    // å—æ”»å‡»çº¢å…‰æ•ˆæœç›¸å…³å˜é‡
+    int damageEffectFrames = 0; // å‰©ä½™çº¢å…‰å¸§æ•°
+    static constexpr int maxDamageEffectFrames = 10; // çº¢å…‰æŒç»­10å¸§
+    QGraphicsEffect* originalEffect = nullptr; // ä¿å­˜åŸå§‹æ•ˆæœ
     
-    // ¹¥»÷ÌØĞ§Ïà¹Ø±äÁ¿
-    int attackEffectFrames = 0; // Ê£Óà¹¥»÷ÌØĞ§Ö¡Êı
-    static constexpr int maxAttackEffectFrames = 6; // ¹¥»÷ÌØĞ§³ÖĞø6Ö¡
-    QPointF originalPosition; // ±£´æÔ­Ê¼Î»ÖÃ
-    static constexpr qreal shakeIntensity = 3.0; // Õğ¶¯Ç¿¶È£¨ÏñËØ£©
+    // æ”»å‡»ç‰¹æ•ˆç›¸å…³å˜é‡
+    int attackEffectFrames = 0; // å‰©ä½™æ”»å‡»ç‰¹æ•ˆå¸§æ•°
+    static constexpr int maxAttackEffectFrames = 6; // æ”»å‡»ç‰¹æ•ˆæŒç»­6å¸§
+    QPointF originalPosition; // ä¿å­˜åŸå§‹ä½ç½®
+    static constexpr qreal shakeIntensity = 3.0; // éœ‡åŠ¨å¼ºåº¦ï¼ˆåƒç´ ï¼‰
 };
 
 

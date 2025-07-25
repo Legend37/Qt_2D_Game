@@ -11,10 +11,10 @@ public:
     
     QString getMedicineName() const { return medicineName; }
     
-    // ´¿Ğéº¯Êı£¬ÓÉ×ÓÀàÊµÏÖ¾ßÌåµÄÖÎÁÆĞ§¹û
+    // çº¯è™šå‡½æ•°ï¼Œç”±å­ç±»å®ç°å…·ä½“çš„æ²»ç–—æ•ˆæœ
     virtual void applyEffect(class Character* character) = 0;
     
-    // ÖØĞ´»æÖÆ·½·¨£¬Ìí¼ÓºìÉ«±ß¿ò
+    // é‡å†™ç»˜åˆ¶æ–¹æ³•ï¼Œæ·»åŠ çº¢è‰²è¾¹æ¡†
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
 protected:

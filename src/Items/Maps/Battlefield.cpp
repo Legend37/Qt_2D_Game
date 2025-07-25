@@ -12,12 +12,12 @@
 Battlefield::Battlefield(QGraphicsItem *parent) : Map(parent, ":/Items/Maps/Battlefield/background.jpg") {
     setupPlatform();
     setupJumpablePlatforms();
-    setupGrassElements(); // ÖØĞÂÆôÓÃ²İµØÏÔÊ¾
-    setupIceBlock(); // ÆôÓÃ±ù¿éÏÔÊ¾
+    setupGrassElements(); // é‡æ–°å¯ç”¨è‰åœ°æ˜¾ç¤º
+    setupIceBlock(); // å¯ç”¨å†°å—æ˜¾ç¤º
 }
 
 void Battlefield::setupGrassElements() {
-    // ´´½¨²İµØÍ¼Ïñ
+    // åˆ›å»ºè‰åœ°å›¾åƒ
     QPixmap grassPixmap(":/Items/Maps/Battlefield/grass.png");
     
     if (grassPixmap.isNull()) {
@@ -27,46 +27,46 @@ void Battlefield::setupGrassElements() {
     
     qreal grassWidth = grassPixmap.width();
     qreal grassHeight = grassPixmap.height();
-    qreal yPosition = 580; // ²İµØyÎ»ÖÃ£¬ÔÚµØÃæÆ½Ì¨ÉÏ·½
+    qreal yPosition = 580; // è‰åœ°yä½ç½®ï¼Œåœ¨åœ°é¢å¹³å°ä¸Šæ–¹
     
-    // µÚÒ»¸ö²İµØÇøÓò£º¸²¸Ç(300-450)£¬¿í¶È150ÏñËØ
+    // ç¬¬ä¸€ä¸ªè‰åœ°åŒºåŸŸï¼šè¦†ç›–(300-450)ï¼Œå®½åº¦150åƒç´ 
     qreal area1Start = 300;
     qreal area1Width = 150; // 450 - 300
     int tiles1Needed = static_cast<int>(std::ceil(area1Width / grassWidth));
     
     for (int i = 0; i < tiles1Needed; ++i) {
         QGraphicsPixmapItem* grassTile = new QGraphicsPixmapItem(grassPixmap, this);
-        qreal tileX = area1Start + i * grassWidth - 40; // Ïò×óÆ«ÒÆ40ÏñËØ
+        qreal tileX = area1Start + i * grassWidth - 40; // å‘å·¦åç§»40åƒç´ 
         
-        // Èç¹û×îºóÒ»¸öÍßÆ¬³¬³öÇøÓò±ß½ç£¬½øĞĞ²Ã¼ô£¨»ùÓÚÔ­Ê¼Î»ÖÃ¼ÆËã£©
+        // å¦‚æœæœ€åä¸€ä¸ªç“¦ç‰‡è¶…å‡ºåŒºåŸŸè¾¹ç•Œï¼Œè¿›è¡Œè£å‰ªï¼ˆåŸºäºåŸå§‹ä½ç½®è®¡ç®—ï¼‰
         if ((area1Start + i * grassWidth) + grassWidth > area1Start + area1Width) {
             qreal remainingWidth = (area1Start + area1Width) - (area1Start + i * grassWidth);
             QPixmap clippedPixmap = grassPixmap.copy(0, 0, remainingWidth, grassPixmap.height());
             grassTile->setPixmap(clippedPixmap);
         }
         
-        grassTile->setPos(tileX, yPosition); // Ê¹ÓÃÆ«ÒÆºóµÄÎ»ÖÃ
-        grassTile->setZValue(1); // È·±£²İµØÔÚ±³¾°Ö®ÉÏ
+        grassTile->setPos(tileX, yPosition); // ä½¿ç”¨åç§»åçš„ä½ç½®
+        grassTile->setZValue(1); // ç¡®ä¿è‰åœ°åœ¨èƒŒæ™¯ä¹‹ä¸Š
     }
     
-    // µÚ¶ş¸ö²İµØÇøÓò£º¸²¸Ç(900-1050)£¬¿í¶È150ÏñËØ
+    // ç¬¬äºŒä¸ªè‰åœ°åŒºåŸŸï¼šè¦†ç›–(900-1050)ï¼Œå®½åº¦150åƒç´ 
     qreal area2Start = 900;
     qreal area2Width = 150; // 1050 - 900
     int tiles2Needed = static_cast<int>(std::ceil(area2Width / grassWidth));
     
     for (int i = 0; i < tiles2Needed; ++i) {
         QGraphicsPixmapItem* grassTile = new QGraphicsPixmapItem(grassPixmap, this);
-        qreal tileX = area2Start + i * grassWidth - 40; // Ïò×óÆ«ÒÆ40ÏñËØ
+        qreal tileX = area2Start + i * grassWidth - 40; // å‘å·¦åç§»40åƒç´ 
         
-        // Èç¹û×îºóÒ»¸öÍßÆ¬³¬³öÇøÓò±ß½ç£¬½øĞĞ²Ã¼ô£¨»ùÓÚÔ­Ê¼Î»ÖÃ¼ÆËã£©
+        // å¦‚æœæœ€åä¸€ä¸ªç“¦ç‰‡è¶…å‡ºåŒºåŸŸè¾¹ç•Œï¼Œè¿›è¡Œè£å‰ªï¼ˆåŸºäºåŸå§‹ä½ç½®è®¡ç®—ï¼‰
         if ((area2Start + i * grassWidth) + grassWidth > area2Start + area2Width) {
             qreal remainingWidth = (area2Start + area2Width) - (area2Start + i * grassWidth);
             QPixmap clippedPixmap = grassPixmap.copy(0, 0, remainingWidth, grassPixmap.height());
             grassTile->setPixmap(clippedPixmap);
         }
         
-        grassTile->setPos(tileX, yPosition); // Ê¹ÓÃÆ«ÒÆºóµÄÎ»ÖÃ
-        grassTile->setZValue(1); // È·±£²İµØÔÚ±³¾°Ö®ÉÏ
+        grassTile->setPos(tileX, yPosition); // ä½¿ç”¨åç§»åçš„ä½ç½®
+        grassTile->setZValue(1); // ç¡®ä¿è‰åœ°åœ¨èƒŒæ™¯ä¹‹ä¸Š
     }
     
     qDebug() << "[DEBUG] Grass elements created - Area1: tiles=" << tiles1Needed 
@@ -74,20 +74,20 @@ void Battlefield::setupGrassElements() {
 }
 
 void Battlefield::setupIceBlock() {
-    // ´´½¨±ù¿éÌùÍ¼£¬Î»ÖÃÔÚ450µ½750Ö®¼ä£¬ºñ¶ÈÓëµØÃæÆ½Ì¨Ò»ÖÂ
+    // åˆ›å»ºå†°å—è´´å›¾ï¼Œä½ç½®åœ¨450åˆ°750ä¹‹é—´ï¼Œåšåº¦ä¸åœ°é¢å¹³å°ä¸€è‡´
     QPixmap icePixmap(":/Items/Maps/Battlefield/Ice_block.png");
     if (icePixmap.isNull()) {
         qDebug() << "[ERROR] Failed to load Ice_block.png";
         return;
     }
     
-    // ±ù¿éÎ»ÖÃ£ºx´Ó450µ½750£¨¿í¶È300ÏñËØ£©£¬ºñ¶ÈÓëµØÃæÆ½Ì¨Ò»ÖÂ£¨40ÏñËØ£©
+    // å†°å—ä½ç½®ï¼šxä»450åˆ°750ï¼ˆå®½åº¦300åƒç´ ï¼‰ï¼Œåšåº¦ä¸åœ°é¢å¹³å°ä¸€è‡´ï¼ˆ40åƒç´ ï¼‰
     qreal iceX = 450;
-    qreal iceY = 600; // ÓëµØÃæÆ½Ì¨ÖØºÏ
+    qreal iceY = 600; // ä¸åœ°é¢å¹³å°é‡åˆ
     qreal iceWidth = 300; // 750 - 450
-    qreal iceThickness = 40; // ÓëµØÃæÆ½Ì¨ÏàÍ¬µÄºñ¶È
+    qreal iceThickness = 40; // ä¸åœ°é¢å¹³å°ç›¸åŒçš„åšåº¦
     
-    // ¼ÆËãĞèÒªµÄ±ù¿éÍßÆ¬ÊıÁ¿
+    // è®¡ç®—éœ€è¦çš„å†°å—ç“¦ç‰‡æ•°é‡
     qreal originalWidth = icePixmap.width();
     qreal originalHeight = icePixmap.height();
     int tilesNeeded = static_cast<int>(std::ceil(iceWidth / originalWidth));
@@ -98,7 +98,7 @@ void Battlefield::setupIceBlock() {
         
         QPixmap processedPixmap;
         
-        // Ê×ÏÈ´¦ÀíË®Æ½²Ã¼ô£¨Èç¹û×îºóÒ»¸öÍßÆ¬³¬³öÇøÓò±ß½ç£©
+        // é¦–å…ˆå¤„ç†æ°´å¹³è£å‰ªï¼ˆå¦‚æœæœ€åä¸€ä¸ªç“¦ç‰‡è¶…å‡ºåŒºåŸŸè¾¹ç•Œï¼‰
         if (tileX + originalWidth > iceX + iceWidth) {
             qreal remainingWidth = (iceX + iceWidth) - tileX;
             processedPixmap = icePixmap.copy(0, 0, remainingWidth, originalHeight);
@@ -106,14 +106,14 @@ void Battlefield::setupIceBlock() {
             processedPixmap = icePixmap;
         }
         
-        // È»ºó´¦Àí´¹Ö±²Ã¼ô£¨ÏŞÖÆºñ¶ÈÎª40ÏñËØ£©
+        // ç„¶åå¤„ç†å‚ç›´è£å‰ªï¼ˆé™åˆ¶åšåº¦ä¸º40åƒç´ ï¼‰
         if (processedPixmap.height() > iceThickness) {
             processedPixmap = processedPixmap.copy(0, 0, processedPixmap.width(), iceThickness);
         }
         
         iceTile->setPixmap(processedPixmap);
         iceTile->setPos(tileX, iceY);
-        iceTile->setZValue(2); // È·±£±ù¿éÔÚ²İµØÖ®ÉÏ
+        iceTile->setZValue(2); // ç¡®ä¿å†°å—åœ¨è‰åœ°ä¹‹ä¸Š
     }
     
     qDebug() << "[DEBUG] Ice block created from x=" << iceX << "to x=" << (iceX + iceWidth) 
@@ -122,84 +122,84 @@ void Battlefield::setupIceBlock() {
 
 
 void Battlefield::setupPlatform() {
-    // »ñÈ¡³¡¾°±ß½çÀ´È·¶¨Æ½Ì¨³ß´ç
-    QRectF sceneRect = QRectF(0, 0, 1280, 720); // Ä¬ÈÏ³¡¾°´óĞ¡
+    // è·å–åœºæ™¯è¾¹ç•Œæ¥ç¡®å®šå¹³å°å°ºå¯¸
+    QRectF sceneRect = QRectF(0, 0, 1280, 720); // é»˜è®¤åœºæ™¯å¤§å°
     
-    // ´´½¨ºá¿çÕû¸ö³¡¾°¿í¶ÈµÄÑÒÊ¯Æ½Ì¨£¬y×ø±êÎª600
+    // åˆ›å»ºæ¨ªè·¨æ•´ä¸ªåœºæ™¯å®½åº¦çš„å²©çŸ³å¹³å°ï¼Œyåæ ‡ä¸º600
     qreal platformY = 600;
     qreal platformWidth = sceneRect.width();
-    qreal platformHeight = 40; // Æ½Ì¨ºñ¶È
+    qreal platformHeight = 40; // å¹³å°åšåº¦
     
     groundPlatform = new Platform(0, platformY, platformWidth, platformHeight, this);
     
 }
 
 void Battlefield::setupJumpablePlatforms() {
-    // Ìí¼ÓµÚÒ»¸ö¿ÉÌøÔ¾Æ½Ì¨£ºy=450, x=200µ½x=400
+    // æ·»åŠ ç¬¬ä¸€ä¸ªå¯è·³è·ƒå¹³å°ï¼šy=450, x=200åˆ°x=400
     Platform* jumpPlatform1 = new Platform(200, 450, 200, 30, this);
     jumpablePlatforms.append(jumpPlatform1);
     
-    // Ìí¼ÓµÚ¶ş¸ö¿ÉÌøÔ¾Æ½Ì¨£ºy=400, x=800µ½x=1000 (ÓëµÚÒ»¸öÆ½Ì¨ÏàÍ¬¿í¶È)
+    // æ·»åŠ ç¬¬äºŒä¸ªå¯è·³è·ƒå¹³å°ï¼šy=400, x=800åˆ°x=1000 (ä¸ç¬¬ä¸€ä¸ªå¹³å°ç›¸åŒå®½åº¦)
     Platform* jumpPlatform2 = new Platform(800, 400, 200, 30, this);
     jumpablePlatforms.append(jumpPlatform2);
     
-    // Ìí¼ÓµÚÈı¸ö¿ÉÌøÔ¾Æ½Ì¨£ºy=300, x=500µ½x=700
+    // æ·»åŠ ç¬¬ä¸‰ä¸ªå¯è·³è·ƒå¹³å°ï¼šy=300, x=500åˆ°x=700
     Platform* jumpPlatform3 = new Platform(500, 300, 200, 30, this);
     jumpablePlatforms.append(jumpPlatform3);
     
-    // Ìí¼ÓµÚËÄ¸ö¿ÉÌøÔ¾Æ½Ì¨£ºy=230, x=72´¦£¬¿í¶È150ÏñËØ
+    // æ·»åŠ ç¬¬å››ä¸ªå¯è·³è·ƒå¹³å°ï¼šy=230, x=72å¤„ï¼Œå®½åº¦150åƒç´ 
     Platform* jumpPlatform4 = new Platform(72, 230, 150, 30, this);
     jumpablePlatforms.append(jumpPlatform4);
     
-    // Ìí¼ÓµÚÎå¸ö¿ÉÌøÔ¾Æ½Ì¨£ºy=200, x=930´¦£¬¿í¶È150ÏñËØ
+    // æ·»åŠ ç¬¬äº”ä¸ªå¯è·³è·ƒå¹³å°ï¼šy=200, x=930å¤„ï¼Œå®½åº¦150åƒç´ 
     Platform* jumpPlatform5 = new Platform(930, 200, 150, 30, this);
     jumpablePlatforms.append(jumpPlatform5);
 }
 
 qreal Battlefield::getFloorHeight() {
-    // µØÃæ¸ß¶ÈÏÖÔÚÊÇÆ½Ì¨¶¥²¿
+    // åœ°é¢é«˜åº¦ç°åœ¨æ˜¯å¹³å°é¡¶éƒ¨
     return 600;
 }
 
 bool Battlefield::isCharacterOnGround(Character* character) const {
     if (!character || !groundPlatform) return false;
     
-    // »ñÈ¡½ÇÉ«µÄÅö×²Ïä
+    // è·å–è§’è‰²çš„ç¢°æ’ç®±
     QRectF characterRect = character->getHitBox();
     
-    // ¼ì²é½ÇÉ«ÊÇ·ñÕ¾ÔÚÆ½Ì¨ÉÏ
+    // æ£€æŸ¥è§’è‰²æ˜¯å¦ç«™åœ¨å¹³å°ä¸Š
     return groundPlatform->isCharacterOnTop(characterRect);
 }
 
 bool Battlefield::isCharacterOnAnyPlatform(Character* character, qreal velocityY) const {
     if (!character) return false;
     
-    // »ñÈ¡½ÇÉ«µÄÅö×²Ïä
+    // è·å–è§’è‰²çš„ç¢°æ’ç®±
     QRectF characterRect = character->getHitBox();
     
-    // Èç¹ûvelocityYÎª0£¬±íÊ¾ÓÃÓÚÌøÔ¾¼ì²â£¬¼ì²éËùÓĞÆ½Ì¨
-    // Èç¹ûvelocityY > 0£¬±íÊ¾ÏÂ½µÊ±µÄÅö×²¼ì²â
+    // å¦‚æœvelocityYä¸º0ï¼Œè¡¨ç¤ºç”¨äºè·³è·ƒæ£€æµ‹ï¼Œæ£€æŸ¥æ‰€æœ‰å¹³å°
+    // å¦‚æœvelocityY > 0ï¼Œè¡¨ç¤ºä¸‹é™æ—¶çš„ç¢°æ’æ£€æµ‹
     if (velocityY > 0) {
-        // Ö»ÔÚÏÂ½µÊ±¼ì²éÆ½Ì¨Åö×²
-        // ¼ì²éµØÃæÆ½Ì¨
+        // åªåœ¨ä¸‹é™æ—¶æ£€æŸ¥å¹³å°ç¢°æ’
+        // æ£€æŸ¥åœ°é¢å¹³å°
         if (groundPlatform && groundPlatform->isCharacterOnTop(characterRect)) {
             return true;
         }
         
-        // ¼ì²éËùÓĞ¿ÉÌøÔ¾Æ½Ì¨
+        // æ£€æŸ¥æ‰€æœ‰å¯è·³è·ƒå¹³å°
         for (Platform* platform : jumpablePlatforms) {
             if (platform && platform->isCharacterOnTop(characterRect)) {
                 return true;
             }
         }
     } else {
-        // velocityY <= 0£¬ÓÃÓÚÌøÔ¾¼ì²â£¬¼ì²éËùÓĞÆ½Ì¨
-        // ¼ì²éµØÃæÆ½Ì¨
+        // velocityY <= 0ï¼Œç”¨äºè·³è·ƒæ£€æµ‹ï¼Œæ£€æŸ¥æ‰€æœ‰å¹³å°
+        // æ£€æŸ¥åœ°é¢å¹³å°
         if (groundPlatform && groundPlatform->isCharacterOnTop(characterRect)) {
             return true;
         }
         
-        // ¼ì²éËùÓĞ¿ÉÌøÔ¾Æ½Ì¨
+        // æ£€æŸ¥æ‰€æœ‰å¯è·³è·ƒå¹³å°
         for (Platform* platform : jumpablePlatforms) {
             if (platform && platform->isCharacterOnTop(characterRect)) {
                 return true;

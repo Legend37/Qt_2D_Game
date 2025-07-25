@@ -18,21 +18,21 @@ public:
 
     qreal getFloorHeight() override;
     
-    // ¼ì²é½ÇÉ«ÊÇ·ñÕ¾ÔÚµØÃæÉÏ£¨Æ½Ì¨ÉÏ£©
+    // æ£€æŸ¥è§’è‰²æ˜¯å¦ç«™åœ¨åœ°é¢ä¸Šï¼ˆå¹³å°ä¸Šï¼‰
     bool isCharacterOnGround(Character* character) const;
     
-    // ¼ì²é½ÇÉ«ÊÇ·ñÕ¾ÔÚÈÎºÎÆ½Ì¨ÉÏ£¨°üÀ¨ÌøÔ¾Æ½Ì¨£©
+    // æ£€æŸ¥è§’è‰²æ˜¯å¦ç«™åœ¨ä»»ä½•å¹³å°ä¸Šï¼ˆåŒ…æ‹¬è·³è·ƒå¹³å°ï¼‰
     bool isCharacterOnAnyPlatform(Character* character, qreal velocityY) const;
 
 private:
     void setupGrassElements();
     void setupIceBlock();
     void setupPlatform();
-    void setupJumpablePlatforms(); // ÉèÖÃ¿ÉÌøÔ¾Æ½Ì¨
+    void setupJumpablePlatforms(); // è®¾ç½®å¯è·³è·ƒå¹³å°
     
     QGraphicsPixmapItem *iceBlock;
-    Platform *groundPlatform; // µØÃæÆ½Ì¨
-    QVector<Platform*> jumpablePlatforms; // ¿ÉÌøÔ¾Æ½Ì¨ÁĞ±í
+    Platform *groundPlatform; // åœ°é¢å¹³å°
+    QVector<Platform*> jumpablePlatforms; // å¯è·³è·ƒå¹³å°åˆ—è¡¨
 };
 
 

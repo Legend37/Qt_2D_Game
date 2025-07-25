@@ -9,53 +9,53 @@
 Ball::Ball(QGraphicsItem *parent) 
     : Item(parent, ":/Items/Weapon/ball.png", false),
       Weapon(parent, ":/Items/Weapon/ball.png", "Ball") {
-    // 设置初始弹药数量为1（只能使用一次）
+    // Set initial ammo to 1 (can only be used once)
     setAmmo(1);
     
-    // 记录创建时间
+    // Record creation time
     creationTime = QDateTime::currentMSecsSinceEpoch();
     
-    // 设置边界矩形
+    // Set bounding rectangle
     setTransformOriginPoint(boundingRect().center());
     
     ballVelocity = QPointF(0, 0);
     
-    // 确保铅球初始状态是未挂载的，可以正常掉落
+    // Ensure ball is initially unmounted and can drop normally
     unmount();
 }
 
 void Ball::mountToParent() {
-    // 铅球的挂载逻辑，可以放大显示
-    Weapon::mountToParent(); // 调用基类的挂载方法
-    setScale(1.5); // 稍微放大一点
-    setPos(33, -85); // 与其他武器位置一致
+    // Ball mount logic, can be enlarged for display
+    Weapon::mountToParent(); // Call base class mount method
+    setScale(1.5); // Slightly enlarge
+    setPos(33, -85); // Same position as other weapons
     setRotation(0);
     setZValue(2);
     
-    // 标记Ball已被拾取
+    // Mark Ball as picked up
     hasBeenPickedUp = true;
 }
 
 void Ball::unmount() {
-    // 调用基类的unmount方法
+    // Call base class unmount method
     Mountable::unmount();
     
-    // 清除射手，让它视为自然掉落
+    // Clear shooter, treat as natural drop
     shooter = nullptr;
     
-    // 根据是否被拾取过来设置不同的生存时间
+    // Set different survival time depending on whether it was picked up
     if (hasBeenPickedUp) {
-        // Ball被放下后设置0.5秒生存时间
-        groundTimer = QDateTime::currentMSecsSinceEpoch() - 9500; // 设置为9.5秒前，剩余0.5秒
+        // Ball sets 0.5s survival time after being dropped
+        groundTimer = QDateTime::currentMSecsSinceEpoch() - 9500; // Set to 9.5s ago, remaining 0.5s
     } else {
-        // 自然掉落的Ball，重置groundTimer让它有完整的10秒生存时间
+        // Ball dropped naturally, reset groundTimer for full 10s survival
         groundTimer = 0;
     }
     
-    // 重置Ball的状态
-    ballVelocity = QPointF(0, 0); // 重置速度为0
-    isThrown = false; // 设置为非投掷模式
-    active = true; // 确保Ball是活跃的，这样可以被删除逻辑处理
+    // Reset Ball state
+    ballVelocity = QPointF(0, 0); // Reset velocity to 0
+    isThrown = false; // Set to non-thrown mode
+    active = true; // Ensure Ball is active for deletion logic
 }
 
 void Ball::advance(int phase) {
