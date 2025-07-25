@@ -33,10 +33,14 @@ add_executable(qt_2025_game src/main.cpp
         src/Items/LegEquipments/LegEquipment.h
         src/Items/HeadEquipments/CapOfTheHero.cpp
         src/Items/HeadEquipments/CapOfTheHero.h
+        src/Items/HeadEquipments/CapOfTheCharacter.cpp
+        src/Items/HeadEquipments/CapOfTheCharacter.h
         src/Items/Armors/OldShirt.cpp
         src/Items/Armors/OldShirt.h
         src/Items/LegEquipments/WellWornTrousers.cpp
         src/Items/LegEquipments/WellWornTrousers.h
+        src/Items/LegEquipments/CharacterTrousers.cpp
+        src/Items/LegEquipments/CharacterTrousers.h
         src/Scenes/Scene.cpp
         src/Scenes/Scene.h
         src/Scenes/BattleScene.cpp

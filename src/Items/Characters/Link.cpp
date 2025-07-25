@@ -4,13 +4,13 @@
 
 #include <memory>
 #include "Link.h"
-#include "../HeadEquipments/CapOfTheHero.h"
+#include "../HeadEquipments/CapOfTheCharacter.h"
 #include "../Armors/OldShirt.h"
-#include "../LegEquipments/WellWornTrousers.h"
+#include "../LegEquipments/CharacterTrousers.h"
 
 Link::Link(QGraphicsItem *parent) : Character(parent) {
-    headEquipment = new CapOfTheHero(this);
-    legEquipment = new WellWornTrousers(this);
+    headEquipment = new CapOfTheCharacter(this);
+    legEquipment = new CharacterTrousers(this);
     armor = new OldShirt(this);
     headEquipment->mountToParent();
     legEquipment->mountToParent();

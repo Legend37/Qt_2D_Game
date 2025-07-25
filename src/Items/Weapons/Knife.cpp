@@ -3,16 +3,16 @@
 Knife::Knife(QGraphicsItem *parent) 
     : Item(parent, ":/Items/Weapon/knife.png", false),
       Weapon(parent, ":/Items/Weapon/knife.png", "Knife") {
-    // Knife ²»ÄÜ·¢Éä×Óµ¯£¬ËùÒÔµ¯Ò©ÉèÎª0
-    setAmmo(0);
+    // Knife ä¸èƒ½å‘å°„å­å¼¹ï¼Œæ‰€ä»¥å¼¹è¯è®¾ä¸º0
+    setAmmo(maxAmmo);
     
-    // ·Å´óĞ¡µ¶µ½2±¶´óĞ¡£¬ºÍÆäËûÎäÆ÷Ò»Ñù
+    // æ”¾å¤§å°åˆ€åˆ°2å€å¤§å°ï¼Œå’Œå…¶ä»–æ­¦å™¨ä¸€æ ·
     setScale(2.0);
 }
 
 void Knife::mountToParent() {
     Weapon::mountToParent();
-    // Ğ¡µ¶ÔÚ½ÇÉ«ÓÒÇ°·½£¬ºÍÆäËûÎäÆ÷Ò»ÑùµÄÎ»ÖÃ
+    // å°åˆ€åœ¨è§’è‰²å³å‰æ–¹ï¼Œå’Œå…¶ä»–æ­¦å™¨ä¸€æ ·çš„ä½ç½®
     setPos(33, -85);
-    setRotation(0); // ±£³ÖË®Æ½
+    setRotation(0); // ä¿æŒæ°´å¹³
 }

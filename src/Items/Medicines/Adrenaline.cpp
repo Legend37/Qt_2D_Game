@@ -21,7 +21,7 @@ void Adrenaline::applyEffect(Character* character) {
     QObject::connect(healingTimer, &QTimer::timeout, [character, healingTimer, ticksRemaining]() {
         if (*ticksRemaining > 0 && character) {
             int currentHP = character->getHP();
-            int newHP = std::min(100, currentHP + 5); // 每次回复5血量，但不超过100
+            int newHP = std::min(100, currentHP + 10); // 每次回复10血量，但不超过100
             character->setHP(newHP);
             
             (*ticksRemaining)--;

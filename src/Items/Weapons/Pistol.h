@@ -9,21 +9,26 @@ public:
     
     void mountToParent() override;
     
-    // »ñÈ¡ÎäÆ÷ÊôĞÔ
+    // è·å–æ­¦å™¨å±æ€§
     qreal getBulletSpeed() const { return bulletSpeed; }
     int getBulletDamage() const { return bulletDamage; }
     qint64 getFireRate() const { return fireRate; }
     
-    // ÉèÖÃÎäÆ÷ÊôĞÔ£¨¿É×Ô¶¨Òå£©
+    // è®¾ç½®æ­¦å™¨å±æ€§ï¼ˆå¯è‡ªå®šä¹‰ï¼‰
     void setBulletSpeed(qreal speed) { bulletSpeed = speed; }
     void setBulletDamage(int damage) { bulletDamage = damage; }
     void setFireRate(qint64 rate) { fireRate = rate; }
+    
+    // è·å–å’Œè®¾ç½®å­å¼¹æ•°é‡
+    int getMaxAmmo() const { return maxAmmo; }
+    void setMaxAmmo(int ammo) { maxAmmo = ammo; setAmmo(ammo); }
 
 private:
-    // ÊÖÇ¹ÊôĞÔ£¨¿ÉÔÚÕâÀïÖ±½ÓĞŞ¸Ä×Ô¶¨Òå£©
-    qreal bulletSpeed = 22.5;    // ×Óµ¯ËÙ¶È
-    int bulletDamage = 15;       // ×Óµ¯ÉËº¦
-    qint64 fireRate = 300;       // Éä»÷¼ä¸ô£¨ºÁÃë£©
+    // æ‰‹æªå±æ€§ï¼ˆå¯åœ¨è¿™é‡Œç›´æ¥ä¿®æ”¹è‡ªå®šä¹‰ï¼‰
+    qreal bulletSpeed = 30;    // å­å¼¹é€Ÿåº¦
+    int bulletDamage = 20;       // å­å¼¹ä¼¤å®³
+    qint64 fireRate = 500;       // å°„å‡»é—´éš”ï¼ˆæ¯«ç§’ï¼‰
+    int maxAmmo = 12;            // æ‰‹æªé»˜è®¤12å‘å­å¼¹
 };
 
 #endif

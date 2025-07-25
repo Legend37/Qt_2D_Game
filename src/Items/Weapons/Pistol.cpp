@@ -3,13 +3,15 @@
 Pistol::Pistol(QGraphicsItem *parent)
     : Item(parent, ":/Items/Weapon/pistol.png", true),
       Weapon(parent, ":/Items/Weapon/pistol.png", "Pistol", true) {
-    // ·Å´óÊÖÇ¹µ½2±¶´óĞ¡
+    // æ”¾å¤§æ‰‹æªåˆ°2å€å¤§å°
     setScale(2.0);
+    // è®¾ç½®æ‰‹æªçš„å­å¼¹æ•°é‡
+    setAmmo(maxAmmo);
 }
 
 void Pistol::mountToParent() {
     Weapon::mountToParent();
-    // ÊÖÇ¹ÔÚ½ÇÉ«ÓÒÇ°·½
+    // æ‰‹æªåœ¨è§’è‰²å³å‰æ–¹
     setPos(33, -85);
-    setRotation(0); // ±£³ÖË®Æ½
+    setRotation(0); // ä¿æŒæ°´å¹³
 }

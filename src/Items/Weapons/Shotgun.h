@@ -7,20 +7,25 @@ class Shotgun : public Weapon {
 public:
     explicit Shotgun(QGraphicsItem *parent);
     
-    // »ñÈ¡ÎäÆ÷ÊôĞÔ
+    // è·å–æ­¦å™¨å±æ€§
     qreal getBulletSpeed() const { return bulletSpeed; }
     int getBulletDamage() const { return bulletDamage; }
     qint64 getFireRate() const { return fireRate; }
     
-    // ÉèÖÃÎäÆ÷ÊôĞÔ£¨¿É×Ô¶¨Òå£©
+    // è®¾ç½®æ­¦å™¨å±æ€§ï¼ˆå¯è‡ªå®šä¹‰ï¼‰
     void setBulletSpeed(qreal speed) { bulletSpeed = speed; }
     void setBulletDamage(int damage) { bulletDamage = damage; }
     void setFireRate(qint64 rate) { fireRate = rate; }
+    
+    // è·å–å’Œè®¾ç½®å­å¼¹æ•°é‡
+    int getMaxAmmo() const { return maxAmmo; }
+    void setMaxAmmo(int ammo) { maxAmmo = ammo; setAmmo(ammo); }
 
 private:
-    qreal bulletSpeed = 60.0;    // ×Óµ¯ËÙ¶È£¨¸ü¿ì£©
-    int bulletDamage = 30;       // ×Óµ¯ÉËº¦£¨¸ü¸ß£©
-    qint64 fireRate = 2000;       // Éä»÷¼ä¸ô£¨ºÁÃë£¬¸üÂı£©
+    qreal bulletSpeed = 50.0;    // å­å¼¹é€Ÿåº¦ï¼ˆæ›´å¿«ï¼‰
+    int bulletDamage = 60;       // å­å¼¹ä¼¤å®³ï¼ˆæ›´é«˜ï¼‰
+    qint64 fireRate = 3000;       // å°„å‡»é—´éš”ï¼ˆæ¯«ç§’ï¼Œæ›´æ…¢ï¼‰
+    int maxAmmo = 6;              // éœ°å¼¹æªé»˜è®¤6å‘å­å¼¹
 };
 
 #endif

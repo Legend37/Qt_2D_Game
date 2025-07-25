@@ -9,9 +9,9 @@ Bullet::~Bullet() {}
 void Bullet::advance(int phase) {
     if (phase == 0) return;
     
-    // Ã¿ÃëÊä³öÒ»´Î×Óµ¯×ø±ê (¼ÙÉè60fps£¬Ã¿60Ö¡Êä³öÒ»´Î)
+    // æ¯ç§’è¾“å‡ºä¸€æ¬¡å­å¼¹åæ ‡ (å‡è®¾60fpsï¼Œæ¯60å¸§è¾“å‡ºä¸€æ¬¡)
     static int debugCounter = 0;
-    if (debugCounter % 60 == 0) { // Ã¿60Ö¡Êä³öÒ»´Î (Ô¼Ã¿Ãë)
+    if (debugCounter % 60 == 0) { // æ¯60å¸§è¾“å‡ºä¸€æ¬¡ (çº¦æ¯ç§’)
         // qDebug() << "[DEBUG] Bullet scenePos:" << scenePos() << "center:" << getSceneCenter() << "velocity:" << velocity;
     }
     debugCounter++;
@@ -20,12 +20,12 @@ void Bullet::advance(int phase) {
     moveBy(velocity.x(), velocity.y());
     QPointF newPos = scenePos();
     
-    // Ã¿Ö¡¶¼Êä³öÒÆ¶¯ĞÅÏ¢£¨ÁÙÊ±µ÷ÊÔ£©
+    // æ¯å¸§éƒ½è¾“å‡ºç§»åŠ¨ä¿¡æ¯ï¼ˆä¸´æ—¶è°ƒè¯•ï¼‰
     if (debugCounter % 10 == 0) {
         // qDebug() << "[DEBUG] Bullet moved from:" << oldPos << "to:" << newPos << "velocity:" << velocity;
     }
     
-    // ¼ì²éÅö×²
+    // æ£€æŸ¥ç¢°æ’
     checkCollisions();
     
     // Remove bullet if it goes off screen
@@ -45,7 +45,7 @@ void Bullet::checkCollisions() {
         return;
     }
     
-    // ³¢ÊÔ½«³¡¾°×ª»»ÎªBattleScene
+    // å°è¯•å°†åœºæ™¯è½¬æ¢ä¸ºBattleScene
     BattleScene* battleScene = qobject_cast<BattleScene*>(scene());
     if (!battleScene) {
         // qDebug() << "[DEBUG] Failed to cast scene to BattleScene";
@@ -54,11 +54,11 @@ void Bullet::checkCollisions() {
     
     // qDebug() << "[DEBUG] Bullet checkCollisions: pos=" << scenePos();
     
-    // »ñÈ¡µ±Ç°×Óµ¯Î»ÖÃ - Ê¹ÓÃ×Óµ¯µÄÖĞĞÄµã
-    QPointF bulletPos = scenePos(); // ×Óµ¯µÄÖĞĞÄµã¾ÍÊÇËüµÄÎ»ÖÃ
+    // è·å–å½“å‰å­å¼¹ä½ç½® - ä½¿ç”¨å­å¼¹çš„ä¸­å¿ƒç‚¹
+    QPointF bulletPos = scenePos(); // å­å¼¹çš„ä¸­å¿ƒç‚¹å°±æ˜¯å®ƒçš„ä½ç½®
     // qDebug() << "[DEBUG] Checking bullet collision at center pos:" << bulletPos;
     
-    // ¼ì²éÓë½ÇÉ«µÄÅö×²
+    // æ£€æŸ¥ä¸è§’è‰²çš„ç¢°æ’
     Character* character = battleScene->getCharacter();
     if (character && character != shooter) {
         QRectF hitBox = character->getHitBox();
@@ -67,21 +67,21 @@ void Bullet::checkCollisions() {
         bool collision = character->checkBulletCollision(bulletPos);
         // qDebug() << "[DEBUG] Character collision result:" << collision;
         if (collision) {
-            // ·¢ÉúÅö×²£¬½ÇÉ«ËğÊ§¶¯Ì¬ÉËº¦Öµ
-            character->takeDamage(damage, DamageType::Bullet); // ×Óµ¯ÉËº¦ÀàĞÍ
+            // å‘ç”Ÿç¢°æ’ï¼Œè§’è‰²æŸå¤±åŠ¨æ€ä¼¤å®³å€¼
+            character->takeDamage(damage, DamageType::Bullet); // å­å¼¹ä¼¤å®³ç±»å‹
             // qDebug() << "[DEBUG] Bullet hit character! Damage:" << damage << "HP:" << character->getHP();
             
-            // ÖØĞÂ»æÖÆÑªÌõ
+            // é‡æ–°ç»˜åˆ¶è¡€æ¡
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
             
-            // ÒÆ³ı×Óµ¯
+            // ç§»é™¤å­å¼¹
             scene()->removeItem(this);
             delete this;
             return;
         }
     }
     
-    // ¼ì²éÓëHeroµÄÅö×²
+    // æ£€æŸ¥ä¸Heroçš„ç¢°æ’
     Character* hero = battleScene->getHero();
     if (hero && hero != shooter) {
         QRectF hitBox = hero->getHitBox();
@@ -90,14 +90,14 @@ void Bullet::checkCollisions() {
         bool collision = hero->checkBulletCollision(bulletPos);
         // qDebug() << "[DEBUG] Hero collision result:" << collision;
         if (collision) {
-            // ·¢ÉúÅö×²£¬HeroËğÊ§¶¯Ì¬ÉËº¦Öµ
-            hero->takeDamage(damage, DamageType::Bullet); // ×Óµ¯ÉËº¦ÀàĞÍ
+            // å‘ç”Ÿç¢°æ’ï¼ŒHeroæŸå¤±åŠ¨æ€ä¼¤å®³å€¼
+            hero->takeDamage(damage, DamageType::Bullet); // å­å¼¹ä¼¤å®³ç±»å‹
             // qDebug() << "[DEBUG] Bullet hit hero! Damage:" << damage << "HP:" << hero->getHP();
             
-            // ÖØĞÂ»æÖÆÑªÌõ
+            // é‡æ–°ç»˜åˆ¶è¡€æ¡
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
             
-            // ÒÆ³ı×Óµ¯
+            // ç§»é™¤å­å¼¹
             scene()->removeItem(this);
             delete this;
             return;
@@ -106,7 +106,7 @@ void Bullet::checkCollisions() {
 }
 
 QPointF Bullet::getSceneCenter() const {
-    // ×Óµ¯¾ØĞÎÊÇ(-10, -10, 20, 20)£¬ËùÒÔÖĞĞÄµãĞèÒª¼ÓÉÏÆ«ÒÆÁ¿
-    // ¾ØĞÎµÄÖĞĞÄµãÏà¶ÔÓÚitemÔ­µãµÄÆ«ÒÆÊÇ(0, 0)£¬ÒòÎª¾ØĞÎÊÇÒÔ(-10, -10)Îª×óÉÏ½Ç
+    // å­å¼¹çŸ©å½¢æ˜¯(-10, -10, 20, 20)ï¼Œæ‰€ä»¥ä¸­å¿ƒç‚¹éœ€è¦åŠ ä¸Šåç§»é‡
+    // çŸ©å½¢çš„ä¸­å¿ƒç‚¹ç›¸å¯¹äºitemåŸç‚¹çš„åç§»æ˜¯(0, 0)ï¼Œå› ä¸ºçŸ©å½¢æ˜¯ä»¥(-10, -10)ä¸ºå·¦ä¸Šè§’
     return scenePos();
 }

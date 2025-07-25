@@ -9,8 +9,8 @@
 Ball::Ball(QGraphicsItem *parent) 
     : Item(parent, ":/Items/Weapon/ball.png", false),
       Weapon(parent, ":/Items/Weapon/ball.png", "Ball") {
-    // Set initial ammo to 1 (can only be used once)
-    setAmmo(1);
+    // Set initial ammo to maxAmmo (can only be used once)
+    setAmmo(maxAmmo);
     
     // Record creation time
     creationTime = QDateTime::currentMSecsSinceEpoch();
@@ -60,13 +60,13 @@ void Ball::unmount() {
 
 void Ball::advance(int phase) {
     if (phase == 0) return;
-    // Èç¹ûÒÑ±ê¼Ç²»»îÔ¾£¬Í£Ö¹ÔË¶¯
+    // ï¿½ï¿½ï¿½ï¿½Ñ±ï¿½Ç²ï¿½ï¿½ï¿½Ô¾ï¿½ï¿½Í£Ö¹ï¿½Ë¶ï¿½
     if (!active) {
         // qDebug() << "[DEBUG] Ball" << this << "is inactive, skipping advance()";
         return;
     }
     
-    // Ö»ÓÐÔÚÎ´±»¹ÒÔØÊ±²Å¼ì²éÉú´æÊ±¼ä
+    // Ö»ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½Å¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
     if (!isMounted()) {
         qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
         if (currentTime - creationTime > maxLifetime) {
@@ -74,7 +74,7 @@ void Ball::advance(int phase) {
             qDebug() << "[DEBUG] Ball lifetime expired - Active status:" << active;
             qDebug() << "[DEBUG] Ball lifetime expired - Time alive:" << (currentTime - creationTime) << "ms";
             
-            // ·ÀÖ¹ÖØ¸´É¾³ý
+            // ï¿½ï¿½Ö¹ï¿½Ø¸ï¿½É¾ï¿½ï¿½
             if (!active) {
                 qDebug() << "[DEBUG] Ball already inactive when lifetime expired, skipping";
                 return;
@@ -85,7 +85,7 @@ void Ball::advance(int phase) {
                 scene()->removeItem(this);
                 qDebug() << "[DEBUG] Ball removed from scene (lifetime expired)";
                 
-                // Ê¹ÓÃ¶¨Ê±Æ÷ÑÓ³ÙÉ¾³ý£¬±ÜÃâÁ¢¼´É¾³ýµ¼ÖÂµÄÎÊÌâ
+                // Ê¹ï¿½Ã¶ï¿½Ê±ï¿½ï¿½ï¿½Ó³ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
                 qDebug() << "[DEBUG] Scheduling Ball deletion (lifetime expired)";
                 QTimer::singleShot(0, [this]() {
                     qDebug() << "[DEBUG] Lambda: Deleting Ball (lifetime expired)" << this;
@@ -101,56 +101,56 @@ void Ball::advance(int phase) {
         }
     }
     
-    // Ó¦ÓÃÖØÁ¦ - ¸ù¾ÝÊÇ·ñÎªÍ¶ÖÀÄ£Ê½Ê¹ÓÃ²»Í¬µÄÖØÁ¦Öµ
-    // ×¢Òâ£ºµôÂäÄ£Ê½Ê¹ÓÃÓëCharacterÒ»ÖÂµÄÖØÁ¦Öµ0.008
-    qreal currentGravity = isThrown ? thrownGravity : 0.008; // Ê¹ÓÃÓëCharacterÒ»ÖÂµÄÖØÁ¦
+    // Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ÎªÍ¶ï¿½ï¿½Ä£Ê½Ê¹ï¿½Ã²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+    // ×¢ï¿½â£ºï¿½ï¿½ï¿½ï¿½Ä£Ê½Ê¹ï¿½ï¿½ï¿½ï¿½CharacterÒ»ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½Öµ0.008
+    qreal currentGravity = isThrown ? thrownGravity : 0.008; // Ê¹ï¿½ï¿½ï¿½ï¿½CharacterÒ»ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
     ballVelocity.setY(ballVelocity.y() + currentGravity);
     
-    // µ÷ÊÔÊä³öÖØÁ¦Ó¦ÓÃÇé¿ö
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½
     static int gravityDebugCounter = 0;
     if (gravityDebugCounter % 15 == 0) {
         // qDebug() << "[DEBUG] Ball gravity applied: vy =" << ballVelocity.y() << "gravity =" << currentGravity << "isThrown =" << isThrown;
     }
     gravityDebugCounter++;
     
-    // ¸üÐÂÎ»ÖÃ
+    // ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     QPointF oldPos = scenePos();
     moveBy(ballVelocity.x(), ballVelocity.y());
     QPointF newPos = scenePos();
     
-    // µ÷ÊÔÊä³ö
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     static int debugCounter = 0;
     if (debugCounter % 30 == 0) {
         // qDebug() << "[DEBUG] Ball pos:" << newPos << "velocity:" << ballVelocity;
     }
     debugCounter++;
     
-    // ¼ì²éÊÇ·ñÂäµ½µØÃæ»ò³¬³ö±ß½ç
+    // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½äµ½ï¿½ï¿½ï¿½ï¿½ò³¬³ï¿½ï¿½ß½ï¿½
     if (scene()) {
         BattleScene* battleScene = qobject_cast<BattleScene*>(scene());
         if (battleScene) {
-            // »ñÈ¡µØÃæ¸ß¶È
+            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
             qreal groundY = battleScene->getGroundHeight();
             if (newPos.y() >= groundY) {
-                // ÇòÂäµØ£¬Í£Ö¹ÔË¶¯
+                // ï¿½ï¿½ï¿½ï¿½Ø£ï¿½Í£Ö¹ï¿½Ë¶ï¿½
                 setPos(scenePos().x(), groundY);
                 ballVelocity = QPointF(0, 0);
                 
-                // ¼ì²éÊÇ·ñÊÇÍ¶ÖÀµÄBall£¨ÓÐshooter£©
+                // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½ï¿½Ballï¿½ï¿½ï¿½ï¿½shooterï¿½ï¿½
                 if (shooter) {
                     
-                    // ·ÀÖ¹ÖØ¸´É¾³ý
+                    // ï¿½ï¿½Ö¹ï¿½Ø¸ï¿½É¾ï¿½ï¿½
                     if (!active) {
                         return;
                     }
                     active = false;
                     
-                    // ´Ó³¡¾°ÖÐÒÆ³ý
+                    // ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
                     if (scene()) {
                         scene()->removeItem(this);
                     }
                     
-                    // Á¢¼´É¾³ý
+                    // ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½
                     QTimer::singleShot(0, [this]() {
                         try {
                             delete this;
@@ -160,17 +160,17 @@ void Ball::advance(int phase) {
                     });
                     return;
                 } else {
-                    // µôÂäµÄBall£¨ÎÞshooter£©½øÈë10Ãë¼ÆÊ±Âß¼­
-                    // Èç¹ûÉÐÎ´¿ªÊ¼µØÃæ¼ÆÊ±£¬¿ªÊ¼¼ÆÊ±
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½Ballï¿½ï¿½ï¿½ï¿½shooterï¿½ï¿½ï¿½ï¿½ï¿½ï¿½10ï¿½ï¿½ï¿½Ê±ï¿½ß¼ï¿½
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ê±
                     if (groundTimer == 0) {
                         groundTimer = QDateTime::currentMSecsSinceEpoch();
                     }
                     
-                    // ¼ì²éÊÇ·ñÒÑÔÚµØÃæÍ£Áô10Ãë
+                    // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½Í£ï¿½ï¿½10ï¿½ï¿½
                     qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
-                    if (currentTime - groundTimer >= 10000) { // 10Ãë
+                    if (currentTime - groundTimer >= 10000) { // 10ï¿½ï¿½
                         
-                        // ±ê¼ÇÎª·Ç»îÔ¾×´Ì¬£¬·ÀÖ¹ÖØ¸´É¾³ý
+                        // ï¿½ï¿½ï¿½Îªï¿½Ç»ï¿½Ô¾×´Ì¬ï¿½ï¿½ï¿½ï¿½Ö¹ï¿½Ø¸ï¿½É¾ï¿½ï¿½
                         if (!active) {
                             qDebug() << "[DEBUG] Dropped Ball already inactive, skipping deletion";
                             return;
@@ -182,14 +182,14 @@ void Ball::advance(int phase) {
                         } catch (...) {
                         }
                         
-                        // ´Ó³¡¾°ÖÐÒÆ³ý
+                        // ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
                         try {
                             battleScene->removeItem(this);
                         } catch (...) {
                             qDebug() << "[DEBUG] ERROR: Exception while removing from scene";
                         }
                         
-                        // Ê¹ÓÃ¶¨Ê±Æ÷ÑÓ³ÙÉ¾³ý£¬±ÜÃâÁ¢¼´É¾³ýµ¼ÖÂµÄÎÊÌâ
+                        // Ê¹ï¿½Ã¶ï¿½Ê±ï¿½ï¿½ï¿½Ó³ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
                         QTimer::singleShot(0, [this]() {
                             try {
                                 delete this;
@@ -204,25 +204,25 @@ void Ball::advance(int phase) {
             }
         }
         
-        // ¼ì²éÊÇ·ñ³¬³öÆÁÄ»±ß½ç
+        // ï¿½ï¿½ï¿½ï¿½Ç·ñ³¬³ï¿½ï¿½ï¿½Ä»ï¿½ß½ï¿½
         qreal currentX = scenePos().x();
         qreal currentY = scenePos().y();
         if (currentX < -50 || currentX > 1330 || currentY > 1000) {
             
-            // ·ÀÖ¹ÖØ¸´É¾³ý
+            // ï¿½ï¿½Ö¹ï¿½Ø¸ï¿½É¾ï¿½ï¿½
             if (!active) {
                 qDebug() << "[DEBUG] Ball already inactive when off-screen, skipping";
                 return;
             }
             active = false;
             
-            // ´Ó³¡¾°ÖÐÒÆ³ý
+            // ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
             if (scene()) {
                 scene()->removeItem(this);
                 qDebug() << "[DEBUG] Ball removed from scene (off-screen)";
             }
             
-            // Ê¹ÓÃ¶¨Ê±Æ÷ÑÓ³ÙÉ¾³ý£¬±ÜÃâÁ¢¼´É¾³ýµ¼ÖÂµÄÎÊÌâ
+            // Ê¹ï¿½Ã¶ï¿½Ê±ï¿½ï¿½ï¿½Ó³ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
             QTimer::singleShot(0, [this]() {
                 try {
                     delete this;
@@ -234,41 +234,41 @@ void Ball::advance(int phase) {
         }
     }
     
-    // ¼ì²éÅö×²
+    // ï¿½ï¿½ï¿½ï¿½ï¿½×²
     checkCollisions();
 }
 
 void Ball::checkCollisions() {
-    // Ö»ÓÐ±»Í¶ÖÀºóÇÒ»îÔ¾×´Ì¬²Å¼ì²âÅö×²
+    // Ö»ï¿½Ð±ï¿½Í¶ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ô¾×´Ì¬ï¿½Å¼ï¿½ï¿½ï¿½ï¿½×²
     if (!scene() || !shooter || !active) return;
     BattleScene* battleScene = qobject_cast<BattleScene*>(scene());
     if (!battleScene) return;
     
     QPointF ballPos = scenePos();
     
-    // ¼ì²éÓë½ÇÉ«µÄÅö×²
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½×²
     Character* character = battleScene->getCharacter();
     if (character && character != shooter) {
         if (character->checkBulletCollision(ballPos)) {
             
-            // ·ÀÖ¹ÖØ¸´É¾³ý
+            // ï¿½ï¿½Ö¹ï¿½Ø¸ï¿½É¾ï¿½ï¿½
             if (!active) {
                 qDebug() << "[DEBUG] Ball already inactive during collision, skipping";
                 return;
             }
             active = false;
             
-            character->takeDamage(50, DamageType::Bullet); // Çò±»ÊÓÎªÍ¶ÉäÎïÉËº¦£¨ÀàËÆ×Óµ¯£©
+            character->takeDamage(50, DamageType::Bullet); // ï¿½ï¿½ï¿½ï¿½ÎªÍ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½
             
-            // ÖØÐÂ»æÖÆÑªÌõ
+            // ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½Ñªï¿½ï¿½
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
             
-            // ´Ó³¡¾°ÖÐÒÆ³ý
+            // ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
             if (scene()) {
                 scene()->removeItem(this);
             }
             
-            // Ê¹ÓÃ¶¨Ê±Æ÷ÑÓ³ÙÉ¾³ý£¬±ÜÃâÁ¢¼´É¾³ýµ¼ÖÂµÄÎÊÌâ
+            // Ê¹ï¿½Ã¶ï¿½Ê±ï¿½ï¿½ï¿½Ó³ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
             QTimer::singleShot(0, [this]() {
                 try {
                     delete this;
@@ -280,29 +280,29 @@ void Ball::checkCollisions() {
         }
     }
     
-    // ¼ì²éÓëHeroµÄÅö×²
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Heroï¿½ï¿½ï¿½ï¿½×²
     Character* hero = battleScene->getHero();
     if (hero && hero != shooter) {
         if (hero->checkBulletCollision(ballPos)) {
             
-            // ·ÀÖ¹ÖØ¸´É¾³ý
+            // ï¿½ï¿½Ö¹ï¿½Ø¸ï¿½É¾ï¿½ï¿½
             if (!active) {
                 qDebug() << "[DEBUG] Ball already inactive during hero collision, skipping";
                 return;
             }
             active = false;
             
-            hero->takeDamage(50, DamageType::Bullet); // Çò±»ÊÓÎªÍ¶ÉäÎïÉËº¦£¨ÀàËÆ×Óµ¯£©
+            hero->takeDamage(50, DamageType::Bullet); // ï¿½ï¿½ï¿½ï¿½ÎªÍ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½
             
-            // ÖØÐÂ»æÖÆÑªÌõ
+            // ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½Ñªï¿½ï¿½
             scene()->invalidate(scene()->sceneRect(), QGraphicsScene::ForegroundLayer);
             
-            // ´Ó³¡¾°ÖÐÒÆ³ý
+            // ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
             if (scene()) {
                 scene()->removeItem(this);
             }
             
-            // Ê¹ÓÃ¶¨Ê±Æ÷ÑÓ³ÙÉ¾³ý£¬±ÜÃâÁ¢¼´É¾³ýµ¼ÖÂµÄÎÊÌâ
+            // Ê¹ï¿½Ã¶ï¿½Ê±ï¿½ï¿½ï¿½Ó³ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
             QTimer::singleShot(0, [this]() {
                 try {
                     delete this;
@@ -321,7 +321,7 @@ QPointF Ball::getSceneCenter() const {
 
 void Ball::setVelocity(qreal vx, qreal vy) {
     ballVelocity = QPointF(vx, vy);
-    // Ö»ÓÐµ±ÓÐ·ÇÁãËÙ¶ÈÊ±²ÅÉèÖÃÎªÍ¶ÖÀÄ£Ê½
+    // Ö»ï¿½Ðµï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÍ¶ï¿½ï¿½Ä£Ê½
     if (vx != 0 || vy != 0) {
         isThrown = true;
     }
@@ -336,13 +336,13 @@ bool Ball::isMounted() const {
 }
 
 void Ball::deleteLater() {
-    // ±ê¼Ç²»»îÔ¾²¢Á¢¼´´Ó³¡¾°ÒÆ³ý£¬Í£Ö¹ºóÐø advance µ÷ÓÃ
+    // ï¿½ï¿½Ç²ï¿½ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½Í£Ö¹ï¿½ï¿½ï¿½ï¿½ advance ï¿½ï¿½ï¿½ï¿½
     if (!active) return;
     active = false;
     if (scene()) {
         scene()->removeItem(this);
     }
-    // ÑÓ³ÙÉ¾³ý£¬È·±£µ±Ç°µ÷ÓÃÕ»°²È«
+    // ï¿½Ó³ï¿½É¾ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½È«
     QTimer::singleShot(0, [this]() {
         delete this;
     });

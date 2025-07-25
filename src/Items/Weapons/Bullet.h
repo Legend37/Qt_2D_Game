@@ -16,7 +16,7 @@ public:
         setBrush(QBrush(QColor(255, 255, 180)));
         setPen(QPen(Qt::NoPen));
         setZValue(10);
-        setPos(x, y); // Ê¹ÓÃ setPos ÉèÖÃ×Óµ¯ÔÚ³¡¾°ÖĞµÄÎ»ÖÃ
+        setPos(x, y); // ä½¿ç”¨ setPos è®¾ç½®å­å¼¹åœ¨åœºæ™¯ä¸­çš„ä½ç½®
     }
 
     virtual ~Bullet();
@@ -24,7 +24,7 @@ public:
     void checkCollisions();
     QPointF getSceneCenter() const;
     
-    // »ñÈ¡ºÍÉèÖÃÉËº¦
+    // è·å–å’Œè®¾ç½®ä¼¤å®³
     int getDamage() const { return damage; }
     void setDamage(int dmg) { damage = dmg; }
 
@@ -32,7 +32,7 @@ public:
     Character* shooter;
 
 private:
-    int damage; // ×Óµ¯ÉËº¦
+    int damage; // å­å¼¹ä¼¤å®³
 };
 
 #endif

@@ -7,21 +7,26 @@ class Submachine : public Weapon {
 public:
     explicit Submachine(QGraphicsItem *parent);
     
-    // »ñÈ¡ÎäÆ÷ÊôĞÔ
+    // è·å–æ­¦å™¨å±æ€§
     qreal getBulletSpeed() const { return bulletSpeed; }
     int getBulletDamage() const { return bulletDamage; }
     qint64 getFireRate() const { return fireRate; }
     
-    // ÉèÖÃÎäÆ÷ÊôĞÔ£¨¿É×Ô¶¨Òå£©
+    // è®¾ç½®æ­¦å™¨å±æ€§ï¼ˆå¯è‡ªå®šä¹‰ï¼‰
     void setBulletSpeed(qreal speed) { bulletSpeed = speed; }
     void setBulletDamage(int damage) { bulletDamage = damage; }
     void setFireRate(qint64 rate) { fireRate = rate; }
+    
+    // è·å–å’Œè®¾ç½®å­å¼¹æ•°é‡
+    int getMaxAmmo() const { return maxAmmo; }
+    void setMaxAmmo(int ammo) { maxAmmo = ammo; setAmmo(ammo); }
 
 private:
-    // ³å·æÇ¹ÊôĞÔ£¨¿ÉÔÚÕâÀïÖ±½ÓĞŞ¸Ä×Ô¶¨Òå£©
-    qreal bulletSpeed = 20.0;    // ×Óµ¯ËÙ¶È£¨½ÏÂı£©
-    int bulletDamage = 10;        // ×Óµ¯ÉËº¦£¨½ÏµÍ£©
-    qint64 fireRate = 50;       // Éä»÷¼ä¸ô£¨ºÁÃë£¬ºÜ¿ì£©
+    // å†²é”‹æªå±æ€§ï¼ˆå¯åœ¨è¿™é‡Œç›´æ¥ä¿®æ”¹è‡ªå®šä¹‰ï¼‰
+    qreal bulletSpeed = 20.0;    // å­å¼¹é€Ÿåº¦ï¼ˆè¾ƒæ…¢ï¼‰
+    int bulletDamage = 10;        // å­å¼¹ä¼¤å®³ï¼ˆè¾ƒä½ï¼‰
+    qint64 fireRate = 50;       // å°„å‡»é—´éš”ï¼ˆæ¯«ç§’ï¼Œå¾ˆå¿«ï¼‰
+    int maxAmmo = 30;             // å†²é”‹æªé»˜è®¤30å‘å­å¼¹
 };
 
 #endif
