@@ -118,20 +118,111 @@ jobs:
   release:
     needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && (contains(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master')
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Generate version
+      id: version
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          VERSION="${{ github.ref_name }}"
+        else
+          VERSION="v$(date +'%Y.%m.%d')-$(echo ${{ github.sha }} | cut -c1-7)"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Generated version: $VERSION"
+    
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       
+    - name: List downloaded artifacts
+      run: |
+        echo "Downloaded artifacts:"
+        find . -type f -name "*" | head -20
+        ls -la
+        
+    - name: Prepare release files
+      run: |
+        mkdir -p release
+        
+        # Package Windows executable
+        if [ -d "qt-2d-game-windows" ]; then
+          echo "Packaging Windows executable..."
+          cd qt-2d-game-windows
+          if [ -f "qt_2025_game.exe" ]; then
+            zip ../release/qt-2d-game-windows.zip qt_2025_game.exe
+            cp qt_2025_game.exe ../release/
+          elif [ -f "Release/qt_2025_game.exe" ]; then
+            zip ../release/qt-2d-game-windows.zip Release/qt_2025_game.exe
+            cp Release/qt_2025_game.exe ../release/qt_2025_game.exe
+          fi
+          cd ..
+        fi
+        
+        # Package Linux executable
+        if [ -d "qt-2d-game-linux" ]; then
+          echo "Packaging Linux executable..."
+          cd qt-2d-game-linux
+          if [ -f "qt_2025_game" ]; then
+            tar -czf ../release/qt-2d-game-linux.tar.gz qt_2025_game
+            cp qt_2025_game ../release/qt_2025_game_linux
+            chmod +x ../release/qt_2025_game_linux
+          fi
+          cd ..
+        fi
+        
+        # Package macOS executable
+        if [ -d "qt-2d-game-macos" ]; then
+          echo "Packaging macOS executable..."
+          cd qt-2d-game-macos
+          if [ -f "qt_2025_game" ]; then
+            tar -czf ../release/qt-2d-game-macos.tar.gz qt_2025_game
+            cp qt_2025_game ../release/qt_2025_game_macos
+            chmod +x ../release/qt_2025_game_macos
+          fi
+          cd ..
+        fi
+        
+        echo "Release files prepared:"
+        ls -la release/
+        
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          qt-2d-game-windows/*
-          qt-2d-game-linux/*
-          qt-2d-game-macos/*
+        tag_name: ${{ steps.version.outputs.version }}
+        name: "Qt 2D Game ${{ steps.version.outputs.version }}"
+        body: |
+          ## 🎮 Qt 2D Game Release ${{ steps.version.outputs.version }}
+          
+          **Platform Support:**
+          - ✅ Windows (x64)
+          - ✅ Linux (x64) 
+          - ✅ macOS (x64)
+          
+          **Download Instructions:**
+          - **Windows**: Download `qt_2025_game.exe` or `qt-2d-game-windows.zip`
+          - **Linux**: Download `qt_2025_game_linux` or `qt-2d-game-linux.tar.gz`
+          - **macOS**: Download `qt_2025_game_macos` or `qt-2d-game-macos.tar.gz`
+          
+          **System Requirements:**
+          - Qt 6.5.3 runtime libraries (usually pre-installed)
+          - Modern GPU with OpenGL support
+          - 4GB RAM minimum
+          
+          **Game Features:**
+          - 2D fighting game with physics
+          - Dual character support (Player 1 & Player 2)
+          - Weapon system (Pistol, Shotgun, Knife, Ball, etc.)
+          - Medicine and armor systems
+          - Platform jumping mechanics
+          
+          ---
+          *Built from commit: ${{ github.sha }}*
+        files: release/*
         draft: false
-        prerelease: false
+        prerelease: ${{ !contains(github.ref, 'refs/tags/') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
