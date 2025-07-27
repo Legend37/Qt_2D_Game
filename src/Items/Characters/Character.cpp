@@ -79,9 +79,9 @@ void Character::processInput() {
     
     if (isCrouchDown()) {
         if (isLeftDown()) {
-            facingRight = true;
-        } else if (isRightDown()) {
             facingRight = false;
+        } else if (isRightDown()) {
+            facingRight = true;
         }
         QTransform transform;
         if (facingRight) {

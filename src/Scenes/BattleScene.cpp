@@ -374,7 +374,7 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
             } else {
             }
             break;
-        case Qt::Key_K:
+        case Qt::Key_Apostrophe:
             if (hero != nullptr) {
                 if (!hero->canAttack()) {
                     break;
@@ -497,19 +497,19 @@ void BattleScene::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_S:
             if (character != nullptr) character->setCrouchDown(true);
             break;
-        case Qt::Key_Left:
+        case Qt::Key_J:
             if (hero != nullptr) hero->setLeftDown(true);
             break;
-        case Qt::Key_Right:
+        case Qt::Key_L:
             if (hero != nullptr) hero->setRightDown(true);
             break;
-        case Qt::Key_Up:
+        case Qt::Key_I:
             if (hero != nullptr) hero->jump();
             break;
-        case Qt::Key_Down:
+        case Qt::Key_K:
             if (hero != nullptr) hero->setCrouchDown(true);
             break;
-        case Qt::Key_L:
+        case Qt::Key_Semicolon:
             if (hero != nullptr) hero->setPickDown(true);
             break;
         default:
@@ -530,16 +530,16 @@ void BattleScene::keyReleaseEvent(QKeyEvent *event) {
         case Qt::Key_S:
             if (character != nullptr) character->setCrouchDown(false);
             break;
-        case Qt::Key_Left:
+        case Qt::Key_J:
             if (hero != nullptr) hero->setLeftDown(false);
             break;
-        case Qt::Key_Right:
+        case Qt::Key_L:
             if (hero != nullptr) hero->setRightDown(false);
             break;
-        case Qt::Key_Down:
+        case Qt::Key_K:
             if (hero != nullptr) hero->setCrouchDown(false);
             break;
-        case Qt::Key_L:
+        case Qt::Key_Semicolon:
             if (hero != nullptr) hero->setPickDown(false);
             break;
         default:
