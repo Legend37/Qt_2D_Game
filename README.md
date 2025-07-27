@@ -1,6 +1,7 @@
 # Qt 2D Game
 
 一个基于Qt6的2D游戏项目，包含角色、武器、装备、药品等游戏元素。
+## [游戏文档]("https://github.com/Legend37/Qt_2D_Game/wiki")
 
 ## 本地构建
 
@@ -25,7 +26,7 @@ brew install qt
 安装CMake
 
 ```
-bew install cmake
+brew install cmake
 ```
 
 下载完整sourcecode并解压，进入到文件夹后用终端执行
